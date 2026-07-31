@@ -1,0 +1,111 @@
+CLINIC MANAGEMENT SYSTEM - VITALS AND BRANCH AUDIT UPDATE
+=========================================================
+
+1. RECEPTIONIST ADDS VITALS FOR ONLINE APPOINTMENT
+--------------------------------------------------
+Endpoint:
+PUT /api/Appointment/online/{appointmentId}/vitals
+
+Roles:
+Admin, Receptionist
+
+Permission for Receptionist:
+Appointments -> CanEdit = true
+
+Request body:
+{
+  "symptoms": "Fever and body pain",
+  "bloodPressure": "120/80",
+  "sugarLevel": "110",
+  "temperature": "99.2 F",
+  "weight": "72 kg",
+  "pulseRate": "78",
+  "respiratoryRate": "18"
+}
+
+Rules:
+- Appointment must be BookingType = Online.
+- Appointment must belong to the logged-in hospital.
+- A Receptionist assigned to a branch can update only that branch's appointment.
+- The endpoint inserts or updates PatientVitals.
+- Appointment vital fields are also synchronized for compatibility with the current UI.
+- An audit log named "Update Patient Vitals" is created with the appointment branch.
+
+2. DOCTOR GETS VITALS IN CONSULTATION
+-------------------------------------
+Endpoint:
+GET /api/Consultation/appointment/{appointmentId}/vitals
+
+Role:
+Doctor
+
+Permission for Doctor:
+Appointments -> CanView = true
+
+Rules:
+- Doctor receives vitals only for appointments assigned to that doctor.
+- Latest PatientVitals data is returned.
+- Existing Appointment vital columns are used as fallback for older records.
+
+Shared endpoint:
+GET /api/Appointment/{appointmentId}/vitals
+
+Roles:
+Admin, Receptionist, Doctor
+
+This endpoint also applies hospital, branch, and doctor ownership checks.
+
+3. ADMIN BRANCH-WISE AUDIT DASHBOARD
+------------------------------------
+Endpoint:
+GET /api/AuditLogs/dashboard/branch-wise
+
+Optional query parameters:
+from=2026-07-28T00:00:00Z
+to=2026-07-28T23:59:59Z
+recentPerBranch=5
+
+Role:
+Admin
+
+Response includes:
+- Total branch count
+- Total activity count
+- Login activities
+- Business activities
+- Vitals updates
+- Unassigned activities
+- Per-branch totals
+- Online user count
+- Last activity time
+- Recent activities
+
+Branch-filtered audit list:
+GET /api/AuditLogs?branchId={branchId}&take=100
+
+Branch-filtered login history:
+GET /api/AuditLogs/login-history?branchId={branchId}&take=100
+
+SECURITY CHANGES
+----------------
+- AuditLogsController now requires Admin or SuperAdmin authentication.
+- Admin audit queries are automatically limited to the Admin's HospitalId.
+- Admin cannot request a branch from another hospital.
+- Audit deletion is restricted to SuperAdmin.
+
+FRONTEND FLOW
+-------------
+Receptionist Online Bookings:
+- Show the existing + button in the Vitals column when Appointments.CanEdit is true.
+- Open a vitals form modal.
+- Call PUT /api/Appointment/online/{appointmentId}/vitals.
+- Refresh the booking row after success.
+
+Doctor Consultation:
+- When an appointment is opened, call GET /api/Consultation/appointment/{appointmentId}/vitals.
+- Bind the returned values to BP, Sugar Level, Temperature, Weight, Pulse Rate, and Respiratory Rate.
+
+Admin Dashboard:
+- Call GET /api/AuditLogs/dashboard/branch-wise.
+- Render one card or table row per branch.
+- Open detailed logs using GET /api/AuditLogs?branchId={branchId}.

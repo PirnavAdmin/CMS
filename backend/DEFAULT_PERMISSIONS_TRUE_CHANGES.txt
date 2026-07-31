@@ -1,0 +1,18 @@
+DEFAULT DOCTOR/RECEPTIONIST PERMISSIONS
+
+All permission modules now default to:
+- CanView = true
+- CanCreate = true
+- CanEdit = true
+- CanDelete = true
+
+Behavior:
+1. New or existing Doctor/Receptionist with no UserPermission row receives full access by default.
+2. GET /api/user-permissions/modules returns all values true.
+3. GET /api/user-permissions/users/{userId} returns true for any unsaved module.
+4. GET /api/user-permissions/me returns every module, defaulting unsaved values to true.
+5. Login response returns every module, defaulting unsaved values to true.
+6. RequirePermissionFilter allows access when no saved permission row exists.
+7. If Admin explicitly saves false for a permission, the saved false value is enforced.
+
+No database migration is required for this change.

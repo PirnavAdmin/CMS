@@ -1,0 +1,39 @@
+PATIENT LIVE TOKEN TRACKING
+===========================
+
+Changes made:
+1. A queue token is generated only after consultation payment succeeds.
+2. Tokens are sequential per Doctor + Branch + Appointment Date.
+   Example: TKN 001, TKN 002, TKN 003.
+3. A patient can track only their own appointment.
+4. Queue status includes current token, patients ahead, estimated waiting time,
+   queue position, live queue items and an about-to-be-called message.
+
+PATIENT APIs
+------------
+GET /api/patient-portal/appointments/{appointmentId}/queue-status
+GET /api/patient-portal/appointments/{appointmentId}/token
+Authorization: Bearer <patient JWT>
+
+Use queue-status from the frontend every 10-15 seconds for live polling.
+
+STAFF/DOCTOR STATUS API
+-----------------------
+PATCH /api/Appointment/{appointmentId}/status?status=Called
+PATCH /api/Appointment/{appointmentId}/status?status=InProgress
+PATCH /api/Appointment/{appointmentId}/status?status=Completed
+
+Supported queue statuses now include:
+Waiting, Called, InProgress, InConsultation, PrescriptionAdded, Completed, Cancelled, NoShow.
+
+FRONTEND FIELD MAPPING
+----------------------
+Your Current Token       -> tokenNumber
+Currently Serving        -> currentToken
+Patients Ahead of You    -> patientsAhead
+Estimated Waiting Time   -> estimatedWaitingMinutes
+Token availability       -> tokenAvailable
+Near-token notification  -> isAboutToBeCalled and message
+Live Queue Status        -> queue[]
+
+No database migration is required because the existing Appointment fields are used.

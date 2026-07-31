@@ -1,0 +1,109 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|c:\\users\\admin\\downloads\\12back\\cms_all_features_modified\\adminclinic\\migrations\\20260731064349_addnursebillinggstanddoctorbranches.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|solutionrelative:migrations\\20260731064349_addnursebillinggstanddoctorbranches.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|c:\\users\\admin\\downloads\\12back\\cms_all_features_modified\\adminclinic\\migrations\\addnursebillinggstanddoctorbranches_backup.txt||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|solutionrelative:migrations\\addnursebillinggstanddoctorbranches_backup.txt||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|c:\\users\\admin\\downloads\\12back\\cms_all_features_modified\\adminclinic\\migrations\\20260731064349_addnursebillinggstanddoctorbranches.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|solutionrelative:migrations\\20260731064349_addnursebillinggstanddoctorbranches.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|c:\\users\\admin\\downloads\\12back\\cms_all_features_modified\\adminclinic\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|solutionrelative:appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|c:\\users\\admin\\downloads\\12back\\cms_all_features_modified\\adminclinic\\controllers\\doctorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{1302070B-B8B4-4A35-04A0-B69BE521E344}|Adminclinic.csproj|solutionrelative:controllers\\doctorcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "20260731064349_AddNurseBillingGstAndDoctorBranches.Designer.cs",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\Migrations\\20260731064349_AddNurseBillingGstAndDoctorBranches.Designer.cs",
+              "RelativeDocumentMoniker": "Migrations\\20260731064349_AddNurseBillingGstAndDoctorBranches.Designer.cs",
+              "ToolTip": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\Migrations\\20260731064349_AddNurseBillingGstAndDoctorBranches.Designer.cs",
+              "RelativeToolTip": "Migrations\\20260731064349_AddNurseBillingGstAndDoctorBranches.Designer.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAD4vw8AAAA1AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T10:56:53.147Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "20260731064349_AddNurseBillingGstAndDoctorBranches.cs",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\Migrations\\20260731064349_AddNurseBillingGstAndDoctorBranches.cs",
+              "RelativeDocumentMoniker": "Migrations\\20260731064349_AddNurseBillingGstAndDoctorBranches.cs",
+              "ToolTip": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\Migrations\\20260731064349_AddNurseBillingGstAndDoctorBranches.cs",
+              "RelativeToolTip": "Migrations\\20260731064349_AddNurseBillingGstAndDoctorBranches.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAABFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T06:43:50.601Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "AddNurseBillingGstAndDoctorBranches_Backup.txt",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\Migrations\\AddNurseBillingGstAndDoctorBranches_Backup.txt",
+              "RelativeDocumentMoniker": "Migrations\\AddNurseBillingGstAndDoctorBranches_Backup.txt",
+              "ToolTip": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\Migrations\\AddNurseBillingGstAndDoctorBranches_Backup.txt",
+              "RelativeToolTip": "Migrations\\AddNurseBillingGstAndDoctorBranches_Backup.txt",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAA8AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003109|",
+              "WhenOpened": "2026-07-31T06:40:58.091Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "DoctorController.cs",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\Controllers\\DoctorController.cs",
+              "RelativeDocumentMoniker": "Controllers\\DoctorController.cs",
+              "ToolTip": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\Controllers\\DoctorController.cs",
+              "RelativeToolTip": "Controllers\\DoctorController.cs",
+              "ViewState": "AgIAABsEAAAAAAAAAAAnwCcEAABeAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T04:51:08.408Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\appsettings.json",
+              "RelativeDocumentMoniker": "appsettings.json",
+              "ToolTip": "C:\\Users\\ADMIN\\Downloads\\12back\\cms_all_features_modified\\Adminclinic\\appsettings.json",
+              "RelativeToolTip": "appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-07-31T04:49:51.183Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

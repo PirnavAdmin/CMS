@@ -1,0 +1,646 @@
+.branches-page {
+  min-height: 100%;
+  padding: 18px;
+  background: #f8fafc;
+  color: #0f172a;
+  box-sizing: border-box;
+}
+
+.branches-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.branches-header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.branches-header p {
+  margin: 7px 0 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.branches-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.branches-primary-button,
+.branches-secondary-button,
+.branches-save-button,
+.branches-icon-button,
+.branches-action-button {
+  border-radius: 8px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.branches-primary-button {
+  height: 42px;
+  border: none;
+  background: #0f766e;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 16px;
+  font-size: 14px;
+  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.16);
+}
+
+.branches-icon-button {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #dbe3ed;
+  background: #ffffff;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.branches-clinic-band {
+  min-height: 40px;
+  border: 1px solid #dbe3ed;
+  border-radius: 8px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  color: #0f766e;
+}
+
+.branches-clinic-logo {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border: 1px solid #e4ecf7;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.branches-clinic-logo svg {
+  stroke-width: 2.3;
+}
+
+.branches-clinic-logo small {
+  max-width: 31px;
+  color: #1d65c1;
+  font-size: 5.5px;
+  font-weight: 900;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branches-clinic-logo--emerald {
+  color: #10b981;
+}
+
+.branches-clinic-logo--dental {
+  color: #1d7ff2;
+  border-color: #dbeafe;
+}
+
+.branches-clinic-logo--dental small {
+  display: none;
+}
+
+.branches-clinic-logo--green {
+  color: #16a34a;
+}
+
+.branches-clinic-logo--sky {
+  color: #0ea5e9;
+}
+
+.branches-clinic-logo--amber {
+  color: #f59e0b;
+}
+
+.branches-clinic-tooth-svg {
+  color: #1d7ff2;
+}
+
+.branches-clinic-band span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.branches-clinic-band b {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 850;
+  overflow-wrap: anywhere;
+}
+
+.branches-toolbar {
+  margin-bottom: 12px;
+}
+
+.branches-search {
+  height: 44px;
+  border: 1px solid #d7e0ea;
+  border-radius: 10px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 0 14px;
+  color: #64748b;
+  box-sizing: border-box;
+}
+
+.branches-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.branches-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.branches-field-suggestions {
+  margin: 6px 0 0;
+  padding: 8px 0;
+  border: 1px solid #dbe3ed;
+  border-radius: 8px;
+  background: #ffffff;
+  max-height: 160px;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.branches-field-suggestions li {
+  padding: 10px 12px;
+  cursor: pointer;
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.branches-field-suggestions li:hover {
+  background: #f8fafc;
+}
+
+.branches-field textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+
+.branches-success,
+.branches-error {
+  margin: 0 0 12px;
+  border-radius: 8px;
+  padding: 11px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.branches-success {
+  background: #ecfdf5;
+  border: 1px solid #bbf7d0;
+  color: #047857;
+}
+
+.branches-error {
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  color: #be123c;
+}
+
+.branches-table {
+  background: #ffffff;
+  border: 1px solid #dbe3ed;
+  border-radius: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.branches-thead,
+.branches-row {
+  display: grid;
+  grid-template-columns:
+    58px
+    minmax(170px, 0.95fr)
+    minmax(190px, 1fr)
+    minmax(230px, 1.25fr)
+    110px
+    124px;
+  column-gap: 8px;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.branches-thead {
+  min-height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 800;
+  background: #f8fafc;
+}
+
+.branches-thead span {
+  min-width: 0;
+}
+
+.branches-thead span:nth-child(5),
+.branches-row > .branches-cell:nth-child(5) {
+  justify-self: center;
+}
+
+.branches-thead span:nth-child(6),
+.branches-actions {
+  justify-self: center;
+}
+
+.branches-actions-heading,
+.branches-actions {
+  position: sticky;
+  right: 0;
+  z-index: 2;
+  background: inherit;
+}
+
+.branches-actions {
+  background: #ffffff;
+}
+
+.branches-row {
+  min-height: 72px;
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.branches-row:last-child {
+  border-bottom: 0;
+}
+
+.branches-name-cell {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.branches-avatar {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 10px;
+  background: #e0f2fe;
+  color: #0369a1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.branches-name-cell b,
+.branches-cell b {
+  display: block;
+  color: #0f172a;
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.branches-name-cell span,
+.branches-cell span {
+  display: block;
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.branches-cell {
+  min-width: 0;
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.branches-cell span {
+  word-break: break-word;
+}
+
+.branches-status {
+  min-width: 72px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.branches-status-active {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.branches-status-inactive {
+  background: #ffe4e6;
+  color: #be123c;
+}
+
+.branches-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 112px;
+}
+
+.branches-action-button {
+  width: 31px;
+  height: 31px;
+  border: 1px solid #dbe3ed;
+  background: #ffffff;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.branches-action-danger {
+  color: #dc2626;
+}
+
+.branches-action-edit {
+  color: #0f172a;
+}
+
+.branches-action-toggle {
+  color: #0f766e;
+}
+
+.branches-empty {
+  padding: 28px;
+  text-align: center;
+  color: #64748b;
+  font-size: 14px;
+}
+
+.branches-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3300;
+  background: rgba(15, 23, 42, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  box-sizing: border-box;
+}
+
+.branches-modal {
+  width: min(760px, 100%);
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #dbe3ed;
+  border-radius: 10px;
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.25);
+}
+
+.branches-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.branches-modal-title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.branches-modal-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: #ccfbf1;
+  color: #0f766e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+}
+
+.branches-modal-title h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.branches-modal-title p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.branches-modal-close {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #dbe3ed;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.branches-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 20px;
+}
+
+.branches-field {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.branches-field-full,
+.branches-form-message,
+.branches-modal-actions {
+  grid-column: 1 / -1;
+}
+
+.branches-field label {
+  color: #334155;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 750;
+}
+
+.branches-field input,
+.branches-field select {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0 13px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.branches-field input:focus,
+.branches-field select:focus {
+  border-color: #0f766e;
+  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+}
+
+.branches-field input.is-invalid,
+.branches-field select.is-invalid {
+  border-color: #dc2626;
+  background: #fffafa;
+}
+
+.branches-field-error {
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.35;
+}
+
+.branches-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.branches-secondary-button,
+.branches-save-button {
+  min-width: 128px;
+  height: 42px;
+  font-size: 14px;
+}
+
+.branches-secondary-button {
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  color: #334155;
+}
+
+.branches-save-button {
+  border: none;
+  background: #0f766e;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.branches-primary-button:disabled,
+.branches-secondary-button:disabled,
+.branches-save-button:disabled,
+.branches-icon-button:disabled,
+.branches-action-button:disabled,
+.branches-modal-close:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .branches-thead,
+  .branches-row {
+    min-width: 900px;
+  }
+}
+
+@media (max-width: 720px) {
+  .branches-page {
+    padding: 16px;
+  }
+
+  .branches-header {
+    flex-direction: column;
+  }
+
+  .branches-header-actions,
+  .branches-primary-button {
+    width: 100%;
+  }
+
+  .branches-clinic-band {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .branches-form {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+
+  .branches-modal-header {
+    padding: 16px;
+  }
+
+  .branches-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .branches-secondary-button,
+  .branches-save-button {
+    width: 100%;
+  }
+}

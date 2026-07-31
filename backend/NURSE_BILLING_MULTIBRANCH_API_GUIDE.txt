@@ -1,0 +1,39 @@
+NEW/UPDATED API FLOW
+
+1. CREATE NURSE LOGIN (Admin token)
+POST /api/Staff as multipart/form-data
+Name, Email, Phone, Role=Nurse, Password, BranchId, IsActive=true
+Nurse uses the same POST /api/Auth/login API as all other users.
+JWT now includes BranchId for branch-assigned users.
+
+2. NURSE PATIENTS AND VITALS
+GET /api/Nurse/patients?date=2026-07-30
+PUT /api/Nurse/appointments/{appointmentId}/vitals
+GET /api/Nurse/print-queue
+The print queue returns completed prescriptions after doctor submits medicines and marks Status=Completed.
+
+3. BILLING TYPES WITH GST
+POST /api/Billing
+BillingType values: OP, Lab, Pharmacy
+GST fields: GstPercentage; response includes SubTotal, GstAmount, TotalAmount.
+GET /api/Billing?billingType=OP
+GET /api/Billing?billingType=Lab
+GET /api/Billing?billingType=Pharmacy
+
+4. DOCTOR MULTIPLE BRANCHES
+PUT /api/Doctor/{doctorId}/branches
+Body: { "branchIds": [1, 2, 3] }
+GET /api/Doctor/{doctorId}/branches
+Schedules can now be created for any active assigned doctor branch.
+
+5. SCHEDULE UPDATE/DELETE
+PUT /api/Schedule/{scheduleId} (Admin or the same Doctor)
+DELETE /api/Schedule/{scheduleId} (Admin or the same Doctor)
+Delete is blocked when active future appointments exist.
+
+6. LOGOUT AUDIT
+POST /api/Auth/logout already updates LogoutTime, IsOnline=false, Action=Logout and SystemAction=User Logged Out.
+
+7. DATABASE
+Run: dotnet ef database update
+Migration added: 20260730123000_AddNurseBillingGstAndDoctorBranches

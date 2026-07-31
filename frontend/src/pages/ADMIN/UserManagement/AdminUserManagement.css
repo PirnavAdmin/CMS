@@ -1,0 +1,359 @@
+.admin-users-page {
+  padding: 16px 14px;
+}
+
+.admin-users-header,
+.admin-users-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.admin-users-header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 23px;
+  line-height: 1.15;
+}
+
+.admin-users-header p {
+  margin: 6px 0 0;
+  color: #64748b;
+}
+
+.admin-users-toolbar {
+  margin: 14px 0;
+}
+
+.admin-users-search {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #fff;
+  padding: 0 12px;
+}
+
+.admin-users-search input,
+.admin-users-toolbar select,
+.admin-users-form-grid input {
+  width: 100%;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font: inherit;
+  font-size: 14px;
+}
+
+.admin-users-search input {
+  border: 0;
+  outline: 0;
+}
+
+.admin-users-toolbar select {
+  max-width: 148px;
+}
+
+.admin-users-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: 8px;
+  padding: 9px 14px;
+  font-size: 14px;
+  background: #0f766e;
+  color: #fff;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-users-btn.is-light {
+  background: #fff;
+  color: #111827;
+  border: 1px solid #dbe3ef;
+}
+
+.admin-users-btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.admin-users-success,
+.admin-users-error {
+  margin-bottom: 14px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.admin-users-success {
+  color: #0f766e;
+}
+
+.admin-users-error {
+  color: #dc2626;
+}
+
+.admin-users-table {
+  overflow-x: hidden;
+  border: 1px solid #dbe3ef;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.admin-users-table-head,
+.admin-users-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 44px minmax(128px, 0.98fr) minmax(190px, 1.35fr) minmax(138px, 0.95fr) minmax(72px, 0.48fr) minmax(104px, 0.66fr) 82px minmax(86px, 0.55fr);
+  column-gap: 8px;
+  row-gap: 4px;
+  align-items: center;
+  padding: 10px 12px;
+}
+
+.admin-users-table-head {
+  background: #f8fafc;
+  color: #111827;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-users-row {
+  border-top: 1px solid #edf2f7;
+  min-height: 54px;
+  font-size: 12.5px;
+}
+
+.admin-users-row span {
+  min-width: 0;
+}
+
+.admin-users-row b,
+.admin-users-row small {
+  display: block;
+  overflow-wrap: anywhere;
+}
+
+.admin-users-row > span {
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+
+.admin-users-email {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-users-name-cell,
+.admin-users-clinic-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.admin-users-name-cell b,
+.admin-users-clinic-cell b {
+  min-width: 0;
+  color: #0f172a;
+  font-size: 12.5px;
+  font-weight: 850;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-users-avatar {
+  width: 24px;
+  height: 24px;
+  flex: 0 0 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  border: 1px solid transparent;
+}
+
+.admin-users-avatar--0 {
+  background: #e0f7f5;
+  border-color: #b7ebe6;
+  color: #0f9d9d;
+}
+
+.admin-users-avatar--1 {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #f59e0b;
+}
+
+.admin-users-avatar--2 {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #16a34a;
+}
+
+.admin-users-avatar--3 {
+  background: #f5f3ff;
+  border-color: #ddd6fe;
+  color: #8b5cf6;
+}
+
+.admin-users-clinic-logo {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  border: 1px solid #e4ecf7;
+  border-radius: 9px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.06);
+  color: #10b981;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.admin-users-clinic-logo svg {
+  stroke-width: 2.3;
+}
+
+.admin-users-clinic-logo small {
+  max-width: 23px;
+  color: #1d65c1;
+  font-size: 5px;
+  font-weight: 900;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-users-clinic-logo--emerald {
+  color: #10b981;
+}
+
+.admin-users-clinic-logo--dental {
+  color: #1d7ff2;
+  border-color: #dbeafe;
+}
+
+.admin-users-clinic-logo--dental small {
+  display: none;
+}
+
+.admin-users-clinic-logo--green {
+  color: #16a34a;
+}
+
+.admin-users-clinic-logo--sky {
+  color: #0ea5e9;
+}
+
+.admin-users-clinic-logo--amber {
+  color: #f59e0b;
+}
+
+.admin-users-clinic-tooth-svg {
+  color: #1d7ff2;
+}
+
+.admin-users-role {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 24px;
+  border-radius: 999px;
+  padding: 0 7px;
+  font-size: 11px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.admin-users-role--doctor {
+  background: #eaf2ff;
+  color: #2563eb;
+}
+
+.admin-users-role--receptionist {
+  background: #fff0f7;
+  color: #db2777;
+}
+
+.admin-users-role--patient {
+  background: #f3edff;
+  color: #8b5cf6;
+}
+
+.admin-users-role--nurse {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.admin-users-role--default {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.admin-users-row small {
+  margin-top: 4px;
+  color: #64748b;
+}
+
+.admin-users-status {
+  display: inline-flex;
+  border-radius: 999px;
+  padding: 4px 7px;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.admin-users-last-active {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-users-status.is-online {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.admin-users-status.is-offline {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.admin-users-state {
+  min-width: 0;
+  padding: 24px;
+  text-align: center;
+  color: #64748b;
+}
+
+@media (max-width: 760px) {
+  .admin-users-page {
+    padding: 16px;
+  }
+
+  .admin-users-header,
+  .admin-users-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-users-toolbar select {
+    max-width: none;
+  }
+
+}

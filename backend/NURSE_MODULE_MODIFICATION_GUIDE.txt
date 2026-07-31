@@ -1,0 +1,76 @@
+NURSE MODULE - MODIFIED PROJECT
+===============================
+
+IMPLEMENTED
+-----------
+1. Nurse registration uses the existing authentication system.
+   POST /api/Auth/register-nurse
+   Authorization: Admin
+
+   Request example:
+   {
+     "name": "Anjali Nurse",
+     "email": "anjali@gmail.com",
+     "phone": "9876543210",
+     "password": "Nurse@123",
+     "hospitalId": 0,
+     "branchId": 1
+   }
+
+   Note: hospitalId is overwritten from the logged-in Admin JWT, preventing
+   an Admin from creating a Nurse in another clinic.
+
+2. Nurse login uses the existing endpoint.
+   POST /api/Auth/login
+
+   Login response includes role, hospitalId, branchId, branchName and permissions.
+
+3. Nurse dashboard and branch patient access.
+   GET /api/Nurse/dashboard
+   GET /api/Nurse/patients
+   GET /api/Nurse/patients/{patientId}
+
+4. Nurse can modify allowed patient demographic/contact data.
+   PUT /api/Nurse/patients/{patientId}
+
+   Nurse cannot modify diagnosis, prescription, consultation fee, payment,
+   doctor, branch or appointment time through this API.
+
+5. Patient vitals.
+   PUT /api/Nurse/appointments/{appointmentId}/vitals
+   GET /api/Nurse/patients/{patientId}/vitals
+
+6. Prescription print queue.
+   GET /api/Nurse/print-queue
+
+7. Admin-managed permissions now support Nurse in addition to Doctor and Receptionist.
+   GET /api/user-permissions/eligible-users?role=Nurse
+   GET /api/user-permissions/users/{userId}
+   PUT /api/user-permissions/users/{userId}
+   GET /api/user-permissions/me
+
+8. Added permission modules:
+   Vitals
+   NursingNotes
+
+SECURITY / BRANCH RULES
+-----------------------
+- Nurse JWT must contain HospitalId and BranchId.
+- Nurse can access only appointments and patients connected to the assigned branch.
+- Missing nurse BranchId fails closed instead of exposing all clinic patients.
+- Patient updates and vitals changes create AuditLog records.
+
+DATABASE
+--------
+The uploaded project already contained Users, Staffs, PatientVitals and
+UserPermissions tables/models. Therefore this modification does not add a new
+schema requirement and no new migration is required for these changes.
+
+RUN
+---
+1. Open the project in Visual Studio.
+2. Confirm appsettings.json connection string.
+3. Run Update-Database if existing migrations are not already applied.
+4. Build the solution.
+5. Login as Admin and register a nurse.
+6. Login as Nurse using POST /api/Auth/login.

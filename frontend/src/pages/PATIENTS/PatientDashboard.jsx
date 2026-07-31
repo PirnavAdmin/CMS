@@ -1,0 +1,914 @@
+import React, { useEffect, useMemo, useState } from "react";
+import "./PatientDashboard.css";
+import {
+  Bell,
+  Calendar,
+  ChevronRight,
+  Clock,
+  FileText,
+  IndianRupee,
+  MapPin,
+  Pill,
+} from "lucide-react";
+import { useNavigate } from "react-router-dom";
+
+const EMPTY_ARRAY = [];
+
+const formatCount = (value) => Number(value || 0).toLocaleString("en-IN");
+
+const formatCurrency = (value) =>
+  new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(Number(value || 0));
+
+const toAmount = (value) => {
+  const parsed = Number(String(value ?? 0).replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const getNestedValue = (record, path) => {
+  if (record == null) return undefined;
+  const keys = Array.isArray(path) ? path : String(path).replace(/\?/g, "").split(".");
+  return keys.reduce((value, key) => (value && typeof value === "object" ? value[key] : undefined), record);
+};
+
+const readFirst = (record, keys) =>
+  keys.reduce((value, key) => value || getNestedValue(record, key), "") || "";
+
+const getBillStatus = (bill) => String(bill?.status || bill?.paymentStatus || bill?.state || "").toLowerCase();
+
+const getBillAppointmentKey = (bill) =>
+  firstValue(
+    readFirst(bill, [
+      'appointmentNumber', 'appointmentNo', 'appointmentId', 'appointment.id', 'appointment_id',
+      'appointment.appointmentNumber', 'appointment.appointmentNo', 'appointment.appointmentId',
+      'invoice.appointmentId', 'invoice.appointment.id', 'invoice.appointment.appointmentNumber',
+      'bill.appointmentId', 'bill.appointment.id', 'bill.appointment.appointmentNumber',
+    ]),
+    ''
+  );
+
+const getBillDateValue = (bill) => {
+  const date = new Date(
+    firstValue(
+      readFirst(bill, ['invoiceDate', 'billDate', 'date', 'createdAt', 'updatedAt']),
+      ''
+    )
+  );
+  return Number.isFinite(date.getTime()) ? date.getTime() : 0;
+};
+
+const selectBestBillRecord = (existing, incoming) => {
+  if (!existing) return incoming;
+  const existingDate = getBillDateValue(existing);
+  const incomingDate = getBillDateValue(incoming);
+  if (incomingDate > existingDate) return incoming;
+  if (incomingDate < existingDate) return existing;
+
+  const existingStatus = getBillStatus(existing);
+  const incomingStatus = getBillStatus(incoming);
+  if (incomingStatus === 'paid' && existingStatus !== 'paid') return incoming;
+  if (existingStatus === 'paid' && incomingStatus !== 'paid') return existing;
+
+  return incoming;
+};
+
+const dedupeBillsByAppointment = (bills = []) => {
+  const grouped = new Map();
+  Array.isArray(bills) && bills.forEach((bill) => {
+    const key = getBillAppointmentKey(bill) || String(firstValue(bill?.invoiceNumber, bill?.billNumber, bill?.referenceNumber, bill?.id, '')).trim();
+    const current = grouped.get(key);
+    grouped.set(key, selectBestBillRecord(current, bill));
+  });
+  return Array.from(grouped.values());
+};
+
+const getBillTotalAmount = (bill) => {
+  const amount = firstValue(
+    bill?.amount,
+    bill?.total,
+    bill?.invoiceAmount,
+    bill?.grandTotal,
+    bill?.paymentAmount,
+    bill?.paidAmount,
+    bill?.dueAmount,
+    bill?.balance,
+    bill?.outstandingAmount
+  );
+  return toAmount(amount);
+};
+
+const getBillDueAmount = (bill) => {
+  const amount = firstValue(
+    bill?.dueAmount,
+    bill?.balance,
+    bill?.outstandingAmount,
+    bill?.remainingAmount,
+    bill?.amount,
+    bill?.total
+  );
+  return toAmount(amount);
+};
+
+const getBillPaidAmount = (bill) => {
+  const amount = firstValue(
+    bill?.paidAmount,
+    bill?.paymentAmount,
+    bill?.amount,
+    bill?.total,
+    bill?.invoiceAmount,
+    bill?.grandTotal
+  );
+  return toAmount(amount);
+};
+
+const firstValue = (...values) => values.find((value) => value !== undefined && value !== null && String(value).trim() !== "");
+
+const formatInlineValue = (value, emptyText = "Not available") => {
+  const resolved = firstValue(value);
+  return resolved !== undefined ? String(resolved) : emptyText;
+};
+
+const formatDateLabel = (value) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (!Number.isNaN(date.getTime())) {
+    return new Intl.DateTimeFormat("en-IN", {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    }).format(date);
+  }
+  return String(value);
+};
+
+const formatTimeLabel = (value) => {
+  if (!value) return null;
+  return String(value).replace(/\s+/g, " ").trim();
+};
+
+const getAppointmentStatus = (appointment = {}) => {
+  const safeAppointment = appointment || {};
+  const status = firstValue(safeAppointment.status, safeAppointment.appointmentStatus, safeAppointment.state);
+  return status ? String(status) : "Scheduled";
+};
+
+const getAppointmentDate = (appointment = {}) =>
+  firstValue(
+    (appointment || {}).date,
+    (appointment || {}).appointmentDate,
+    (appointment || {}).scheduledDate,
+    (appointment || {}).visitDate,
+    (appointment || {}).slotDate,
+    (appointment || {}).startDate,
+    (appointment || {}).createdAt
+  );
+
+const getAppointmentTime = (appointment = {}) =>
+  firstValue((appointment || {}).time, (appointment || {}).slot, (appointment || {}).timeRange, (appointment || {}).scheduleTime, (appointment || {}).startTime, (appointment || {}).endTime);
+
+const getDoctorName = (appointment = {}) =>
+  firstValue(
+    typeof (appointment || {}).doctor === "string" ? (appointment || {}).doctor : undefined,
+    (appointment || {}).doctorName,
+    (appointment || {}).doctor?.name,
+    (appointment || {}).doctor?.fullName,
+    (appointment || {}).practitionerName,
+    (appointment || {}).providerName
+  );
+const getTokenNumber = (appointment = {}) =>
+  firstValue(
+    appointment?.tokenNumber,
+    appointment?.TokenNumber,
+    appointment?.token,
+    appointment?.tokenNo,
+    appointment?.token_number,
+    appointment?.displayToken
+  );
+
+const formatTokenNumber = (token) => {
+  const value = String(firstValue(token) || "").trim();
+  if (!value) return null;
+  const match = value.match(/^TKN\s*0*(\d+)$/i);
+  return match ? `TKN${String(Number(match[1])).padStart(3, "0")}` : null;
+};
+
+const getNumericValue = (value) => {
+  const number = Number(String(value || "").replace(/[^0-9.-]/g, ""));
+  return Number.isFinite(number) ? number : null;
+};
+
+const getPatientQueueMetrics = (dashboardData = {}, appointment = {}, visits = []) => {
+  const source = dashboardData && typeof dashboardData === "object" ? dashboardData : appointment;
+  const patientsAheadRaw = firstValue(
+    readFirst(source, [
+      "patientsAhead",
+      "patientsAheadCount",
+      "queueAhead",
+      "position",
+      "waitingCount",
+      "queuePosition",
+      "positionAhead",
+    ]),
+    readFirst(appointment, [
+      "patientsAhead",
+      "patientsAheadCount",
+      "queueAhead",
+      "position",
+      "waitingCount",
+      "queuePosition",
+      "positionAhead",
+    ])
+  );
+  const estimatedWaitingRaw = firstValue(
+    readFirst(source, [
+      "estimatedWaitingTime",
+      "estimatedWaitTime",
+      "waitingTime",
+      "estimatedWait",
+      "eta",
+      "estimatedTime",
+      "waitingMinutes",
+    ]),
+    readFirst(appointment, [
+      "estimatedWaitingTime",
+      "estimatedWaitTime",
+      "waitingTime",
+      "estimatedWait",
+      "eta",
+      "estimatedTime",
+      "waitingMinutes",
+    ])
+  );
+  const waitingMinutes = getNumericValue(estimatedWaitingRaw);
+  const token = firstValue(
+    readFirst(source, ["currentToken", "tokenNumber", "token", "displayToken", "appointmentToken"]),
+    getTokenNumber(appointment)
+  );
+
+  const counts = { waiting: 0, inConsultation: 0, completed: 0 };
+  const items = Array.isArray(visits) ? visits : [];
+  items.forEach((item) => {
+    const status = String(firstValue(item.status, item.appointmentStatus, item.state) || "").toLowerCase();
+    if (status.includes("complete") || status.includes("done") || status.includes("closed")) {
+      counts.completed += 1;
+    } else if (status.includes("inprogress") || status.includes("in consultation") || status.includes("consult") || status.includes("ongoing")) {
+      counts.inConsultation += 1;
+    } else {
+      counts.waiting += 1;
+    }
+  });
+
+  const activeStatus = String(firstValue(appointment?.status, appointment?.appointmentStatus, appointment?.state) || "").toLowerCase();
+  if (activeStatus.includes("consult") || activeStatus.includes("inprogress") || activeStatus.includes("ongoing")) {
+    counts.inConsultation = Math.max(counts.inConsultation, 1);
+  } else if (
+    activeStatus &&
+    !["complete", "done", "closed", "cancelled", "canceled", "rejected"].some((term) => activeStatus.includes(term))
+  ) {
+    counts.waiting = Math.max(counts.waiting, 1);
+  }
+
+  return {
+    token,
+    formattedToken: formatTokenNumber(token),
+    patientsAhead: getNumericValue(patientsAheadRaw),
+    waitingMinutes,
+    queueCounts: counts,
+  };
+};
+const getSpecialization = (appointment = {}) =>
+  firstValue((appointment || {}).specialization, (appointment || {}).department, (appointment || {}).speciality, (appointment || {}).specialty, (appointment || {}).doctor?.specialization);
+
+const getClinicName = (appointment = {}) =>
+  firstValue((appointment || {}).clinic, (appointment || {}).clinicName, (appointment || {}).hospitalName, (appointment || {}).departmentName);
+
+const getLocation = (appointment = {}) =>
+  firstValue((appointment || {}).location, (appointment || {}).room, (appointment || {}).branch, (appointment || {}).site, (appointment || {}).clinicAddress, getClinicName(appointment));
+
+const getAppointmentAvatar = (appointment = {}) => {
+  const doctorName = String(getDoctorName(appointment) || "").trim();
+  if (!doctorName) return "--";
+  return doctorName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+};
+
+const getSortedUpcomingAppointment = (items = []) => {
+  const list = Array.isArray(items) ? items.filter(Boolean) : [];
+  if (!list.length) return null;
+
+  const score = (item) => {
+    const status = String(item.status || item.appointmentStatus || item.state || "").toLowerCase();
+    if (status.includes("upcoming") || status.includes("confirm") || status.includes("schedule") || status.includes("book")) return 0;
+    if (status.includes("pending") || status.includes("new")) return 1;
+    return 2;
+  };
+
+  return [...list].sort((left, right) => {
+    const leftScore = score(left);
+    const rightScore = score(right);
+    if (leftScore !== rightScore) return leftScore - rightScore;
+    const leftTime = new Date(firstValue(getAppointmentDate(left), left.createdAt, left.updatedAt) || 0).getTime();
+    const rightTime = new Date(firstValue(getAppointmentDate(right), right.createdAt, right.updatedAt) || 0).getTime();
+    return leftTime - rightTime;
+  })[0];
+};
+
+function PatientDashboard({ patient, visits = EMPTY_ARRAY, prescriptions = EMPTY_ARRAY, bills = EMPTY_ARRAY, dashboardData = null }) {
+  const navigate = useNavigate();
+  const dashboardPatient = patient || {};
+  const uniqueBills = useMemo(() => {
+    const seen = new Set();
+    return (Array.isArray(bills) ? bills : []).filter((bill) => {
+      const billId = String(
+        firstValue(
+          bill?.invoiceId,
+          bill?.billId,
+          bill?.id,
+          bill?.referenceId,
+          bill?.invoice?.id,
+          bill?.bill?.id,
+          bill?.invoice?.referenceId,
+          bill?.bill?.referenceId
+        ) || ""
+      ).trim();
+      const billNumber = String(
+        firstValue(
+          bill?.invoiceNumber,
+          bill?.billNumber,
+          bill?.referenceNumber,
+          bill?.invoice?.invoiceNumber,
+          bill?.invoice?.billNumber,
+          bill?.bill?.invoiceNumber,
+          bill?.bill?.billNumber,
+          bill?.bill?.referenceNumber
+        ) || ""
+      ).trim();
+      const appointmentId = String(
+        firstValue(
+          bill?.appointmentId,
+          bill?.appointment?.id,
+          bill?.appointment_id,
+          bill?.invoice?.appointmentId,
+          bill?.invoice?.appointment?.id,
+          bill?.bill?.appointmentId,
+          bill?.bill?.appointment?.id,
+          bill?.appointmentNumber,
+          bill?.appointmentNo,
+          bill?.appointment?.number
+        ) || ""
+      ).trim();
+      const patientId = String(
+        firstValue(
+          bill?.patientId,
+          bill?.patient?.id,
+          bill?.invoice?.patientId,
+          bill?.invoice?.patient?.id,
+          bill?.bill?.patientId,
+          bill?.bill?.patient?.id,
+          bill?.patientCode,
+          bill?.patient?.code
+        ) || ""
+      ).trim();
+      const key = [billId, billNumber, appointmentId, patientId]
+        .filter(Boolean)
+        .join("|");
+      if (!key) return true;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }, [bills]);
+  const upcomingAppointment = getSortedUpcomingAppointment(visits);
+  const previousVisits = Array.isArray(visits) ? visits.length : 0;
+  const prescriptionCount = Array.isArray(prescriptions) ? prescriptions.length : 0;
+  const medicalRecordCount = previousVisits + prescriptionCount;
+  const pendingBillsAmount = Array.isArray(uniqueBills)
+    ? uniqueBills.reduce((total, bill) => {
+        const status = getBillStatus(bill);
+        const isPending = !status || status.includes("pending") || status.includes("unpaid") || status.includes("due");
+        return isPending ? total + getBillDueAmount(bill) : total;
+      }, 0)
+    : 0;
+  const totalPaidAmount = Array.isArray(uniqueBills)
+    ? uniqueBills.reduce((total, bill) => {
+        const status = getBillStatus(bill);
+        return status === "paid" ? total + getBillPaidAmount(bill) : total;
+      }, 0)
+    : 0;
+  const hasBills = Array.isArray(uniqueBills) && uniqueBills.length > 0;
+  const hasPendingBills = Array.isArray(uniqueBills)
+    ? uniqueBills.some((bill) => {
+        const status = getBillStatus(bill);
+        return !status || status.includes("pending") || status.includes("unpaid") || status.includes("due");
+      })
+    : false;
+  const pendingStatusNote = hasBills
+    ? hasPendingBills
+      ? "Payment due"
+      : "Paid"
+    : "No bills yet";
+  const billCardLabel = hasBills
+    ? hasPendingBills
+      ? "Bills Pending"
+      : "Bills Paid"
+    : "Billing";
+  const billCardValue = hasPendingBills ? pendingBillsAmount : totalPaidAmount;
+  const selectedPatientId = formatInlineValue(dashboardPatient.patientCode || dashboardPatient.id, "-");
+  const selectedPatientPhone = formatInlineValue(dashboardPatient.phone, "Phone not available");
+  const selectedPatientBloodGroup = formatInlineValue(dashboardPatient.bloodGroup || dashboardPatient.bloodgroup, "-");
+  const appointmentDate = formatDateLabel(getAppointmentDate(upcomingAppointment));
+  const appointmentTime = formatTimeLabel(getAppointmentTime(upcomingAppointment));
+  const appointmentReminderDoctor = formatInlineValue(getDoctorName(upcomingAppointment), "Your");
+  const {
+    formattedToken,
+    patientsAhead,
+    waitingMinutes,
+    queueCounts,
+  } = getPatientQueueMetrics(dashboardData, upcomingAppointment, visits);
+  const tokenValue = formattedToken || "Not available";
+  const patientsAheadLabel = patientsAhead !== null ? formatCount(patientsAhead) : "Not available";
+  const estimatedWaitingTimeLabel = waitingMinutes !== null ? `${waitingMinutes} mins` : "Not available";
+
+  const defaultNotifications = [
+    {
+      id: "upcoming-appointment-reminder",
+      title: "Upcoming Appointment Reminder",
+      message: upcomingAppointment
+        ? `${appointmentReminderDoctor} appointment${appointmentDate ? ` on ${appointmentDate}` : ""}${appointmentTime ? ` at ${appointmentTime}` : ""}.`
+        : "No upcoming appointment is scheduled yet.",
+      date: appointmentDate || "Today",
+      read: false,
+    },
+    {
+      id: "prescription-ready",
+      title: "Prescription Ready",
+      message: prescriptionCount ? `${formatCount(prescriptionCount)} prescription record${prescriptionCount === 1 ? "" : "s"} available to view.` : "No prescription is ready yet.",
+      date: prescriptionCount ? "Ready now" : "Pending",
+      read: prescriptionCount === 0,
+    },
+    {
+      id: "payment-due",
+      title: "Payment due",
+      message: pendingBillsAmount ? `${formatCurrency(pendingBillsAmount)} pending for payment.` : "No payment is due right now.",
+      date: pendingBillsAmount ? "Due" : "Clear",
+      read: pendingBillsAmount === 0,
+    },
+  ];
+  const notificationItems = defaultNotifications;
+  const notificationSummary = notificationItems.length ? `${notificationItems.length} updates` : "No notifications yet";
+
+  const [selectedNotificationId, setSelectedNotificationId] = useState(notificationItems[0]?.id ?? null);
+
+  useEffect(() => {
+    setSelectedNotificationId(notificationItems[0]?.id ?? null);
+  }, [notificationItems]);
+
+  const appointmentDoctor = formatInlineValue(getDoctorName(upcomingAppointment), "No appointment scheduled");
+  const appointmentSpecialization = formatInlineValue(getSpecialization(upcomingAppointment), "Waiting for appointment data");
+  const appointmentClinic = formatInlineValue(getClinicName(upcomingAppointment), "Clinic details not available");
+  const appointmentLocation = formatInlineValue(getLocation(upcomingAppointment), "Location not available");
+  const appointmentStatus = formatInlineValue(getAppointmentStatus(upcomingAppointment), "No appointment scheduled");
+  const appointmentAvatar = getAppointmentAvatar(upcomingAppointment);
+  const hasAppointment = Boolean(upcomingAppointment);
+
+  const handleBookAppointment = () => {
+    navigate("/patient/appointments/book");
+  };
+
+  const handleViewRecords = () => {
+    navigate("/patient/medical-history");
+  };
+
+  const handleViewDetails = () => {
+    navigate("/patient/medical-history");
+  };
+
+  const handleViewAppointmentDetails = () => {
+    navigate("/patient/appointments");
+  };
+
+  const handleReschedule = () => {
+    navigate("/patient/appointments/book");
+  };
+
+  const handleViewAllNotifications = () => {
+    navigate("/patient/notifications");
+  };
+
+  return (
+    <div className="patient-dashboard pd-reference-dashboard">
+      <div className="pd-header">
+        <div className="pd-header-copy">
+          <h1 className="pd-greeting-title">Welcome back, Patient! <span aria-hidden="true">👋</span></h1>
+          <p className="pd-greeting-subtitle">Here&apos;s your health overview and important updates.</p>
+        </div>
+        <div className="pd-header-actions">
+          <button type="button" className="pd-header-btn pd-header-btn--primary" onClick={handleBookAppointment}><Calendar size={16} />Book appointment</button>
+          <button type="button" className="pd-header-btn" onClick={handleViewDetails}><FileText size={16} />View records</button>
+        </div>
+      </div>
+
+      <div className="pd-overview-grid">
+        <section className="pd-card pd-token-panel">
+          <div className="pd-token-panel-header"><h2>Your Current Token</h2><Bell size={18} aria-hidden="true" /></div>
+          <div className="pd-current-token-group"><div className="pd-token-icon"><FileText size={26} /></div><div><strong className="pd-current-token">{tokenValue}</strong><span className="pd-current-token-label">Your Token Number</span></div></div>
+          <div className="pd-token-summary-grid">
+            <div className="pd-token-stat"><span>Patients Ahead of You</span><strong>{patientsAheadLabel}</strong></div>
+            <div className="pd-token-stat"><span>Estimated Waiting Time</span><strong>{estimatedWaitingTimeLabel}</strong></div>
+          </div>
+          <p className="pd-token-notice"><Bell size={15} />You will be notified when your token is about to be called.</p>
+        </section>
+
+        <section className="pd-card pd-appointment-panel">
+          <div className="pd-section-header"><div><h2>Today&apos;s Appointment</h2></div><span className="pd-status-badge">{appointmentStatus}</span></div>
+          <div className="pd-appointment-summary"><div className="pd-summary-card-icon"><Calendar size={25} /></div><div><strong>{hasAppointment ? `${appointmentTime || "Time pending"}${appointmentDate ? `, ${appointmentDate}` : ""}` : "No appointment scheduled"}</strong><p>{hasAppointment ? appointmentSpecialization : "Book an appointment to see details."}</p></div></div>
+          <div className="pd-appointment-doctor"><strong>{hasAppointment ? appointmentDoctor : "Appointment details unavailable"}</strong><span>{hasAppointment ? appointmentClinic : ""}</span></div>
+          <button type="button" className="pd-card-footer-button" onClick={hasAppointment ? handleViewAppointmentDetails : handleBookAppointment}>{hasAppointment ? "View Details" : "Book Appointment"}</button>
+        </section>
+
+        <section className="pd-card pd-summary-card pd-summary-card--billing" onClick={() => navigate("/patient/bills")} role="button" tabIndex={0} onKeyDown={(event) => event.key === "Enter" && navigate("/patient/bills")}>
+          <div className="pd-summary-card-icon"><IndianRupee size={25} /></div><div className="pd-summary-card-copy"><span>Total Due</span><strong>{formatCurrency(billCardValue)}</strong><p>{pendingStatusNote}</p></div><button type="button" className="pd-card-footer-button" onClick={(event) => { event.stopPropagation(); navigate("/patient/bills"); }}>View Bills</button>
+        </section>
+        <section className="pd-card pd-summary-card pd-summary-card--records" onClick={handleViewRecords} role="button" tabIndex={0} onKeyDown={(event) => event.key === "Enter" && handleViewRecords()}>
+          <div className="pd-summary-card-icon"><FileText size={25} /></div><div className="pd-summary-card-copy"><span>Health Records</span><strong>{formatCount(medicalRecordCount)}</strong><p>{medicalRecordCount === 1 ? "Record" : "Records"}</p></div><button type="button" className="pd-card-footer-button" onClick={(event) => { event.stopPropagation(); handleViewRecords(); }}>View Records</button>
+        </section>
+      </div>
+
+      <div className="pd-dashboard-row">
+        <section className="pd-card pd-queue-panel">
+          <div className="pd-section-header"><div><h2>Live Queue Status</h2><p>Real-time token progress</p></div><button type="button" className="pd-link-button" onClick={handleViewAppointmentDetails}>View Full Queue</button></div>
+          <div className="pd-queue-track" aria-label="Queue progress">{["TKN 018", "TKN 019", "TKN 020", "TKN 021", "TKN 022", tokenValue, "TKN 024", "TKN 025"].map((token, index) => <div key={`${token}-${index}`} className={`pd-queue-step ${token === tokenValue ? "is-current" : index < 5 ? "is-complete" : ""}`}><i>{index < 5 ? "✓" : ""}</i><span>{token}</span></div>)}</div>
+          <div className="pd-queue-legend"><span><i className="is-complete" />Completed</span><span><i className="is-current" />In Consultation</span><span><i />Waiting</span></div>
+        </section>
+        <section className="pd-card pd-actions-panel"><div className="pd-section-header"><div><h2>Quick Actions</h2></div></div><div className="pd-quick-action-list">
+          <button type="button" onClick={handleBookAppointment}><Calendar size={17} />Book Appointment<ChevronRight size={16} /></button><button type="button" onClick={() => navigate("/patient/prescriptions")}><Pill size={17} />View Prescriptions<ChevronRight size={16} /></button><button type="button" onClick={handleViewRecords}><FileText size={17} />View Medical Records<ChevronRight size={16} /></button><button type="button" onClick={() => navigate("/patient/bills")}><IndianRupee size={17} />View Bills &amp; Payments<ChevronRight size={16} /></button>
+        </div></section>
+        <section className="pd-card pd-notifications-panel"><div className="pd-section-header"><div><h2>Recent Notifications</h2></div><button type="button" className="pd-link-button" onClick={handleViewAllNotifications}>View all</button></div><div className="pd-notification-list">{notificationItems.map((notification) => <button key={notification.id} type="button" className={`pd-notification-item ${notification.read ? "is-read" : "is-unread"}`} onClick={() => setSelectedNotificationId(notification.id)}><Bell size={16} /><span className="pd-notification-body"><strong>{notification.message}</strong></span><em>{notification.date}</em></button>)}</div></section>
+      </div>
+    </div>
+  );
+
+  /* Previous dashboard markup is intentionally retained below for reference while the UI above is active.
+  return (
+    <div className="patient-dashboard">
+      <div className="pd-header">
+        <div className="pd-header-copy">
+          <h1 className="pd-greeting-title">Patient Dashboard</h1>
+          <p className="pd-greeting-subtitle">Keep track of appointments, care history, prescriptions, and billing in one place.</p>
+        </div>
+        <div className="pd-header-actions">
+          <button type="button" className="pd-header-btn pd-header-btn--primary" onClick={handleBookAppointment}>
+            <Calendar size={16} />
+            Book appointment
+          </button>
+          <button type="button" className="pd-header-btn" onClick={handleViewDetails}>
+            <FileText size={16} />
+            View records
+          </button>
+        </div>
+      </div>
+
+      <div className="pd-hero-grid">
+        <section className="pd-card pd-token-panel">
+          <div className="pd-token-panel-header">
+            <span className="pd-eyebrow">Live queue</span>
+            <h2>Current Token</h2>
+          </div>
+
+          <div className="pd-current-token-group">
+            <span className="pd-current-token-label">Your token number</span>
+            <strong className="pd-current-token">{tokenValue}</strong>
+            <p className="pd-current-token-subtitle">
+              You will be notified when your token is about to be called.
+            </p>
+          </div>
+
+          <div className="pd-token-summary-grid">
+            <div className="pd-token-stat">
+              <span>Patients Ahead</span>
+              <strong>{patientsAheadLabel}</strong>
+            </div>
+            <div className="pd-token-stat">
+              <span>Estimated Waiting Time</span>
+              <strong>{estimatedWaitingTimeLabel}</strong>
+            </div>
+            <div className="pd-token-stat">
+              <span>Today's Appointment</span>
+              <strong>{appointmentDate ? `${appointmentDate}${appointmentTime ? ` • ${appointmentTime}` : ""}` : "Not scheduled"}</strong>
+            </div>
+          </div>
+        </section>
+
+        <section className="pd-summary-panel">
+          <button type="button" className="pd-summary-card pd-summary-card--appointment" onClick={hasAppointment ? handleViewAppointmentDetails : handleBookAppointment}>
+            <div className="pd-summary-card-icon">
+              <Calendar size={18} />
+            </div>
+            <div className="pd-summary-card-copy">
+              <span>Today's Appointment</span>
+              <strong>{hasAppointment ? `${appointmentDate}${appointmentTime ? ` • ${appointmentTime}` : ""}` : "No appointment scheduled"}</strong>
+              <p>{hasAppointment ? `${appointmentDoctor} · ${appointmentClinic}` : "Book your appointment to see details."}</p>
+            </div>
+          </button>
+
+          <button type="button" className="pd-summary-card pd-summary-card--billing" onClick={() => navigate("/patient/bills")}> 
+            <div className="pd-summary-card-icon">
+              <IndianRupee size={18} />
+            </div>
+            <div className="pd-summary-card-copy">
+              <span>Billing</span>
+              <strong>{formatCurrency(billCardValue)}</strong>
+            </div>
+          </button>
+
+          <button type="button" className="pd-summary-card pd-summary-card--records" onClick={handleViewRecords}>
+            <div className="pd-summary-card-icon">
+              <FileText size={18} />
+            </div>
+            <div className="pd-summary-card-copy">
+              <span>Health Records</span>
+              <strong>{formatCount(medicalRecordCount)} records</strong>
+            </div>
+          </button>
+        </section>
+      </div>
+
+      <div className="pd-main-content">
+        <div className="pd-left-column">
+          <section className="pd-card pd-queue-panel">
+            <div className="pd-section-header">
+              <div>
+                <h2>Live Queue Status</h2>
+                <p>Real-time token progress</p>
+              </div>
+            </div>
+
+            <div className="pd-queue-status-grid">
+              <div className="pd-queue-status-item pd-queue-status-item--completed">
+                <span>Completed</span>
+                <strong>{queueCounts.completed}</strong>
+              </div>
+              <div className="pd-queue-status-item pd-queue-status-item--inprogress">
+                <span>In Consultation</span>
+                <strong>{queueCounts.inConsultation}</strong>
+              </div>
+              <div className="pd-queue-status-item pd-queue-status-item--waiting">
+                <span>Waiting</span>
+                <strong>{queueCounts.waiting}</strong>
+              </div>
+            </div>
+
+            <div className="pd-queue-note">
+              <span>You are here</span>
+              <strong>{tokenValue}</strong>
+            </div>
+          </section>
+        </div>
+
+        <div className="pd-right-column">
+          <section className="pd-card pd-actions-panel">
+            <div className="pd-section-header">
+              <div>
+                <h2>Quick Actions</h2>
+                <p>Common patient portal shortcuts.</p>
+              </div>
+            </div>
+
+            <div className="pd-action-grid">
+              <button type="button" className="pd-action-tile pd-action-tile--primary" onClick={handleBookAppointment}>
+                <Calendar size={22} />
+                <span>Book Appointment</span>
+              </button>
+              <button type="button" className="pd-action-tile" onClick={handleViewRecords}>
+                <FileText size={22} />
+                <span>View Records</span>
+              </button>
+              <button type="button" className="pd-action-tile" onClick={() => navigate("/patient/prescriptions") }>
+                <Pill size={22} />
+                <span>View Prescriptions</span>
+              </button>
+              <button type="button" className="pd-action-tile" onClick={() => navigate("/patient/bills") }>
+                <IndianRupee size={22} />
+                <span>View Bills & Payments</span>
+              </button>
+            </div>
+          </section>
+
+          <section className="pd-card pd-notifications-panel">
+          <div className="pd-section-header">
+            <div>
+              <h2>Upcoming Appointment</h2>
+              <p>Next scheduled visit and clinic details.</p>
+            </div>
+            <span className="pd-status-badge">{appointmentStatus}</span>
+          </div>
+
+          <div className="pd-appointment-card">
+            <div className="pd-doctor-info">
+              <div className="pd-doctor-avatar">{appointmentAvatar}</div>
+              <div className="pd-doctor-details">
+                <h3 className="pd-doctor-name">{appointmentDoctor}</h3>
+                <p className="pd-doctor-specialty">{appointmentSpecialization}</p>
+                <p className="pd-doctor-clinic">{appointmentClinic}</p>
+              </div>
+            </div>
+
+            {hasAppointment ? (
+              <>
+                <div className="pd-details-grid">
+                  <div className="pd-detail-row">
+                    <Clock size={16} />
+                    <span>{appointmentDate ? `${appointmentDate}${appointmentTime ? ` at ${appointmentTime}` : ""}` : appointmentStatus}</span>
+                  </div>
+                  <div className="pd-detail-row">
+                    <MapPin size={16} />
+                    <span>{appointmentLocation}</span>
+                  </div>
+                </div>
+
+                <div className="pd-appointment-actions">
+                  <button type="button" className="pd-action-btn pd-action-btn--primary" onClick={handleViewAppointmentDetails}>
+                    View details
+                  </button>
+                  <button type="button" className="pd-action-btn" onClick={handleReschedule}>
+                    Reschedule
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="pd-empty-state">
+                <p>No upcoming appointment is available from the backend yet.</p>
+                <button type="button" className="pd-action-btn pd-action-btn--primary" onClick={handleBookAppointment}>
+                  Book Appointment
+                </button>
+              </div>
+            )}
+
+            <div className="pd-profile-strip">
+              <div>
+                <span>Patient ID</span>
+                <strong>{selectedPatientId}</strong>
+              </div>
+              <div>
+                <span>Contact</span>
+                <strong>{selectedPatientPhone}</strong>
+              </div>
+              <div>
+                <span>Blood group</span>
+                <strong>{selectedPatientBloodGroup}</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="pd-card pd-notifications-panel">
+          <div className="pd-section-header">
+            <div>
+              <h2>
+                <Bell size={18} />
+                Notifications:
+              </h2>
+              <p>Recent updates from the care team and billing desk.</p>
+            </div>
+            <button type="button" className="pd-link-button" onClick={handleViewAllNotifications}>
+              View all
+            </button>
+          </div>
+
+          <div className="pd-notification-list">
+            {notificationItems.length ? (
+              notificationItems.map((notification) => (
+                <button
+                  key={notification.id}
+                  type="button"
+                  className={`pd-notification-item ${notification.id === selectedNotificationId ? "is-active" : ""} ${notification.read ? "is-read" : "is-unread"}`}
+                  onClick={() => setSelectedNotificationId(notification.id)}
+                >
+                  <span className="pd-notification-dot" />
+                  <span className="pd-notification-body">
+                    <strong>{notification.title}</strong>
+                    <span>{notification.message}</span>
+                    <em>{notification.date}</em>
+                  </span>
+                  <ChevronRight size={16} className="pd-notification-chevron" />
+                </button>
+              ))
+            ) : (
+              <div className="pd-empty-state pd-empty-state--compact">
+                <p>{notificationSummary}</p>
+              </div>
+            )}
+          </div>
+
+        </section>
+      </div>
+
+        <section className="pd-card pd-appointment-panel">
+          <div className="pd-section-header">
+            <div>
+              <h2>Upcoming Appointment</h2>
+              <p>Next scheduled visit and clinic details.</p>
+            </div>
+            <span className="pd-status-badge">{appointmentStatus}</span>
+          </div>
+
+          <div className="pd-appointment-card">
+            <div className="pd-doctor-info">
+              <div className="pd-doctor-avatar">{appointmentAvatar}</div>
+              <div className="pd-doctor-details">
+                <h3 className="pd-doctor-name">{appointmentDoctor}</h3>
+                <p className="pd-doctor-specialty">{appointmentSpecialization}</p>
+                <p className="pd-doctor-clinic">{appointmentClinic}</p>
+              </div>
+            </div>
+
+            {hasAppointment ? (
+              <>
+                <div className="pd-details-grid">
+                  <div className="pd-detail-row">
+                    <Clock size={16} />
+                    <span>{appointmentDate ? `${appointmentDate}${appointmentTime ? ` at ${appointmentTime}` : ""}` : appointmentStatus}</span>
+                  </div>
+                  <div className="pd-detail-row">
+                    <MapPin size={16} />
+                    <span>{appointmentLocation}</span>
+                  </div>
+                </div>
+
+                <div className="pd-appointment-actions">
+                  <button type="button" className="pd-action-btn pd-action-btn--primary" onClick={handleViewAppointmentDetails}>
+                    View details
+                  </button>
+                  <button type="button" className="pd-action-btn" onClick={handleReschedule}>
+                    Reschedule
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="pd-empty-state">
+                <p>No upcoming appointment is available from the backend yet.</p>
+                <button type="button" className="pd-action-btn pd-action-btn--primary" onClick={handleBookAppointment}>
+                  Book Appointment
+                </button>
+              </div>
+            )}
+
+            <div className="pd-profile-strip">
+              <div>
+                <span>Patient ID</span>
+                <strong>{selectedPatientId}</strong>
+              </div>
+              <div>
+                <span>Contact</span>
+                <strong>{selectedPatientPhone}</strong>
+              </div>
+              <div>
+                <span>Blood group</span>
+                <strong>{selectedPatientBloodGroup}</strong>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="pd-card pd-actions-panel">
+          <div className="pd-section-header">
+            <div>
+              <h2>Quick actions</h2>
+              <p>Frequent shortcuts for the patient portal.</p>
+            </div>
+          </div>
+
+          <div className="pd-action-grid">
+            <button type="button" className="pd-action-tile pd-action-tile--primary" onClick={handleBookAppointment}>
+              <Calendar size={22} />
+              <span>Book Appointment</span>
+            </button>
+            <button type="button" className="pd-action-tile" onClick={handleViewRecords}>
+              <FileText size={22} />
+              <span>View Records</span>
+            </button>
+            <button type="button" className="pd-action-tile" onClick={() => navigate("/patient/prescriptions")}>
+              <Pill size={22} />
+              <span>View Prescriptions</span>
+            </button>
+            <button type="button" className="pd-action-tile" onClick={() => navigate("/patient/bills")}>
+              <IndianRupee size={22} />
+              <span>View Bills & Payments</span>
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+  */
+}
+
+export default PatientDashboard;

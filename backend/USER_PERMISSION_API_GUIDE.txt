@@ -1,0 +1,75 @@
+ADMIN -> DOCTOR / RECEPTIONIST USER PERMISSIONS
+================================================
+
+Admin can assign module-wise permissions only to active Doctor and Receptionist
+users belonging to the same hospital.
+
+Allowed modules:
+- Dashboard
+- Appointments
+- Patients
+- Billing
+- Reports
+- Schedule
+- Prescriptions
+
+1. List modules
+GET /api/user-permissions/modules
+Authorization: Bearer <Admin token>
+
+2. List eligible Doctor / Receptionist users
+GET /api/user-permissions/eligible-users
+GET /api/user-permissions/eligible-users?role=Doctor
+GET /api/user-permissions/eligible-users?role=Receptionist
+Authorization: Bearer <Admin token>
+
+3. Get one user's current permissions
+GET /api/user-permissions/users/{userId}
+Authorization: Bearer <Admin token>
+
+4. Assign or replace permissions
+PUT /api/user-permissions/users/{userId}
+Authorization: Bearer <Admin token>
+Content-Type: application/json
+
+Example:
+{
+  "permissions": [
+    {
+      "module": "Appointments",
+      "canView": true,
+      "canCreate": true,
+      "canEdit": true,
+      "canDelete": false
+    },
+    {
+      "module": "Patients",
+      "canView": true,
+      "canCreate": false,
+      "canEdit": false,
+      "canDelete": false
+    }
+  ]
+}
+
+5. Remove all permissions
+DELETE /api/user-permissions/users/{userId}
+Authorization: Bearer <Admin token>
+
+6. Doctor / Receptionist gets own permissions
+GET /api/user-permissions/me
+Authorization: Bearer <Doctor or Receptionist token>
+
+The common login response also returns:
+"permissions": [ ... ]
+
+Frontend rule example:
+- Hide module when canView is false.
+- Disable Add button when canCreate is false.
+- Disable Edit button when canEdit is false.
+- Disable Delete button when canDelete is false.
+
+Database migration:
+20260728090000_AddUserPermissions
+The application already calls Database.Migrate() during startup, so the new table
+will be created when the updated API starts against the database.

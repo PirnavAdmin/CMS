@@ -1,0 +1,141 @@
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
+
+#nullable disable
+
+namespace AuthDemo.Migrations
+{
+    /// <inheritdoc />
+    public partial class CreateDoctorBranchesAndBillingColumns : Migration
+    {
+        /// <inheritdoc />
+        protected override void Up(MigrationBuilder migrationBuilder)
+        {
+            // Add billing type, branch and GST-related columns.
+            migrationBuilder.AddColumn<string>(
+                name: "BillingType",
+                table: "Billings",
+                type: "nvarchar(50)",
+                maxLength: 50,
+                nullable: false,
+                defaultValue: "OP");
+
+            migrationBuilder.AddColumn<int>(
+                name: "BranchId",
+                table: "Billings",
+                type: "int",
+                nullable: true);
+
+            migrationBuilder.AddColumn<decimal>(
+                name: "SubTotal",
+                table: "Billings",
+                type: "decimal(18,2)",
+                nullable: false,
+                defaultValue: 0m);
+
+            migrationBuilder.AddColumn<decimal>(
+                name: "GstPercentage",
+                table: "Billings",
+                type: "decimal(18,2)",
+                nullable: false,
+                defaultValue: 0m);
+
+            migrationBuilder.AddColumn<decimal>(
+                name: "GstAmount",
+                table: "Billings",
+                type: "decimal(18,2)",
+                nullable: false,
+                defaultValue: 0m);
+
+            // Create the doctor-to-branch mapping table.
+            migrationBuilder.CreateTable(
+                name: "DoctorBranches",
+                columns: table => new
+                {
+                    Id = table.Column<int>(
+                            type: "int",
+                            nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+
+                    DoctorId = table.Column<int>(
+                        type: "int",
+                        nullable: false),
+
+                    BranchId = table.Column<int>(
+                        type: "int",
+                        nullable: false),
+
+                    HospitalId = table.Column<int>(
+                        type: "int",
+                        nullable: false),
+
+                    IsActive = table.Column<bool>(
+                        type: "bit",
+                        nullable: false,
+                        defaultValue: true),
+
+                    CreatedAt = table.Column<DateTime>(
+                        type: "datetime2",
+                        nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey(
+                     "PK_DoctorBranches",
+                         x => x.Id);
+
+                    table.ForeignKey(
+                        name: "FK_DoctorBranches_Branches_BranchId",
+                        column: x => x.BranchId,
+                        principalTable: "Branches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+
+                    table.ForeignKey(
+                        name: "FK_DoctorBranches_Doctors_DoctorId",
+                        column: x => x.DoctorId,
+                        principalTable: "Doctors",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DoctorBranches_BranchId",
+                table: "DoctorBranches",
+                column: "BranchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DoctorBranches_DoctorId_BranchId",
+                table: "DoctorBranches",
+                columns: new[] { "DoctorId", "BranchId" },
+                unique: true);
+        }
+
+        /// <inheritdoc />
+        protected override void Down(MigrationBuilder migrationBuilder)
+        {
+            migrationBuilder.DropTable(
+                name: "DoctorBranches");
+
+            migrationBuilder.DropColumn(
+                name: "BillingType",
+                table: "Billings");
+
+            migrationBuilder.DropColumn(
+                name: "BranchId",
+                table: "Billings");
+
+            migrationBuilder.DropColumn(
+                name: "SubTotal",
+                table: "Billings");
+
+            migrationBuilder.DropColumn(
+                name: "GstPercentage",
+                table: "Billings");
+
+            migrationBuilder.DropColumn(
+                name: "GstAmount",
+                table: "Billings");
+        }
+    }
+}
