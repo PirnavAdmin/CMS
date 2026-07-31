@@ -1,4 +1,4 @@
-const DEFAULT_API_BASE_URL = "https://bounding-irate-manatee.ngrok-free.dev";
+const DEFAULT_API_BASE_URL = "http://13.207.31.165:5000";
 const DEFAULT_API_ASSET_BASE_URL = DEFAULT_API_BASE_URL;
 
 export const API_BASE_URL = (

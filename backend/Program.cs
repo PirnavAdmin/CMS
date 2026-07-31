@@ -301,7 +301,13 @@ app.UseSwaggerUI();
 
 
 
-app.UseHttpsRedirection();
+if (!string.Equals(
+        builder.Configuration["ASPNETCORE_DISABLE_HTTPS_REDIRECTION"],
+        "true",
+        StringComparison.OrdinalIgnoreCase))
+{
+    app.UseHttpsRedirection();
+}
 
 
 app.UseStaticFiles();
