@@ -16,9 +16,9 @@ Update production secrets before the first deploy:
 
 The backend database connection currently uses:
 
-- Database: `cmsdb`
-- User: `cmsuser`
-- Server: `13.207.31.165`
+- Database: `ClinicalManagementSystemDB`
+- User: `sa`
+- Server: `13.207.31.165,1433`
 
 Start the stack from the repository root:
 
