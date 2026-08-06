@@ -1,14 +1,14 @@
 # EC2 Docker Deployment
 
-The deployment is configured for Elastic IP `13.207.31.165`.
+The deployment is configured for Elastic IP `3.7.108.129`.
 
 - `frontend/.env`
 - `frontend/src/config/api.jsx`
 
 Use the requested ports:
 
-- Frontend: `http://13.207.31.165:3000`
-- Backend: `http://13.207.31.165:5000`
+- Frontend: `http://3.7.108.129:3000`
+- Backend: `http://3.7.108.129:5000`
 
 Update production secrets before the first deploy:
 
@@ -18,7 +18,7 @@ The backend database connection currently uses:
 
 - Database: `ClinicalManagementSystemDB`
 - User: `sa`
-- Server: `13.207.31.165,1433`
+- Server: `3.7.108.129,1433`
 
 Start the stack from the repository root:
 
