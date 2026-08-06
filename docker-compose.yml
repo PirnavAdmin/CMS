@@ -1,32 +1,6 @@
+version: "3.8"
+
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: cms-backend
-    env_file:
-      - ./backend/.env
-    ports:
-      - "5000:5000"
-    volumes:
-      - ./backend/wwwroot:/app/wwwroot
-      - ./backend/uploads:/app/uploads
-    restart: unless-stopped
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    container_name: cms-frontend
-    env_file:
-      - ./frontend/.env
-    depends_on:
-      - backend
-    ports:
-      - "3000:3000"
-    restart: unless-stopped
-
-    services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: cms-sqlserver
@@ -48,6 +22,36 @@ services:
       interval: 20s
       timeout: 10s
       retries: 15
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: cms-backend
+    env_file:
+      - ./backend/.env
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/wwwroot:/app/wwwroot
+      - ./backend/uploads:/app/uploads
+    restart: unless-stopped
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: cms-frontend
+    env_file:
+      - ./frontend/.env
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
 
 volumes:
   sqlserver_data:
