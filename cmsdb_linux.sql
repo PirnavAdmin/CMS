@@ -1,4 +1,4 @@
-USE [master]
+USE [cmsdb]
 GO
 /* SQLINES DEMO *** atabase [ClinicalManagementSystemDB]    Script Date: 7/31/2026 5:43:27 PM ******/
 CREATE DATABASE [ClinicalManagementSystemDB]
@@ -2034,7 +2034,7 @@ REFERENCES [dbo].[Hospitals]([Id])
 GO
 /* ALTER TABLE [dbo].[Users] CHECK CONSTRAINT [FK_Users_Hospitals_HospitalId] */
 GO
-USE [master]
+USE [cmddb]
 GO
 ALTER DATABASE [ClinicalManagementSystemDB] SET  READ_WRITE 
 GO
