@@ -1,0 +1,311 @@
+.doctor-schedule-page {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 32px 36px 44px;
+  color: #0f172a;
+}
+
+.ds-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ds-head h2 {
+  margin: 0;
+  font-size: 34px;
+  line-height: 1.15;
+  letter-spacing: 0;
+}
+
+.ds-head p,
+.ds-note {
+  margin: 8px 0 0;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.ds-alert {
+  border-radius: 8px;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  font-weight: 700;
+}
+
+.ds-alert.error {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+
+.ds-alert.success {
+  background: #ecfdf5;
+  border-color: #bbf7d0;
+  color: #047857;
+}
+
+.ds-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+
+.ds-card {
+  background: #ffffff;
+  border: 1px solid #dbe5f2;
+  border-radius: 8px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+  padding: 22px;
+}
+
+.ds-card h3 {
+  margin: 0 0 18px;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.ds-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 14px;
+  color: #334155;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.ds-card input,
+.ds-card select,
+.ds-card textarea {
+  width: 100%;
+  min-height: 42px;
+  box-sizing: border-box;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+  font-size: 15px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ds-card textarea {
+  min-height: 94px;
+  resize: vertical;
+}
+
+.ds-card input:focus,
+.ds-card select:focus,
+.ds-card textarea:focus {
+  border-color: #0f9d9d;
+  box-shadow: 0 0 0 3px rgba(15, 157, 157, 0.14);
+}
+
+.ds-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.ds-days {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(44px, 1fr));
+  gap: 8px;
+  margin: 4px 0 16px;
+}
+
+.ds-days button {
+  min-height: 38px;
+  border: 1px solid #dbe5f2;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.ds-days button.active {
+  background: #0f9d9d;
+  border-color: #0f9d9d;
+  color: #ffffff;
+}
+
+.ds-primary,
+.ds-secondary,
+.ds-overrides-card button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 10px 16px;
+}
+
+.ds-primary {
+  width: 100%;
+  background: #0f9d9d;
+  color: #ffffff;
+}
+
+.ds-secondary {
+  background: #eef6f7;
+  color: #0f766e;
+  border: 1px solid #b7e2e2;
+}
+
+.ds-primary:disabled,
+.ds-secondary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.ds-preview-card {
+  min-height: 100%;
+}
+
+.ds-slots {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.ds-slot {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 10px;
+  border: 1px solid #dbe5f2;
+  border-left-width: 4px;
+  border-radius: 8px;
+  padding: 11px 12px;
+  background: #f8fafc;
+}
+
+.ds-slot strong {
+  font-size: 14px;
+}
+
+.ds-slot span {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.ds-slot small {
+  grid-column: 1 / -1;
+  color: #64748b;
+}
+
+.ds-slot.available {
+  border-left-color: #16a34a;
+}
+
+.ds-slot.available span {
+  color: #15803d;
+}
+
+.ds-slot.booked {
+  border-left-color: #dc2626;
+}
+
+.ds-slot.booked span {
+  color: #b91c1c;
+}
+
+.ds-empty {
+  border: 1px dashed #cbd5e1;
+  border-radius: 8px;
+  color: #64748b;
+  padding: 18px;
+  text-align: center;
+}
+
+.ds-overrides-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.ds-overrides-card h3 {
+  margin: 0;
+  padding: 20px 22px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ds-table-wrap {
+  overflow-x: auto;
+}
+
+.ds-overrides-card table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+
+.ds-overrides-card th,
+.ds-overrides-card td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 14px;
+}
+
+.ds-overrides-card th {
+  background: #f8fafc;
+  color: #334155;
+  font-size: 13px;
+  text-transform: uppercase;
+}
+
+.ds-overrides-card td:last-child {
+  display: flex;
+  gap: 8px;
+}
+
+.ds-overrides-card button {
+  min-height: 34px;
+  padding: 7px 11px;
+  background: #eef6f7;
+  color: #0f766e;
+}
+
+.ds-overrides-card button.danger {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+@media (max-width: 1280px) {
+  .ds-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ds-preview-card {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 780px) {
+  .doctor-schedule-page {
+    padding: 22px 18px 34px;
+  }
+
+  .ds-head h2 {
+    font-size: 28px;
+  }
+
+  .ds-grid,
+  .ds-two {
+    grid-template-columns: 1fr;
+  }
+
+  .ds-days {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
