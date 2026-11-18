@@ -147,12 +147,12 @@ public class PatientPortalController : ControllerBase
         return true;
     }
 
-    // All appointment writers must lock the same hospital row in a SQL Server
+    // All appointment writers must lock the same hospital row in MySQL
     // SERIALIZABLE transaction before checking the shared clinic quota.
     private async Task<bool> LockClinicForBookingAsync(int hospitalId)
     {
         var lockedId = await _context.Hospitals
-            .FromSqlInterpolated($"SELECT * FROM [Hospitals] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {hospitalId}")
+            .FromSqlInterpolated($"SELECT * FROM Hospitals WHERE Id = {hospitalId} FOR UPDATE")
             .AsNoTracking()
             .Select(x => x.Id)
             .FirstOrDefaultAsync();

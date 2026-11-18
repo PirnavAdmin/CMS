@@ -1,4 +1,4 @@
-﻿
+
 using System;
 using System.Data;
 using System.Linq;
@@ -56,7 +56,7 @@ public sealed class HospitalPaymentAllocationService
         // Lock the payment order for allocation.
         var order = await _db.HospitalPaymentOrders
             .FromSqlInterpolated(
-                $"SELECT * FROM [HospitalPaymentOrders] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {orderId} AND [HospitalId] = {hospitalId}")
+                $"SELECT * FROM HospitalPaymentOrders WHERE Id = {orderId} AND HospitalId = {hospitalId} FOR UPDATE")
             .SingleOrDefaultAsync(cancellationToken);
 
         if (order == null ||
@@ -118,7 +118,7 @@ public sealed class HospitalPaymentAllocationService
         // Lock the invoice before calculating the balance.
         var bill = await _db.Billings
             .FromSqlInterpolated(
-                $"SELECT * FROM [Billings] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {order.BillingId} AND [HospitalId] = {hospitalId}")
+                $"SELECT * FROM Billings WHERE Id = {order.BillingId} AND HospitalId = {hospitalId} FOR UPDATE")
             .SingleOrDefaultAsync(cancellationToken);
 
         if (bill == null)
@@ -253,7 +253,7 @@ public sealed class HospitalPaymentAllocationService
         // Lock the QR record.
         var qr = await _db.HospitalPaymentQrs
             .FromSqlInterpolated(
-                $"SELECT * FROM [HospitalPaymentQrs] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {qrId} AND [HospitalId] = {hospitalId}")
+                $"SELECT * FROM HospitalPaymentQrs WHERE Id = {qrId} AND HospitalId = {hospitalId} FOR UPDATE")
             .SingleOrDefaultAsync(cancellationToken);
 
         if (qr == null ||
@@ -309,7 +309,7 @@ public sealed class HospitalPaymentAllocationService
         // Lock the invoice.
         var bill = await _db.Billings
             .FromSqlInterpolated(
-                $"SELECT * FROM [Billings] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {qr.BillingId} AND [HospitalId] = {hospitalId}")
+                $"SELECT * FROM Billings WHERE Id = {qr.BillingId} AND HospitalId = {hospitalId} FOR UPDATE")
             .SingleOrDefaultAsync(cancellationToken);
 
         if (bill == null)

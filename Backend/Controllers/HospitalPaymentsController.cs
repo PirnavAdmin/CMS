@@ -1530,12 +1530,12 @@ public sealed class HospitalPaymentsController : ControllerBase
         string mode;
         int? credentialId;
 
-        // Reserve the refundable balance under a SQL Server update lock.
+        // Reserve the refundable balance under a MySQL row lock.
         // No external Razorpay request is made while holding this transaction.
         await using (var reservation = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable))
         {
             var transaction = await _db.HospitalPaymentTransactions
-                .FromSqlInterpolated($"SELECT * FROM [HospitalPaymentTransactions] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {transactionId}")
+                .FromSqlInterpolated($"SELECT * FROM HospitalPaymentTransactions WHERE Id = {transactionId} FOR UPDATE")
                 .SingleOrDefaultAsync();
 
             if (transaction == null || transaction.HospitalId != HospitalId)
@@ -1626,7 +1626,7 @@ public sealed class HospitalPaymentsController : ControllerBase
             // Reload under a lock: the webhook may have completed the refund first.
             await using var resultTx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
             var saved = await _db.HospitalPaymentRefunds
-                .FromSqlInterpolated($"SELECT * FROM [HospitalPaymentRefunds] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {refund.Id}")
+                .FromSqlInterpolated($"SELECT * FROM HospitalPaymentRefunds WHERE Id = {refund.Id} FOR UPDATE")
                 .SingleAsync();
 
             if (!saved.GatewayRefundId.StartsWith("REQUESTED-", StringComparison.Ordinal) &&
@@ -1690,7 +1690,7 @@ public sealed class HospitalPaymentsController : ControllerBase
             {
                 await using var checkScope = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
                 var saved = await _db.HospitalPaymentRefunds
-                    .FromSqlInterpolated($"SELECT * FROM [HospitalPaymentRefunds] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {refund.Id}")
+                    .FromSqlInterpolated($"SELECT * FROM HospitalPaymentRefunds WHERE Id = {refund.Id} FOR UPDATE")
                     .SingleOrDefaultAsync();
                 if (saved != null && saved.Status is not ("processed" or "failed"))
                 {

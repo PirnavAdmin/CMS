@@ -85,7 +85,7 @@ public sealed class HospitalReconciliationDiscoveryWorker : BackgroundService
         await using var scope = _scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        // A SQL Server session lease prevents overlapping worker iterations
+        // A MySQL named session lock prevents overlapping worker iterations
         // across application instances sharing the same database.
         await db.Database.OpenConnectionAsync(ct);
         var connection = db.Database.GetDbConnection();
@@ -94,15 +94,8 @@ public sealed class HospitalReconciliationDiscoveryWorker : BackgroundService
         {
             await using (var command = connection.CreateCommand())
             {
-                command.CommandText = @"
-DECLARE @result INT;
-EXEC @result = sp_getapplock
-    @Resource = N'Adminclinic:HospitalReconciliationDiscovery:v1',
-    @LockMode = N'Exclusive',
-    @LockOwner = N'Session',
-    @LockTimeout = 0;
-SELECT @result;";
-                acquired = Convert.ToInt32(await command.ExecuteScalarAsync(ct)) >= 0;
+                command.CommandText = "SELECT GET_LOCK('Adminclinic:HospitalReconciliationDiscovery:v1', 0)";
+                acquired = Convert.ToInt32(await command.ExecuteScalarAsync(ct)) == 1;
             }
 
             if (!acquired)
@@ -236,11 +229,8 @@ SELECT @result;";
                 try
                 {
                     await using var release = connection.CreateCommand();
-                    release.CommandText = @"
-EXEC sp_releaseapplock
-    @Resource = N'Adminclinic:HospitalReconciliationDiscovery:v1',
-    @LockOwner = N'Session';";
-                    await release.ExecuteNonQueryAsync(CancellationToken.None);
+                    release.CommandText = "SELECT RELEASE_LOCK('Adminclinic:HospitalReconciliationDiscovery:v1')";
+                    await release.ExecuteScalarAsync(CancellationToken.None);
                 }
                 catch (Exception ex)
                 {

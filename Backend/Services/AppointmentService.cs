@@ -1,4 +1,4 @@
-﻿using AuthDemo.Data;
+using AuthDemo.Data;
 using AuthDemo.DTOs;
 using AuthDemo.Helpers;
 using AuthDemo.Models;
@@ -167,7 +167,7 @@ public class AppointmentService : IAppointmentService
             IsolationLevel.Serializable);
 
         var lockedHospitalId = await _context.Hospitals
-            .FromSqlInterpolated($"SELECT * FROM [Hospitals] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {hospitalId}")
+            .FromSqlInterpolated($"SELECT * FROM Hospitals WHERE Id = {hospitalId} FOR UPDATE")
             .AsNoTracking()
             .Select(x => x.Id)
             .FirstOrDefaultAsync();

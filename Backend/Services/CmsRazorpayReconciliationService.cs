@@ -95,12 +95,12 @@ public sealed class CmsRazorpayReconciliationService
         // Use the same locking order for every capture reconciliation.
         var lockedPurchase = await _db.SubscriptionPurchases
             .FromSqlInterpolated(
-                $"SELECT * FROM [SubscriptionPurchases] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {purchase.Id}")
+                $"SELECT * FROM SubscriptionPurchases WHERE Id = {purchase.Id} FOR UPDATE")
             .SingleAsync();
 
         var lockedEvent = await _db.CmsPaymentWebhookEvents
             .FromSqlInterpolated(
-                $"SELECT * FROM [CmsPaymentWebhookEvents] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {eventId}")
+                $"SELECT * FROM CmsPaymentWebhookEvents WHERE Id = {eventId} FOR UPDATE")
             .SingleAsync();
 
         if (lockedEvent.ProcessingStatus == "Processed")

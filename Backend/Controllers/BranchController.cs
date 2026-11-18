@@ -125,10 +125,11 @@ public class BranchController : ControllerBase
 
     private async Task LockHospitalAsync(int hospitalId)
     {
-        // SQL Server transaction-scoped lock serializes writes across all branches
-        // of this hospital. This controller already targets SQL Server.
-        await _context.Database.ExecuteSqlInterpolatedAsync(
-            $"SELECT 1 FROM [Hospitals] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {hospitalId}");
+        // Lock the hospital row to serialize branch capacity changes.
+        await _context.Hospitals
+            .FromSqlInterpolated($"SELECT * FROM Hospitals WHERE Id = {hospitalId} FOR UPDATE")
+            .Select(h => h.Id)
+            .FirstOrDefaultAsync();
     }
 
     [HttpPost]

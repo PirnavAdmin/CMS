@@ -324,7 +324,7 @@ public class AppDbContext
             entity.Property(x => x.KycNotes).HasMaxLength(500);
             entity.ToTable(t => t.HasCheckConstraint(
                 "CK_CmsOwnerMerchantSettings_Mode",
-                "[Mode] IN ('Test', 'Live')"));
+                "Mode IN ('Test', 'Live')"));
         });
 
         modelBuilder.Entity<HospitalMerchantSetting>(entity =>
@@ -344,7 +344,7 @@ public class AppDbContext
                 .OnDelete(DeleteBehavior.Restrict);
             entity.ToTable(t => t.HasCheckConstraint(
                 "CK_HospitalMerchantSettings_Mode",
-                "[Mode] IN ('Test', 'Live')"));
+                "Mode IN ('Test', 'Live')"));
         });
 
         // =================================================
@@ -399,10 +399,10 @@ public class AppDbContext
             entity.HasIndex(x => x.OriginalSubscriptionId);
             entity.HasIndex(x => x.GatewayOrderId)
                 .IsUnique()
-                .HasFilter("[GatewayOrderId] IS NOT NULL");
+                ;
             entity.HasIndex(x => x.GatewayPaymentId)
                 .IsUnique()
-                .HasFilter("[GatewayPaymentId] IS NOT NULL");
+                ;
             // Pin CMS subscription orders to the credential used at creation.
             // Nullable to preserve historical purchases.
             entity.Property(x => x.RazorpayCredentialId).IsRequired(false);
@@ -430,7 +430,7 @@ public class AppDbContext
             entity.HasIndex(x => new { x.PurchaseType, x.AdminUserId, x.HospitalId });
             entity.HasIndex(x => x.TransactionReference)
                 .IsUnique()
-                .HasFilter("[TransactionReference] IS NOT NULL");
+                ;
             entity.HasIndex(x => new { x.AdminUserId, x.PaymentStatus });
             entity.HasIndex(x => new { x.HospitalId, x.ActivatedAt });
         });
@@ -502,7 +502,7 @@ public class AppDbContext
             entity.Property(x => x.UnitPrice).HasPrecision(18, 2);
             entity.Property(x => x.GstPercentage).HasPrecision(5, 2);
             entity.ToTable(t => t.HasCheckConstraint(
-                "CK_PharmacyOtcSaleItems_Quantity", "[Quantity] > 0"));
+                "CK_PharmacyOtcSaleItems_Quantity", "Quantity > 0"));
             entity.HasOne<Medicine>().WithMany()
                 .HasForeignKey(x => x.MedicineId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -518,7 +518,7 @@ public class AppDbContext
             entity.Property(x => x.SellingPrice).HasPrecision(18, 2);
             entity.ToTable(t => t.HasCheckConstraint(
                 "CK_PharmacyStockBatches_Quantity",
-                "[Quantity] >= 0"));
+                "Quantity >= 0"));
             entity.HasIndex(x => new
             {
                 x.HospitalId,
@@ -584,7 +584,7 @@ public class AppDbContext
         // LAB MANAGEMENT
         // =================================================
         // Explicit SQL table mapping for the lab test catalogue.
-        // Keep this name consistent with the EF migration and SQL Server.
+        // Keep this name stable for the migrated database schema.
         modelBuilder.Entity<LabTestMaster>()
             .ToTable("LabTestMasters", "dbo");
 
@@ -1253,11 +1253,11 @@ public class AppDbContext
 
             entity.HasIndex(x => new { x.NotificationId, x.UserId })
                 .IsUnique()
-                .HasFilter("[UserId] IS NOT NULL");
+                ;
 
             entity.HasIndex(x => new { x.NotificationId, x.SuperAdminId })
                 .IsUnique()
-                .HasFilter("[SuperAdminId] IS NOT NULL");
+                ;
 
             entity.HasOne(x => x.Notification)
                 .WithMany(x => x.NotificationReads)
@@ -1276,8 +1276,8 @@ public class AppDbContext
 
             entity.ToTable(t => t.HasCheckConstraint(
                 "CK_NotificationReads_OneRecipient",
-                "([UserId] IS NOT NULL AND [SuperAdminId] IS NULL) OR " +
-                "([UserId] IS NULL AND [SuperAdminId] IS NOT NULL)"));
+                "(UserId IS NOT NULL AND SuperAdminId IS NULL) OR " +
+                "(UserId IS NULL AND SuperAdminId IS NOT NULL)"));
         });
 
         //Schedule → Branch(if applicable)
@@ -1383,7 +1383,7 @@ public class AppDbContext
 
             entity.HasIndex(x => x.InvoiceNumber)
                 .IsUnique()
-                .HasFilter("[InvoiceNumber] IS NOT NULL");
+                ;
 
             // =================================================
             // STEP 4: DISCOUNT AND GST BREAKDOWN
@@ -1458,7 +1458,7 @@ public class AppDbContext
         modelBuilder.Entity<PrescriptionItem>()
             .ToTable(t => t.HasCheckConstraint(
                 "CK_PrescriptionItems_PrescribedQuantity",
-                "[PrescribedQuantity] >= 0"));
+                "PrescribedQuantity >= 0"));
         modelBuilder.Entity<BillingPaymentTransaction>(entity =>
         {
             entity.HasKey(x => x.Id);
@@ -1484,7 +1484,7 @@ public class AppDbContext
             entity.HasIndex(x => x.ReferenceNumber)
                 .IsUnique()
                 .HasDatabaseName("UX_BillingPaymentTransactions_RazorpayReference")
-                .HasFilter("[PaymentMethod] = 'Razorpay' AND [ReferenceNumber] IS NOT NULL");
+                ;
 
             entity.HasOne(x => x.Billing)
                 .WithMany(x => x.PaymentTransactions)
@@ -1578,9 +1578,9 @@ public class AppDbContext
             entity.Property(x => x.ImageUrl).HasMaxLength(2048);
             entity.HasIndex(x => x.LocalReference).IsUnique();
             entity.HasIndex(x => x.GatewayQrId).IsUnique()
-                .HasFilter("[GatewayQrId] IS NOT NULL");
+                ;
             entity.HasIndex(x => x.GatewayPaymentId)
-                .HasFilter("[GatewayPaymentId] IS NOT NULL");
+                ;
             entity.HasIndex(x => new { x.HospitalId, x.BillingId, x.Status });
             entity.HasOne<Billing>().WithMany()
                 .HasForeignKey(x => x.BillingId).OnDelete(DeleteBehavior.Restrict);
@@ -1608,8 +1608,8 @@ public class AppDbContext
                 .HasForeignKey(x => x.RazorpayCredentialId)
                 .OnDelete(DeleteBehavior.Restrict);
             entity.HasIndex(x => x.LocalOrderId).IsUnique();
-            entity.HasIndex(x => x.GatewayOrderId).IsUnique().HasFilter("[GatewayOrderId] IS NOT NULL");
-            entity.HasIndex(x => new { x.HospitalId, x.IdempotencyKey }).IsUnique().HasFilter("[IdempotencyKey] IS NOT NULL");
+            entity.HasIndex(x => x.GatewayOrderId).IsUnique();
+            entity.HasIndex(x => new { x.HospitalId, x.IdempotencyKey }).IsUnique();
             entity.HasIndex(x => new { x.HospitalId, x.BillingId, x.Status });
             entity.HasOne<Billing>().WithMany().HasForeignKey(x => x.BillingId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<Hospital>().WithMany().HasForeignKey(x => x.HospitalId).OnDelete(DeleteBehavior.Restrict);
@@ -1637,16 +1637,16 @@ public class AppDbContext
             entity.Property(x => x.SettlementReconciliationStatus)
                 .HasMaxLength(30).IsRequired().HasDefaultValue("Pending");
             entity.Property(x => x.SettlementReconciliationNotes).HasMaxLength(1000);
-            entity.Property(x => x.GatewaySettledAtUtc).HasColumnType("datetime2");
-            entity.Property(x => x.SettlementReconciledAtUtc).HasColumnType("datetime2");
+            entity.Property(x => x.GatewaySettledAtUtc);
+            entity.Property(x => x.SettlementReconciledAtUtc);
             entity.HasIndex(x => new { x.HospitalId, x.Mode, x.GatewaySettlementId })
                 .HasDatabaseName("IX_HospitalPaymentTransactions_SettlementLookup")
-                .HasFilter("[GatewaySettlementId] IS NOT NULL");
+                ;
 
             entity.HasIndex(x => x.GatewayPaymentId).IsUnique();
             entity.HasIndex(x => new { x.HospitalId, x.BillingId });
             entity.HasIndex(x => x.HospitalPaymentQrId)
-                .HasFilter("[HospitalPaymentQrId] IS NOT NULL");
+                ;
 
             entity.HasOne(x => x.Order).WithMany()
                 .HasForeignKey(x => x.HospitalPaymentOrderId)
@@ -1666,8 +1666,8 @@ public class AppDbContext
             // Exactly one source is required; do not permit unlinked payment rows.
             entity.ToTable(t => t.HasCheckConstraint(
                 "CK_HospitalPaymentTransactions_Source",
-                "([PaymentSource] = 'Order' AND [HospitalPaymentOrderId] IS NOT NULL AND [HospitalPaymentQrId] IS NULL AND [GatewayOrderId] IS NOT NULL) " +
-                "OR ([PaymentSource] = 'Qr' AND [HospitalPaymentQrId] IS NOT NULL AND [HospitalPaymentOrderId] IS NULL AND [GatewayOrderId] IS NULL)"));
+                "(PaymentSource = 'Order' AND HospitalPaymentOrderId IS NOT NULL AND HospitalPaymentQrId IS NULL AND GatewayOrderId IS NOT NULL) " +
+                "OR (PaymentSource = 'Qr' AND HospitalPaymentQrId IS NOT NULL AND HospitalPaymentOrderId IS NULL AND GatewayOrderId IS NULL)"));
         });
 
         modelBuilder.Entity<HospitalPaymentWebhookEvent>(entity =>
@@ -1697,11 +1697,11 @@ public class AppDbContext
             entity.Property(x => x.SettlementReconciliationStatus)
                 .HasMaxLength(30).IsRequired().HasDefaultValue("Pending");
             entity.Property(x => x.SettlementReconciliationNotes).HasMaxLength(1000);
-            entity.Property(x => x.GatewaySettledAtUtc).HasColumnType("datetime2");
-            entity.Property(x => x.SettlementReconciledAtUtc).HasColumnType("datetime2");
+            entity.Property(x => x.GatewaySettledAtUtc);
+            entity.Property(x => x.SettlementReconciledAtUtc);
             entity.HasIndex(x => new { x.HospitalId, x.GatewaySettlementId })
                 .HasDatabaseName("IX_HospitalPaymentRefunds_SettlementLookup")
-                .HasFilter("[GatewaySettlementId] IS NOT NULL");
+                ;
             entity.HasIndex(x => x.GatewayRefundId).IsUnique();
             entity.HasOne(x => x.Transaction).WithMany().HasForeignKey(x => x.HospitalPaymentTransactionId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<Hospital>().WithMany().HasForeignKey(x => x.HospitalId).OnDelete(DeleteBehavior.Restrict);
@@ -1730,9 +1730,9 @@ public class AppDbContext
             entity.Property(x => x.ReconciliationNotes).HasMaxLength(1000);
             entity.Property(x => x.ReconciliationAttemptCount).HasDefaultValue(0);
             entity.Property(x => x.RequiresManualReview).HasDefaultValue(false);
-            entity.Property(x => x.LastReconciliationAttemptAtUtc).HasColumnType("datetime2");
-            entity.Property(x => x.ReconciledAtUtc).HasColumnType("datetime2");
-            entity.Property(x => x.UpdatedAtUtc).HasColumnType("datetime2");
+            entity.Property(x => x.LastReconciliationAttemptAtUtc);
+            entity.Property(x => x.ReconciledAtUtc);
+            entity.Property(x => x.UpdatedAtUtc);
             entity.HasIndex(x => new { x.HospitalId, x.Mode, x.SettlementId })
                 .HasDatabaseName("IX_HospitalSettlementRecords_ModeLookup");
             entity.HasIndex(x => new { x.HospitalId, x.SettlementId, x.HospitalPaymentTransactionId }).IsUnique();
@@ -1754,10 +1754,10 @@ public class AppDbContext
             entity.Property(x => x.Reason).HasMaxLength(300);
             entity.HasIndex(x => x.GatewayRefundId).IsUnique();
             entity.HasIndex(x => x.GatewayPaymentId)
-                .HasFilter("[GatewayPaymentId] IS NOT NULL");
+                ;
             entity.HasIndex(x => new { x.SubscriptionPurchaseId, x.IdempotencyKey })
                 .IsUnique()
-                .HasFilter("[IdempotencyKey] IS NOT NULL");
+                ;
             entity.HasOne<SubscriptionPurchase>().WithMany().HasForeignKey(x => x.SubscriptionPurchaseId).OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -1784,7 +1784,7 @@ public class AppDbContext
             entity.Property(x => x.Currency).HasMaxLength(10);
             entity.Property(x => x.Reason).HasMaxLength(300);
             entity.Property(x => x.Status).HasMaxLength(40).IsRequired();
-            entity.Property(x => x.EvidenceDocumentIdsJson).IsRequired().HasDefaultValue("[]");
+            entity.Property(x => x.EvidenceDocumentIdsJson).IsRequired().HasDefaultValue("");
             entity.HasIndex(x => new { x.HospitalId, x.GatewayDisputeId }).IsUnique();
             entity.HasIndex(x => new { x.HospitalId, x.Status });
             entity.HasOne(x => x.Transaction).WithMany().HasForeignKey(x => x.HospitalPaymentTransactionId).OnDelete(DeleteBehavior.Restrict);
@@ -1800,7 +1800,7 @@ public class AppDbContext
             entity.Property(x => x.Currency).HasMaxLength(10);
             entity.Property(x => x.Reason).HasMaxLength(300);
             entity.Property(x => x.Status).HasMaxLength(40).IsRequired();
-            entity.Property(x => x.EvidenceDocumentIdsJson).IsRequired().HasDefaultValue("[]");
+            entity.Property(x => x.EvidenceDocumentIdsJson).IsRequired().HasDefaultValue("");
             entity.HasIndex(x => x.GatewayDisputeId).IsUnique();
             entity.HasIndex(x => new { x.SubscriptionPurchaseId, x.Mode });
             entity.HasOne<SubscriptionPurchase>().WithMany().HasForeignKey(x => x.SubscriptionPurchaseId).OnDelete(DeleteBehavior.Restrict);
@@ -1831,10 +1831,10 @@ public class AppDbContext
             entity.Property(x => x.UnmatchedTransactionCount).HasDefaultValue(0);
             entity.Property(x => x.MatchedPaymentCount).HasDefaultValue(0);
             entity.Property(x => x.MatchedRefundCount).HasDefaultValue(0);
-            entity.Property(x => x.LastReconciliationAttemptAtUtc).HasColumnType("datetime2");
-            entity.Property(x => x.GatewayEvidenceFetchedAtUtc).HasColumnType("datetime2");
-            entity.Property(x => x.ReconciledAtUtc).HasColumnType("datetime2");
-            entity.Property(x => x.UpdatedAtUtc).HasColumnType("datetime2");
+            entity.Property(x => x.LastReconciliationAttemptAtUtc);
+            entity.Property(x => x.GatewayEvidenceFetchedAtUtc);
+            entity.Property(x => x.ReconciledAtUtc);
+            entity.Property(x => x.UpdatedAtUtc);
             entity.HasIndex(x => new { x.HospitalId, x.Mode, x.ReconciliationStatus })
                 .HasDatabaseName("IX_HospitalGatewaySettlements_ReconciliationQueue");
             entity.HasIndex(x => new { x.HospitalId, x.Mode, x.SettlementId }).IsUnique();
@@ -1859,16 +1859,16 @@ public class AppDbContext
             {
                 table.HasCheckConstraint(
                     "CK_RazorpayCredentials_MerchantType",
-                    "[MerchantType] IN ('CMS', 'Hospital')");
+                    "MerchantType IN ('CMS', 'Hospital')");
 
                 table.HasCheckConstraint(
                     "CK_RazorpayCredentials_Mode",
-                    "[Mode] IN ('Test', 'Live')");
+                    "Mode IN ('Test', 'Live')");
 
                 table.HasCheckConstraint(
                     "CK_RazorpayCredentials_Hospital",
-                    "([MerchantType] = 'CMS' AND [HospitalId] IS NULL) OR " +
-                    "([MerchantType] = 'Hospital' AND [HospitalId] IS NOT NULL)");
+                    "(MerchantType = 'CMS' AND HospitalId IS NULL) OR " +
+                    "(MerchantType = 'Hospital' AND HospitalId IS NOT NULL)");
             });
 
             entity.HasKey(x => x.Id);
@@ -1903,8 +1903,7 @@ public class AppDbContext
                 x.Mode
             })
                 .IsUnique()
-                .HasFilter(
-                    "[MerchantType] = 'CMS' AND [IsActive] = 1");
+                ;
 
             // Only one active credential per hospital and mode.
             entity.HasIndex(x => new
@@ -1913,8 +1912,7 @@ public class AppDbContext
                 x.Mode
             })
                 .IsUnique()
-                .HasFilter(
-                    "[MerchantType] = 'Hospital' AND [IsActive] = 1");
+                ;
         });
 
         modelBuilder.Entity<HospitalPaymentLink>(entity =>
@@ -1971,11 +1969,11 @@ public class AppDbContext
 
                 entity.HasIndex(x => x.RazorpayOrderId)
                     .IsUnique()
-                    .HasFilter("[RazorpayOrderId] IS NOT NULL");
+                    ;
 
                 entity.HasIndex(x => x.RazorpayPaymentId)
                     .IsUnique()
-                    .HasFilter("[RazorpayPaymentId] IS NOT NULL");
+                    ;
 
                 entity.HasIndex(x => new
                 {

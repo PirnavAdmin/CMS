@@ -1,33 +1,37 @@
 # Deploy on the server
 
-1. In your domain registrar's DNS panel, point the domain to this server:
-   - `A` record, host `@`, value `43.205.42.69`
-   - `A` record, host `www`, value `43.205.42.69`
-   Remove conflicting A/AAAA records for these names. DNS changes can take time to propagate.
-2. Copy the repository to the server. Install Docker Engine and the Docker Compose plugin. Nginx is installed and managed directly on the server; Compose does not run an Nginx container.
-3. Create `.env` from `.env.example`. Set unique strong values for DB_PASSWORD, MSSQL_SA_PASSWORD and JWT_KEY (at least 32 random characters). Keep `.env` private; it is git-ignored.
-4. Allow inbound TCP 80, 443, 3000 and 5000 in the EC2 security group. Port 80 serves the domain; ports 3000 and 5000 provide direct access as requested. Do not open SQL Server port 1433.
-5. Start the app from the repository root:
+## Host setup
 
-   ```sh
-   docker compose up -d --build
-   ```
+1. In your registrar's DNS panel, point `pulseleef.com` and `www.pulseleef.com` to `43.205.42.69` with A records. Remove conflicting A/AAAA records.
+2. Install Docker Engine, the Docker Compose plugin, and Nginx on the server. MySQL is installed on the host; Compose does not start a database container.
+3. Configure MySQL to accept connections from Docker's bridge gateway. On Linux, this usually means setting `bind-address` to `0.0.0.0`, restarting MySQL, and creating/granting the application user for the Docker bridge host (for example `'cmsdbuser'@'%'`). Restrict MySQL port 3306 to the server's local/Docker network in the firewall; do not expose it publicly.
+4. Ensure the migrated MySQL database `cmsdb` and tables already exist. This app's SQL Server EF migrations are not compatible with MySQL and are not run at startup.
 
-6. Install the host Nginx site config and reload Nginx:
+## Configure and start the app
 
-   ```sh
-   sudo cp nginx/pulseleef.com.conf /etc/nginx/sites-available/pulseleef.com
-   sudo ln -s /etc/nginx/sites-available/pulseleef.com /etc/nginx/sites-enabled/pulseleef.com
-   sudo nginx -t
-   sudo systemctl reload nginx
-   ```
+Create `.env` from `.env.example` and set the MySQL host credentials, database name, SSL mode, and a private JWT key of at least 32 characters. The Compose default `DB_HOST=host.docker.internal` resolves to the Docker host using `host-gateway`; change it if your Docker setup uses a different route. Keep `.env` private; it is git-ignored.
 
-Host Nginx proxies `/api`, `/images`, and `/uploads` to the backend on `127.0.0.1:5000` and other requests to the frontend on `127.0.0.1:3000`. Direct URLs are `http://43.205.42.69:3000` (frontend) and `http://43.205.42.69:5000` (backend).
+Start the frontend and backend:
 
-The SQL Server container creates the requested `cmsdb` database and `cmsdbuser` login on first initialization. EF Core migrations run when the backend starts. Docker volumes persist the database files, uploads, and ASP.NET Data Protection keys. Back up these volumes; losing the key ring prevents decrypting stored Razorpay credentials.
+```sh
+docker compose up -d --build
+```
 
-The supplied `CMSDBscript.sql` has Windows-specific database file paths and creates a database named `CMSDB`, so it is not run by this setup. This deployment starts a fresh `cmsdb` schema from the backend's EF migrations. Restore existing business data separately from a compatible SQL Server backup/export.
+The backend uses the Pomelo EF Core MySQL provider. The existing SQL Server migrations remain in the repository for historical reference; the app does not execute them against MySQL. Because the database has already been migrated, schema updates must be made with MySQL-compatible scripts/migrations.
 
-The Nginx site config currently serves HTTP. After DNS resolves and port 80 is reachable, install a Let's Encrypt certificate (for example with Certbot's Nginx plugin) to enable HTTPS on the host.
+## Host Nginx and DNS
 
-Check app status with `docker compose ps` and logs with `docker compose logs -f backend`.
+Install the host Nginx site config:
+
+```sh
+sudo cp nginx/pulseleef.com.conf /etc/nginx/sites-available/pulseleef.com
+sudo ln -s /etc/nginx/sites-available/pulseleef.com /etc/nginx/sites-enabled/pulseleef.com
+sudo nginx -t
+sudo systemctl reload nginx
+```
+
+Nginx proxies `/api`, `/images`, and `/uploads` to the backend at `127.0.0.1:5000`, and other paths to the frontend at `127.0.0.1:3000`. Allow inbound TCP 80 and 443 for the domain; ports 3000 and 5000 are published for direct access. MySQL 3306 should remain private.
+
+The Nginx site config currently serves HTTP. Once DNS resolves and port 80 is reachable, install a Let's Encrypt certificate (for example with Certbot's Nginx plugin) to enable HTTPS.
+
+Inspect services with `docker compose ps` and `docker compose logs -f backend`.

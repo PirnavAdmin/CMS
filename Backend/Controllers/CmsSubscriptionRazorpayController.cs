@@ -75,7 +75,7 @@ public class CmsSubscriptionRazorpayController : ControllerBase
         if (admin == null)
             return Unauthorized();
 
-        // Serialize order creation for this purchase in SQL Server.
+        // Serialize order creation for this purchase in MySQL.
         // This prevents two simultaneous requests from creating separate orders.
         // A durable reservation/outbox is still recommended for recovery after
         // a gateway timeout or a process crash.
@@ -84,7 +84,7 @@ public class CmsSubscriptionRazorpayController : ControllerBase
 
         var purchase = await _db.SubscriptionPurchases
             .FromSqlInterpolated(
-                $"SELECT * FROM [SubscriptionPurchases] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {purchaseId}")
+                $"SELECT * FROM SubscriptionPurchases WHERE Id = {purchaseId} FOR UPDATE")
             .SingleOrDefaultAsync();
 
         if (purchase == null)
@@ -374,7 +374,7 @@ public class CmsSubscriptionRazorpayController : ControllerBase
 
         var locked = await _db.SubscriptionPurchases
             .FromSqlInterpolated(
-                $"SELECT * FROM [SubscriptionPurchases] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {dto.PurchaseId}")
+                $"SELECT * FROM SubscriptionPurchases WHERE Id = {dto.PurchaseId} FOR UPDATE")
             .FirstOrDefaultAsync();
 
         if (locked == null)
@@ -584,7 +584,7 @@ public class CmsSubscriptionRazorpayController : ControllerBase
         {
             var purchase = await _db.SubscriptionPurchases
                 .FromSqlInterpolated(
-                    $"SELECT * FROM [SubscriptionPurchases] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {purchaseId}")
+                    $"SELECT * FROM SubscriptionPurchases WHERE Id = {purchaseId} FOR UPDATE")
                 .SingleOrDefaultAsync();
 
             if (purchase == null)
@@ -704,7 +704,7 @@ public class CmsSubscriptionRazorpayController : ControllerBase
 
             var storedRefund = await _db.CmsSubscriptionRefunds
                 .FromSqlInterpolated(
-                    $"SELECT * FROM [CmsSubscriptionRefunds] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {refund.Id}")
+                    $"SELECT * FROM CmsSubscriptionRefunds WHERE Id = {refund.Id} FOR UPDATE")
                 .SingleAsync();
 
             if (!string.IsNullOrWhiteSpace(storedRefund.GatewayRefundId) &&
@@ -852,7 +852,7 @@ public class CmsSubscriptionRazorpayController : ControllerBase
         await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         var locked = await _db.CmsSubscriptionRefunds
             .FromSqlInterpolated(
-                $"SELECT * FROM [CmsSubscriptionRefunds] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {refundId}")
+                $"SELECT * FROM CmsSubscriptionRefunds WHERE Id = {refundId} FOR UPDATE")
             .SingleOrDefaultAsync();
 
         if (locked == null ||

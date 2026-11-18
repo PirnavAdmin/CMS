@@ -44,8 +44,9 @@ builder.Services.AddScoped<RazorpayCredentialStore>();
 // ======================================================
 
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection")
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
     )
 );
 
@@ -95,7 +96,7 @@ builder.Services.AddScoped<HospitalPaymentOrderService>();
 builder.Services.AddScoped<HospitalRefundReconciliationService>();
 // Change #19: Hospital settlement reconciliation (manual invocation only).
 // Do not enable automatic matching until gateway evidence is verified.
-// Shared SQL Server lock for manual and background settlement reconciliation.
+// Shared database lock for manual and background settlement reconciliation.
 builder.Services.AddScoped<HospitalSettlementReconciliationLockService>();
 builder.Services.AddScoped<HospitalSettlementReconciliationService>();
 // Change #19: opt-in background reconciliation; disabled unless explicitly configured.
@@ -310,12 +311,12 @@ if (demoPaymentsEnabled)
         );
 
     var sqlConnectionBuilder =
-        new Microsoft.Data.SqlClient.SqlConnectionStringBuilder(
+        new MySqlConnector.MySqlConnectionStringBuilder(
             connectionString
         );
 
     var databaseName =
-        sqlConnectionBuilder.InitialCatalog;
+        sqlConnectionBuilder.Database;
 
     if (string.IsNullOrWhiteSpace(databaseName) ||
         !databaseName.StartsWith(
@@ -323,7 +324,7 @@ if (demoPaymentsEnabled)
             StringComparison.OrdinalIgnoreCase))
     {
         throw new InvalidOperationException(
-            "Demo payments require a separate SQL Server " +
+            "Demo payments require a separate MySQL " +
             "database whose name starts with CMS_DEMO_."
         );
     }
@@ -909,13 +910,6 @@ app.Use(async (httpContext, next) =>
 // ======================================================
 
 app.MapControllers();
-
-if (string.Equals(Environment.GetEnvironmentVariable("RUN_DB_MIGRATIONS"), "true", StringComparison.OrdinalIgnoreCase))
-{
-    await using var scope = app.Services.CreateAsyncScope();
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    await db.Database.MigrateAsync();
-}
 
 // ======================================================
 // 24. RUN APPLICATION

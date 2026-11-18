@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using AuthDemo.Data;
-using Microsoft.Data.SqlClient;
+using MySqlConnector;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +13,7 @@ using Microsoft.Extensions.Logging;
 namespace AuthDemo.Services;
 
 // CMS payment.captured recovery worker. Disabled by default.
-// A SQL Server application lock prevents concurrent retry batches across instances.
+// A MySQL named lock prevents concurrent retry batches across instances.
 public sealed class CmsWebhookRetryBackgroundService : BackgroundService
 {
     private const string LockName = "CMS:Razorpay:WebhookRetry:payment.captured";
@@ -78,29 +77,23 @@ public sealed class CmsWebhookRetryBackgroundService : BackgroundService
 
     private async Task RetryBatchAsync(int batchSize, int maxAttempts, CancellationToken token)
     {
-        // Session-scoped SQL application lock, held until the entire batch finishes.
+        // Session-scoped MySQL named lock, held until the entire batch finishes.
         // A separate connection is used so EF transactions do not release this lock.
         await using var lockScope = _scopeFactory.CreateAsyncScope();
         var lockDb = lockScope.ServiceProvider.GetRequiredService<AppDbContext>();
         var connectionString = lockDb.Database.GetConnectionString();
         if (string.IsNullOrWhiteSpace(connectionString))
-            throw new InvalidOperationException("CMS webhook retry requires a SQL Server connection string.");
+            throw new InvalidOperationException("CMS webhook retry requires a MySQL connection string.");
 
-        await using var lockConnection = new SqlConnection(connectionString);
+        await using var lockConnection = new MySqlConnection(connectionString);
         await lockConnection.OpenAsync(token);
 
         await using (var command = lockConnection.CreateCommand())
         {
-            command.CommandText = "sp_getapplock";
-            command.CommandType = CommandType.StoredProcedure;
-            command.Parameters.Add(new SqlParameter("@Resource", SqlDbType.NVarChar, 255) { Value = LockName });
-            command.Parameters.Add(new SqlParameter("@LockMode", SqlDbType.NVarChar, 32) { Value = "Exclusive" });
-            command.Parameters.Add(new SqlParameter("@LockOwner", SqlDbType.NVarChar, 32) { Value = "Session" });
-            command.Parameters.Add(new SqlParameter("@LockTimeout", SqlDbType.Int) { Value = 0 });
-            var result = new SqlParameter("@Result", SqlDbType.Int) { Direction = ParameterDirection.ReturnValue };
-            command.Parameters.Add(result);
-            await command.ExecuteNonQueryAsync(token);
-            if (Convert.ToInt32(result.Value) < 0)
+            command.CommandText = "SELECT GET_LOCK(@resource, 0)";
+            command.Parameters.AddWithValue("@resource", LockName);
+            var result = await command.ExecuteScalarAsync(token);
+            if (Convert.ToInt32(result) != 1)
                 return; // Another instance is already running the batch.
         }
 
@@ -139,15 +132,13 @@ public sealed class CmsWebhookRetryBackgroundService : BackgroundService
             try
             {
                 await using var command = lockConnection.CreateCommand();
-                command.CommandText = "sp_releaseapplock";
-                command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.Add(new SqlParameter("@Resource", SqlDbType.NVarChar, 255) { Value = LockName });
-                command.Parameters.Add(new SqlParameter("@LockOwner", SqlDbType.NVarChar, 32) { Value = "Session" });
-                await command.ExecuteNonQueryAsync(CancellationToken.None);
+                command.CommandText = "SELECT RELEASE_LOCK(@resource)";
+                command.Parameters.AddWithValue("@resource", LockName);
+                await command.ExecuteScalarAsync(CancellationToken.None);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "CMS webhook retry lock release failed; SQL session disposal will release it.");
+                _logger.LogWarning(ex, "CMS webhook retry lock release failed; MySQL session disposal will release it.");
             }
         }
     }

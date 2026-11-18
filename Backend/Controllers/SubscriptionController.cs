@@ -288,8 +288,8 @@ public class SubscriptionController : ControllerBase
     // other database failures must not be misreported as duplicate plans.
     private static bool IsPlanDuplicateKeyViolation(DbUpdateException exception)
     {
-        var sqlException = exception.GetBaseException() as Microsoft.Data.SqlClient.SqlException;
-        if (sqlException == null || (sqlException.Number != 2601 && sqlException.Number != 2627))
+        var sqlException = exception.GetBaseException() as MySqlConnector.MySqlException;
+        if (sqlException == null || sqlException.Number != 1062)
             return false;
 
         return sqlException.Message.Contains(
@@ -674,7 +674,7 @@ public class SubscriptionController : ControllerBase
         // concurrent requests both confirming a payment.
         await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         var purchase = await _context.SubscriptionPurchases
-            .FromSqlInterpolated($"SELECT * FROM [SubscriptionPurchases] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {dto.PurchaseId}")
+            .FromSqlInterpolated($"SELECT * FROM SubscriptionPurchases WHERE Id = {dto.PurchaseId} FOR UPDATE")
             .FirstOrDefaultAsync();
 
         if (purchase == null)
@@ -774,7 +774,7 @@ public class SubscriptionController : ControllerBase
 
         await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         var purchase = await _context.SubscriptionPurchases
-            .FromSqlInterpolated($"SELECT * FROM [SubscriptionPurchases] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {dto.PurchaseId}")
+            .FromSqlInterpolated($"SELECT * FROM SubscriptionPurchases WHERE Id = {dto.PurchaseId} FOR UPDATE")
             .FirstOrDefaultAsync();
 
         if (purchase == null || !ValidateDemoToken(purchase, dto.DemoToken))
@@ -851,7 +851,7 @@ public class SubscriptionController : ControllerBase
 
     private bool ValidateDemoToken(SubscriptionPurchase purchase, string suppliedToken)
     {
-        // CreatedAt is stored in UTC; SQL Server typically reads it back
+        // CreatedAt is stored in UTC; MySQL typically reads it back
         // with DateTimeKind.Unspecified, so interpret it explicitly as UTC.
         var createdAtUtc = DateTime.SpecifyKind(purchase.CreatedAt, DateTimeKind.Utc);
         if (createdAtUtc.AddMinutes(30) < DateTime.UtcNow)
@@ -1075,7 +1075,7 @@ public class SubscriptionController : ControllerBase
         if (!admin.HospitalId.HasValue) return Conflict(new { message = "Clinic onboarding required." });
         await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
         var purchase = await _context.SubscriptionPurchases
-            .FromSqlInterpolated($"SELECT * FROM [SubscriptionPurchases] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {purchaseId}")
+            .FromSqlInterpolated($"SELECT * FROM SubscriptionPurchases WHERE Id = {purchaseId} FOR UPDATE")
             .FirstOrDefaultAsync(x => x.PurchaseType == "Upgrade" && x.AdminUserId == admin.Id && x.HospitalId == admin.HospitalId);
         if (purchase == null) return NotFound(new { message = "Upgrade purchase not found." });
         if (purchase.ActivatedAt.HasValue)
@@ -1092,7 +1092,7 @@ public class SubscriptionController : ControllerBase
         if (!purchase.OriginalSubscriptionId.HasValue)
             return Conflict(new { message = "Original subscription missing." });
         var current = await _context.ClinicSubscriptions
-            .FromSqlInterpolated($"SELECT * FROM [ClinicSubscriptions] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {purchase.OriginalSubscriptionId.Value}")
+            .FromSqlInterpolated($"SELECT * FROM ClinicSubscriptions WHERE Id = {purchase.OriginalSubscriptionId.Value} FOR UPDATE")
             .FirstOrDefaultAsync();
         var now = DateTime.UtcNow;
         if (current == null || current.HospitalId != admin.HospitalId || current.Status != "Active" ||
@@ -1216,7 +1216,7 @@ public class SubscriptionController : ControllerBase
         // Without UPDLOCK, simultaneous activation requests can both read
         // ActivatedAt == null before either one commits.
         var purchase = await _context.SubscriptionPurchases
-            .FromSqlInterpolated($"SELECT * FROM [SubscriptionPurchases] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {purchaseId}")
+            .FromSqlInterpolated($"SELECT * FROM SubscriptionPurchases WHERE Id = {purchaseId} FOR UPDATE")
             .Include(x => x.SubscriptionPlan)
             .FirstOrDefaultAsync(x => x.AdminUserId == admin.Id &&
                 x.HospitalId == admin.HospitalId && x.AdminCreationStatus == "Created" && x.PurchaseType == "Renewal");

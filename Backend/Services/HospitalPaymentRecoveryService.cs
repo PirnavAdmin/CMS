@@ -50,7 +50,7 @@ public sealed class HospitalPaymentRecoveryService
 
     /// <summary>
     /// Starts a recovery attempt under the existing
-    /// SQL Server application lock.
+    /// MySQL named lock.
     ///
     /// Returns null when another process owns the lock.
     /// </summary>

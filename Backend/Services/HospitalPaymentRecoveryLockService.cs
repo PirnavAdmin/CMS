@@ -13,11 +13,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 namespace AuthDemo.Services;
 
 /// <summary>
-/// Provides a SQL Server transaction-scoped application lock
+/// Uses a MySQL session named lock together with a database transaction
 /// for a hospital payment recovery operation.
-///
-/// The lock is released when its transaction commits
-/// or rolls back.
 /// </summary>
 public sealed class HospitalPaymentRecoveryLockService
 {
@@ -64,37 +61,21 @@ public sealed class HospitalPaymentRecoveryLockService
                 "starting another transaction.");
         }
 
-        // Hash the payment ID to produce a bounded,
-        // consistent SQL application-lock resource.
+        // Hash the payment ID to produce a bounded MySQL lock name.
         var resource = CreateLockResource(
             hospitalId,
             gatewayPaymentId);
 
-        var transaction = await _db.Database
-            .BeginTransactionAsync(
-                IsolationLevel.Serializable,
-                cancellationToken);
+        var connection = _db.Database.GetDbConnection();
+        await _db.Database.OpenConnectionAsync(cancellationToken);
+        var lockAcquired = false;
+        IDbContextTransaction? transaction = null;
 
         try
         {
-            var connection = _db.Database.GetDbConnection();
-
             await using var command = connection.CreateCommand();
-
-            command.Transaction = transaction.GetDbTransaction();
-
             command.CommandType = CommandType.Text;
-
-            command.CommandText = @"
-DECLARE @result INT;
-
-EXEC @result = sys.sp_getapplock
-    @Resource = @resource,
-    @LockMode = 'Exclusive',
-    @LockOwner = 'Transaction',
-    @LockTimeout = 0;
-
-SELECT @result;";
+            command.CommandText = "SELECT GET_LOCK(@resource, 0)";
 
             var parameter = command.CreateParameter();
 
@@ -111,46 +92,43 @@ SELECT @result;";
             if (result == null || result == DBNull.Value)
             {
                 throw new InvalidOperationException(
-                    "SQL Server did not return a lock result.");
+                    "MySQL did not return a lock result.");
             }
 
-            var lockResult = Convert.ToInt32(result);
-
-            // sp_getapplock returns >= 0 on success.
-            // -1 is a lock timeout (another worker owns it).
-            // Other negative values represent errors.
-            if (lockResult == -1)
+            lockAcquired = Convert.ToInt32(result) == 1;
+            if (!lockAcquired)
             {
-                await transaction.RollbackAsync(
-                    CancellationToken.None);
-
-                await transaction.DisposeAsync();
-
+                await _db.Database.CloseConnectionAsync();
                 return null;
             }
 
-            if (lockResult < 0)
-            {
-                throw new InvalidOperationException(
-                    $"SQL Server application lock failed " +
-                    $"with code {lockResult}.");
-            }
+            transaction = await _db.Database.BeginTransactionAsync(
+                IsolationLevel.Serializable, cancellationToken);
 
             return new PaymentRecoveryLockHandle(
-                transaction);
+                transaction, connection, resource, _db.Database);
         }
         catch
         {
-            try
+            if (transaction != null)
             {
-                await transaction.RollbackAsync(
-                    CancellationToken.None);
+                try { await transaction.RollbackAsync(CancellationToken.None); }
+                finally { await transaction.DisposeAsync(); }
             }
-            finally
+            if (lockAcquired && connection.State == ConnectionState.Open)
             {
-                await transaction.DisposeAsync();
+                await using var release = connection.CreateCommand();
+                release.CommandText = "SELECT RELEASE_LOCK(@resource)";
+                var parameter = release.CreateParameter();
+                parameter.ParameterName = "@resource";
+                parameter.Value = resource;
+                release.Parameters.Add(parameter);
+                await release.ExecuteScalarAsync(CancellationToken.None);
             }
-
+            if (connection.State == ConnectionState.Open)
+            {
+                await _db.Database.CloseConnectionAsync();
+            }
             throw;
         }
     }
@@ -169,20 +147,29 @@ SELECT @result;";
 }
 
 /// <summary>
-/// Owns a database transaction and its SQL application lock.
+/// Owns a database transaction and MySQL session lock.
 /// Disposing without committing rolls the transaction back.
 /// </summary>
 public sealed class PaymentRecoveryLockHandle : IAsyncDisposable
 {
     private readonly IDbContextTransaction _transaction;
+    private readonly System.Data.Common.DbConnection _connection;
+    private readonly string _resource;
+    private readonly DatabaseFacade _database;
 
     private bool _completed;
     private bool _disposed;
 
     internal PaymentRecoveryLockHandle(
-        IDbContextTransaction transaction)
+        IDbContextTransaction transaction,
+        System.Data.Common.DbConnection connection,
+        string resource,
+        DatabaseFacade database)
     {
         _transaction = transaction;
+        _connection = connection;
+        _resource = resource;
+        _database = database;
     }
 
     public async Task CommitAsync(
@@ -245,7 +232,24 @@ public sealed class PaymentRecoveryLockHandle : IAsyncDisposable
         }
         finally
         {
-            await _transaction.DisposeAsync();
+            try
+            {
+                if (_connection.State == ConnectionState.Open)
+                {
+                    await using var release = _connection.CreateCommand();
+                    release.CommandText = "SELECT RELEASE_LOCK(@resource)";
+                    var parameter = release.CreateParameter();
+                    parameter.ParameterName = "@resource";
+                    parameter.Value = _resource;
+                    release.Parameters.Add(parameter);
+                    await release.ExecuteScalarAsync(CancellationToken.None);
+                }
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
+                await _database.CloseConnectionAsync();
+            }
         }
     }
 }

@@ -239,7 +239,7 @@ public class SuperAdminPendingAdminController : ControllerBase
             // Lock this purchase row until commit so two simultaneous requests
             // cannot create separate Admin accounts for the same purchase.
             var purchase = await _context.SubscriptionPurchases
-                .FromSqlInterpolated($"SELECT * FROM dbo.SubscriptionPurchases WITH (UPDLOCK, HOLDLOCK) WHERE Id = {id}")
+                .FromSqlInterpolated($"SELECT * FROM SubscriptionPurchases WHERE Id = {id} FOR UPDATE")
                 .SingleOrDefaultAsync();
 
             if (purchase == null)

@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using AuthDemo.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -136,9 +136,9 @@ public sealed class HospitalRefundReconciliationService
             return new Result(refundId, "ReviewRequired", $"Unrecognized gateway refund status: {remote.Status}.");
 
         await using var tx = await _db.Database.BeginTransactionAsync(IsolationLevel.Serializable, cancellationToken);
-        // UPDLOCK + HOLDLOCK serializes concurrent reconciliation of this local refund on SQL Server.
+        // FOR UPDATE serializes concurrent reconciliation of this local refund in MySQL.
         var current = await _db.HospitalPaymentRefunds.FromSqlInterpolated(
-            $"SELECT * FROM [HospitalPaymentRefunds] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {refundId} AND [HospitalId] = {hospitalId}")
+            $"SELECT * FROM HospitalPaymentRefunds WHERE Id = {refundId} AND HospitalId = {hospitalId} FOR UPDATE")
             .SingleOrDefaultAsync(cancellationToken);
         if (current == null || current.HospitalPaymentTransactionId != payment.Id || current.Amount != refund.Amount
             || current.GatewayRefundId != refund.GatewayRefundId)

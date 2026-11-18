@@ -378,7 +378,7 @@ public sealed class CmsSubscriptionWebhookController
 
             var refundEvent = await _db.CmsPaymentWebhookEvents
                 .FromSqlInterpolated(
-                    $"SELECT * FROM [CmsPaymentWebhookEvents] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {recordId}")
+                    $"SELECT * FROM CmsPaymentWebhookEvents WHERE Id = {recordId} FOR UPDATE")
                 .SingleOrDefaultAsync();
 
             if (refundEvent == null)
@@ -412,7 +412,7 @@ public sealed class CmsSubscriptionWebhookController
 
             var savedRefund = await _db.CmsSubscriptionRefunds
                 .FromSqlInterpolated(
-                    $"SELECT * FROM [CmsSubscriptionRefunds] WITH (UPDLOCK, HOLDLOCK) WHERE [GatewayRefundId] = {refundId}")
+                    $"SELECT * FROM CmsSubscriptionRefunds WHERE GatewayRefundId = {refundId} FOR UPDATE")
                 .SingleOrDefaultAsync();
 
             if (savedRefund == null || savedRefund.Mode != refundEvent.Mode)
@@ -532,7 +532,7 @@ public sealed class CmsSubscriptionWebhookController
 
             var disputeEvent = await _db.CmsPaymentWebhookEvents
                 .FromSqlInterpolated(
-                    $"SELECT * FROM [CmsPaymentWebhookEvents] WITH (UPDLOCK, HOLDLOCK) WHERE [Id] = {recordId}")
+                    $"SELECT * FROM CmsPaymentWebhookEvents WHERE Id = {recordId} FOR UPDATE")
                 .SingleOrDefaultAsync();
 
             if (disputeEvent == null)
@@ -564,7 +564,7 @@ public sealed class CmsSubscriptionWebhookController
             // dispute row against concurrent updates from different events.
             var saved = await _db.CmsSubscriptionDisputes
                 .FromSqlInterpolated(
-                    $"SELECT * FROM [CmsSubscriptionDisputes] WITH (UPDLOCK, HOLDLOCK) WHERE [GatewayDisputeId] = {disputeId}")
+                    $"SELECT * FROM CmsSubscriptionDisputes WHERE GatewayDisputeId = {disputeId} FOR UPDATE")
                 .SingleOrDefaultAsync();
 
             if (saved != null &&
