@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AuthDemo.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage;
 
 namespace AuthDemo.Services;
