@@ -93,21 +93,26 @@ export const readClinicBrandingMap = () => {
 };
 
 export const saveClinicBranding = (branding = {}, scope = {}) => {
-  const key = getClinicBrandingScope(scope);
-  const map = readClinicBrandingMap();
-  const next = {
-    ...map,
-    [key]: {
-      ...map[key],
-      ...branding,
-      clinicId: scope.clinicId || branding.clinicId || "",
-      clinicName: formatClinicName(scope.clinicName || branding.clinicName || ""),
-      updatedAt: new Date().toISOString(),
-    },
-  };
-  localStorage.setItem(CLINIC_BRANDING_STORAGE_KEY, JSON.stringify(next));
-  window.dispatchEvent(new CustomEvent(CLINIC_BRANDING_UPDATED_EVENT, { detail: { key, branding: next[key] } }));
-  return next[key];
+  try {
+    const key = getClinicBrandingScope(scope);
+    const map = readClinicBrandingMap();
+    const next = {
+      ...map,
+      [key]: {
+        ...map[key],
+        ...branding,
+        clinicId: scope.clinicId || branding.clinicId || "",
+        clinicName: formatClinicName(scope.clinicName || branding.clinicName || ""),
+        updatedAt: new Date().toISOString(),
+      },
+    };
+    localStorage.setItem(CLINIC_BRANDING_STORAGE_KEY, JSON.stringify(next));
+    window.dispatchEvent(new CustomEvent(CLINIC_BRANDING_UPDATED_EVENT, { detail: { key, branding: next[key] } }));
+    return next[key];
+  } catch (error) {
+    console.warn("Unable to save clinic branding to localStorage:", error);
+    return branding;
+  }
 };
 
 const resolveAssetUrl = (value = "") => {
@@ -171,26 +176,37 @@ export const getPublicClinicLogoUrl = (clinicId = "") => {
   return id ? apiUrl(`public/clinics/${encodeURIComponent(id)}/logo`) : "";
 };
 
-export const syncClinicBrandingFromBackend = async (scope = {}) => {
-  if (scope.enabled === false) return null;
-  const publicLogoUrl = getPublicClinicLogoUrl(scope.clinicId);
-  if (!publicLogoUrl) return null;
+const imageBlobToDataUrl = (blob) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(blob);
+  });
+
+// An <img> request cannot send ngrok's bypass header, so render the fetched image data.
+export const loadPublicClinicLogo = async (clinicId = "") => {
+  const publicLogoUrl = getPublicClinicLogoUrl(clinicId);
+  if (!publicLogoUrl) return "";
 
   const response = await fetch(publicLogoUrl, {
     method: "GET",
-    headers: {
-      "ngrok-skip-browser-warning": "true",
-    },
+    headers: { "ngrok-skip-browser-warning": "true" },
   }).catch(() => null);
-  if (!response?.ok) return null;
+  if (!response?.ok) return "";
 
   const contentType = String(response.headers.get("content-type") || "").toLowerCase();
-  const version = Date.now();
-  const logoDataUrl = contentType.startsWith("image/")
-    ? publicLogoUrl
-    : resolveAssetUrl(readRemoteLogoValue(await parseApiPayload(response)));
+  if (contentType.startsWith("image/")) {
+    return imageBlobToDataUrl(await response.blob()).catch(() => "");
+  }
 
-  return logoDataUrl ? saveClinicBranding({ logoDataUrl: withCacheBust(logoDataUrl, version) }, scope) : null;
+  return resolveAssetUrl(readRemoteLogoValue(await parseApiPayload(response)));
+};
+
+export const syncClinicBrandingFromBackend = async (scope = {}) => {
+  if (scope.enabled === false) return null;
+  const logoDataUrl = await loadPublicClinicLogo(scope.clinicId);
+  return logoDataUrl ? saveClinicBranding({ logoDataUrl: withCacheBust(logoDataUrl) }, scope) : null;
 };
 
 export const getClinicInvoiceBranding = ({ clinicId = "", clinicName = "" } = {}) => {
@@ -218,8 +234,9 @@ export const getClinicInvoiceBranding = ({ clinicId = "", clinicName = "" } = {}
     customTemplateDataUrl: branding.customTemplateDataUrl || "",
     customTemplates: Array.isArray(branding.customTemplates) ? branding.customTemplates : [],
     selectedCustomTemplateId: branding.selectedCustomTemplateId || "",
-    opTemplate: branding.opTemplate || null,
-    diagnosticTemplate: branding.diagnosticTemplate || null,
+    billingTemplate: branding.billingTemplate || branding.opTemplate || branding.diagnosticTemplate || null,
+    opTemplate: branding.billingTemplate || branding.opTemplate || null,
+    diagnosticTemplate: branding.billingTemplate || branding.diagnosticTemplate || null,
   };
 };
 
@@ -247,3 +264,4 @@ export const useClinicInvoiceBranding = (scope = {}) => {
   }, [scopeKey, enabled]);
   return getClinicInvoiceBranding({ ...scope, version });
 };
+

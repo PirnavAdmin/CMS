@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import ReceptionAppointmentList from "../Recepitionist/pages/ReceptionAppointmentList";
-import { getOfflineAppointments, getOnlineAppointments, requestJson as nurseRequestJson } from "../Recepitionist/receptionApi";
+import { getNurseAppointments, requestJson as nurseRequestJson } from "./nurseApi";
 import { getNurseScope, scopeNurseRecords } from "./nurseScope";
 
 function NurseOfflineBookings() {
@@ -27,26 +27,23 @@ function NurseOfflineBookings() {
     // create a new function instance whenever refreshKey changes so the
     // ReceptionAppointmentList effect re-runs and reloads data
     return async () => {
-      const [onlineAppointments, offlineAppointments] = await Promise.all([
-        getOnlineAppointments(),
-        getOfflineAppointments(),
-      ]);
-
-      return scopeNurseRecords([...onlineAppointments, ...offlineAppointments]);
+      return scopeNurseRecords(await getNurseAppointments());
     };
   }, [refreshKey]);
 
   return (
-    <ReceptionAppointmentList
-      title="Offline Bookings"
-      subtitle="Appointments created manually by the receptionist."
-      fetchAppointments={fetchAppointments}
-      bookingType="Offline"
-      emptyState="No offline bookings found for the current filters."
-      apiRequest={nurseRequestJson}
-      getScope={getNurseScope}
-      scopeRecords={scopeNurseRecords}
-    />
+    <div className="nurse-offline-bookings">
+      <ReceptionAppointmentList
+        title="Offline Bookings"
+        subtitle="Appointments created manually by the receptionist."
+        fetchAppointments={fetchAppointments}
+        bookingType="Offline"
+        emptyState="No offline bookings found for the current filters."
+        apiRequest={nurseRequestJson}
+        getScope={getNurseScope}
+        scopeRecords={scopeNurseRecords}
+      />
+    </div>
   );
 }
 

@@ -1,3 +1,5 @@
+import { billValue, loadPatientBills } from "../../utils/patientBills";
+import { getBillingType } from "../../utils/billingRevenue";
 import React, {
   useCallback,
   useEffect,
@@ -7,6 +9,9 @@ import React, {
 import {
   Calendar,
   ClipboardList,
+  Receipt,
+  FileText,
+  Activity,
   Droplet,
   Mail,
   MapPin,
@@ -22,7 +27,8 @@ import {
 } from "react-router-dom";
 
 import "./PatientDetails.css";
-import { apiUrl } from "../../config/api";
+import { apiUrl, assetUrl } from "../../config/api";
+import { getApiHeaders } from "../../utils/branchApi";
 
 const PATIENT_API_URL =
   apiUrl("Patient");
@@ -165,22 +171,10 @@ const isPatientAppointment = (
   appointment,
   patient
 ) => {
-  return (
-    String(appointment.patientId || "") ===
-    String(patient.id || "") ||
-    String(appointment.patient?.id || "") ===
-    String(patient.id || "") ||
-    String(appointment.patientCode || "") ===
-    String(patient.patientCode || "") ||
-    String(appointment.patient?.code || "") ===
-    String(patient.patientCode || "") ||
-    String(appointment.phone || "") ===
-    String(patient.phone || "") ||
-    String(appointment.patient?.phone || "") ===
-    String(patient.phone || "") ||
-    String(appointment.patientName || "").toLowerCase() ===
-    String(patient.name || "").toLowerCase()
-  );
+  const recordId = appointment.patientId ?? appointment.patient?.id;
+  if (recordId != null) return String(recordId) === String(patient.id);
+  const code = appointment.patientCode ?? appointment.patient?.code;
+  return Boolean(code && patient.patientCode && String(code) === String(patient.patientCode));
 };
 
 const normalizePrescriptions = (data, history = []) => {
@@ -230,34 +224,28 @@ const fetchPrescriptions = async (patient, history) => {
       },
     });
 
-    if (!response.ok) return [];
+    if (!response.ok) throw new Error("Unable to load prescriptions.");
 
     const data = await response.json();
     const appointmentIds = new Set(
       history.map((visit) => String(visit.appointmentId)).filter(Boolean)
     );
     const patientId = String(patient.id || "").trim();
-    const patientName = String(patient.name || "").trim().toLowerCase();
+
 
     return normalizePrescriptions(data, history).filter((prescription) => {
       const prescriptionPatientId = String(
         prescription.patientId || prescription.patient?.id || ""
       ).trim();
-      const prescriptionPatientName = String(
-        prescription.patientName || prescription.patient?.name || ""
-      )
-        .trim()
-        .toLowerCase();
 
       return (
         (patientId && prescriptionPatientId === patientId) ||
-        appointmentIds.has(String(prescription.appointmentId)) ||
-        (patientName && prescriptionPatientName === patientName)
+        appointmentIds.has(String(prescription.appointmentId))
       );
     });
   } catch (error) {
     console.warn("Unable to load prescriptions.", error);
-    return [];
+    throw error;
   }
 };
 
@@ -341,10 +329,7 @@ function PatientDetails() {
         const response = await fetch(
           `${PATIENT_API_URL}/${id}`,
           {
-            headers: {
-              "ngrok-skip-browser-warning":
-                "true",
-            },
+            headers: getApiHeaders(),
           }
         );
 
@@ -363,10 +348,7 @@ function PatientDetails() {
         const response = await fetch(
           PATIENT_API_URL,
           {
-            headers: {
-              "ngrok-skip-browser-warning":
-                "true",
-            },
+            headers: getApiHeaders(),
           }
         );
 
@@ -401,10 +383,7 @@ function PatientDetails() {
         const historyResponse = await fetch(
           `${PATIENT_HISTORY_API_URL}/${id}/history`,
           {
-            headers: {
-              "ngrok-skip-browser-warning":
-                "true",
-            },
+            headers: getApiHeaders(),
           }
         );
 
@@ -427,10 +406,7 @@ function PatientDetails() {
           const appointmentsResponse = await fetch(
             APPOINTMENT_API_URL,
             {
-              headers: {
-                "ngrok-skip-browser-warning":
-                  "true",
-              },
+              headers: getApiHeaders(),
             }
           );
 
@@ -457,22 +433,33 @@ function PatientDetails() {
         }
       }
 
-      const prescriptions =
-        await fetchPrescriptions(patient, history);
-
-      console.log(
-        "PATIENT DETAILS:",
-        {
-          patient,
-          history,
-          prescriptions,
-        }
-      );
-
+      const readRecords = async (path) => {
+        const response = await fetch(apiUrl(path), { headers: getApiHeaders() });
+        if (!response.ok) throw new Error("Unable to load records.");
+        const data = await response.json();
+        return Array.isArray(data) ? data : Array.isArray(data?.data) ? data.data : data && typeof data === "object" ? [data] : [];
+      };
+      const results = await Promise.allSettled([
+        fetchPrescriptions(patient, history),
+        readRecords(`MedicalHistory/all/${encodeURIComponent(patient.id)}`),
+        readRecords("Lab/orders").then(rows => rows.filter(row => isPatientAppointment(row, patient))),
+        Promise.all(history.filter(visit => visit.appointmentId).map(async visit => {
+          const rows = await readRecords(`Overview/${encodeURIComponent(visit.appointmentId)}/documents`);
+          return rows.map(row => ({ ...row, visitDate: visit.date }));
+        })).then(rows => rows.flat()),
+      ]);
+      const billing = await loadPatientBills({ patient, history, request: async path => {
+        const response = await fetch(apiUrl(path), { headers: getApiHeaders(), cache: "no-store" });
+        if (!response.ok) throw new Error("Unable to load bills.");
+        return response.json();
+      } });
       setPatientData({
-        patient,
-        history,
-        prescriptions,
+        patient, history,
+        bills: billing.bills,
+        prescriptions: results[0].status === "fulfilled" ? results[0].value : [],
+        medicalHistory: results[1].status === "fulfilled" ? results[1].value : [],
+        reports: results.slice(2).flatMap(result => result.status === "fulfilled" ? result.value : []),
+        panelErrors: { bills: billing.incomplete, prescriptions: results[0].status === "rejected", medical: results[1].status === "rejected", reports: results.slice(2).some(result => result.status === "rejected") },
       });
 
     } catch (error) {
@@ -559,11 +546,11 @@ function PatientDetails() {
 
       {/* TITLE */}
 
-      <h2 className="patient-details-title">
+      <h2 className="patient-details-title" data-page-title>
         {patient.name}
       </h2>
 
-      <p className="patient-details-subtitle">
+      <p className="patient-details-subtitle" data-page-subtitle>
 
         Patient ID:
         {" "}
@@ -586,6 +573,7 @@ function PatientDetails() {
             {getInitials(
               patient.name
             )}
+
 
           </div>
 
@@ -737,8 +725,48 @@ function PatientDetails() {
 
             </button>
 
+            {[['reports', 'Reports', FileText], ['medical', 'Medical History', Activity], ['bills', 'Bills', Receipt]].map(([key, label, Icon]) => (
+              <button type="button" key={key} className={`patient-tab ${activeTab === key ? 'patient-tab-active' : ''}`} onClick={() => setActiveTab(key)}><Icon size={20} />{label}</button>
+            ))}
+
           </div>
 
+          {patientData.panelErrors?.[activeTab] ? <div role="alert" className="patient-empty-state">Some {activeTab === 'medical' ? 'medical history' : activeTab} could not be loaded. <button type="button" onClick={fetchPatient}>Retry</button></div> : null}
+          {activeTab === "medical" ? <div className="patient-prescription-list">
+            {(patientData.medicalHistory || []).map((record, index) => <article className="patient-prescription-card" key={record.id || index}>
+              <b>Medical history ? {getDisplayDate(record.createdAt || record.recordedAt || record.date)}</b>
+              <dl className="patient-clinical-fields">{[['Allergies', 'allergies'], ['Chronic diseases', 'chronicDiseases'], ['Current medications', 'currentMedications'], ['Surgeries', 'surgeries'], ['Family history', 'familyHistory'], ['Notes', 'notes']].map(([label, key]) => <div key={key}><dt>{label}</dt><dd>{record[key] || 'Not recorded'}</dd></div>)}</dl>
+            </article>)}
+            {!patientData.medicalHistory?.length && !patientData.panelErrors?.medical ? <div className="patient-empty-state">No medical history recorded.</div> : null}
+          </div> : null}
+          {activeTab === "reports" ? <div className="patient-prescription-list">
+            {(patientData.reports || []).map((report, index) => <article className="patient-prescription-card" key={report.id || index}>
+              <b>{report.testName || report.documentName || report.fileName || report.title || 'Patient report'}</b>
+              <p className="patient-prescription-note">{getDisplayDate(report.completedAt || report.createdAt || report.visitDate)} ? {report.status || 'Uploaded'}</p>
+              {report.result || report.resultValue ? <p>Result: {report.result || report.resultValue} {report.unit || ''}</p> : null}
+              {report.notes ? <p>{report.notes}</p> : null}
+              {report.reportUrl || report.documentUrl || report.fileUrl || report.filePath ? <ReportDownload report={report} /> : null}
+            </article>)}
+            {!patientData.reports?.length && !patientData.panelErrors?.reports ? <div className="patient-empty-state">No reports found.</div> : null}
+          </div> : null}
+          {activeTab === "bills" ? <div className="patient-prescription-list">
+            <p className="patient-prescription-note">OP, lab and pharmacy bills ? {(patientData.bills || []).length} invoices</p>
+            {(patientData.bills || []).map((bill, index) => {
+              const type = getBillingType({ ...bill, billingType: billValue(bill, 'billingType', 'BillingType', 'invoiceType', 'InvoiceType') || bill.__billType });
+              const label = type === 'pharmacy' ? 'Pharmacy' : type === 'diagnostic' ? 'Lab' : 'OP';
+              const invoice = billValue(bill, 'invoiceNo', 'InvoiceNo', 'invoiceNumber', 'InvoiceNumber', 'billNumber', 'BillNumber', 'billingId', 'BillingId', 'billId', 'BillId', 'id', 'Id');
+              const amount = billValue(bill, 'totalAmount', 'TotalAmount', 'grandTotal', 'GrandTotal', 'netAmount', 'NetAmount', 'amount', 'Amount');
+              return <article className="patient-prescription-card" key={index}>
+                <div className="patient-prescription-top"><b>{label} ? {invoice || 'Invoice'}</b><span>{billValue(bill, 'paymentStatus', 'PaymentStatus', 'status', 'Status') || 'Unknown'}</span></div>
+                <dl className="patient-clinical-fields">
+                  <div><dt>Bill date</dt><dd>{getDisplayDate(billValue(bill, 'createdAt', 'CreatedAt', 'billDate', 'BillDate', 'invoiceDate', 'InvoiceDate'))}</dd></div>
+                  <div><dt>Total amount</dt><dd>{amount !== '' && Number.isFinite(Number(amount)) ? Number(amount).toLocaleString('en-IN', {style:'currency',currency:'INR'}) : 'Not available'}</dd></div>
+                  <div><dt>Payment mode</dt><dd>{billValue(bill, 'paymentMethod', 'PaymentMethod', 'paymentMode', 'PaymentMode') || 'Not recorded'}</dd></div>
+                </dl>
+              </article>;
+            })}
+            {!patientData.bills?.length && !patientData.panelErrors?.bills ? <div className="patient-empty-state">No bills found for this patient.</div> : null}
+          </div> : null}
           {/* VISITS */}
 
           {activeTab === "history" ? (
@@ -799,7 +827,7 @@ function PatientDetails() {
 
             </div>
 
-          ) : (
+          ) : activeTab === "prescriptions" ? (
 
             <div className="patient-prescription-list">
 
@@ -877,18 +905,38 @@ function PatientDetails() {
               ) : (
 
                 <div className="patient-empty-state">
-                  No prescriptions found.
+                  {patientData.panelErrors?.prescriptions ? "Prescriptions unavailable." : "No prescriptions found."}
                 </div>
 
               )}
 
             </div>
 
-          )}
+          ) : null}
         </div>
       </div>
     </div>
   );
+}
+
+function ReportDownload({ report }) {
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const openReport = async () => {
+    setBusy(true); setError("");
+    try {
+      const url = assetUrl(report.reportUrl || report.documentUrl || report.fileUrl || report.filePath);
+      if (!/^https?:/i.test(url)) throw new Error("Invalid report URL");
+      const trusted = new URL(url).origin === new URL(apiUrl("")).origin;
+      const response = await fetch(url, { headers: trusted ? getApiHeaders() : {} });
+      if (!response.ok) throw new Error("Report unavailable");
+      const objectUrl = URL.createObjectURL(await response.blob());
+      const link = document.createElement("a"); link.href = objectUrl; link.download = report.fileName || report.documentName || "patient-report"; link.click();
+      setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    } catch { setError("Unable to download report. Please try again."); }
+    finally { setBusy(false); }
+  };
+  return <><button type="button" disabled={busy} onClick={openReport}>{busy ? 'Downloading?' : 'Download report'}</button>{error ? <p role="alert">{error}</p> : null}</>;
 }
 
 export default PatientDetails;

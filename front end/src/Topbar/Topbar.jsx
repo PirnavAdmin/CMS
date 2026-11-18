@@ -71,11 +71,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Menu,
   Search,
+  ChevronRight,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import "./Topbar.css";
 import NotificationPopup from "../components/NotificationPopup";
+import ThemePicker from "../components/ThemePicker";
 import UserProfileMenu from "../profile/UserProfileMenu";
 import { apiUrl } from "../config/api";
 import {
@@ -112,8 +114,23 @@ function Topbar({ onMenu }) {
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
   const [activityCount, setActivityCount] = useState(0);
-  const isSuperAdmin = location.pathname.startsWith("/superadmin");
+  const sessionRole = String(
+    localStorage.getItem("adminRole") || sessionStorage.getItem("adminRole") || ""
+  )
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, "");
+  const isSuperAdmin = location.pathname.startsWith("/superadmin") || sessionRole === "superadmin";
   const searchItems = isSuperAdmin ? superAdminModuleSearchItems : adminModuleSearchItems;
+  const areaLabel = isSuperAdmin ? "Super Admin" : "Admin";
+  const currentPage = searchItems
+    .filter(({ path }) => location.pathname === path || location.pathname.startsWith(`${path}/`))
+    .sort((a, b) => b.path.length - a.path.length)[0];
+  const fallbackTitle = location.pathname.split("/").filter(Boolean).pop()
+    ?.replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+  const pageTitle = currentPage?.label === "Dashboard"
+    ? `${areaLabel} Dashboard`
+    : currentPage?.label || fallbackTitle || `${areaLabel} Dashboard`;
   const placeholder = isSuperAdmin
     ? "Search dashboard, clinics, admins, reports..."
     : "Search patients, doctors, appointments...";
@@ -189,6 +206,13 @@ function Topbar({ onMenu }) {
           <Menu size={20} />
         </button>
 
+        <div className="topbar-title-wrap">
+          <h1>{pageTitle}</h1>
+          <div className="topbar-crumbs">
+            <span>Home</span><ChevronRight size={13} /><span>{areaLabel}</span>
+          </div>
+        </div>
+
         <form
           className="topbar-search-box"
           onSubmit={submitSearch}
@@ -237,6 +261,7 @@ function Topbar({ onMenu }) {
       {/* RIGHT */}
 
       <div className="topbar-right">
+        <ThemePicker />
         <NotificationPopup isSuperAdmin={isSuperAdmin} activityCount={activityCount} />
 
         <UserProfileMenu roleType="admin" />

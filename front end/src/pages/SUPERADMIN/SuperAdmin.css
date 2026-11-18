@@ -7,17 +7,49 @@
   padding: 0;
 }
 
+.content:has(.sa-page-header) {
+  padding-top: 16px !important;
+}
+
+.sa-roles-permissions-page {
+  min-height: max-content;
+  padding-bottom: 24px;
+}
+
+.sa-audit-logs-page {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: max-content;
+}
+
+html body .content.superadmin-content .sa-audit-logs-page {
+  row-gap: 10px !important;
+}
+
+html body .content.superadmin-content .sa-audit-logs-page > :is(.sa-tabs, .sa-search-filter, .sa-audit-scope-filter) {
+  margin-top: 0 !important;
+  margin-bottom: 0 !important;
+}
+
+.sa-notifications-page {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  min-height: max-content;
+}
+
 .sa-page-header h1 {
   margin: 0;
-  font-size: 24px;
-  line-height: 1.15;
+  font-size: 22px;
+  line-height: 1.2;
   letter-spacing: 0;
 }
 
 .sa-page-header p {
   margin: 6px 0 0;
   color: #475569;
-  font-size: 14px;
+  font-size: 12px;
   max-width: 640px;
 }
 
@@ -35,27 +67,39 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  border: 1px solid #dbe9f0;
+  border: 1px solid var(--theme-primary-glow);
   border-radius: 8px;
-  padding: 0 12px;
-  background: #ffffff;
-  color: #0f172a;
+  padding: 0 14px;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
   text-decoration: none;
-  transition: all 0.18s ease;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--theme-primary) 10%, transparent);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .sa-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  border-color: var(--theme-primary);
+  color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 30%, transparent);
 }
 
 .sa-btn-primary {
-  border-color: #0f766e;
-  background: #0f766e;
+  border-color: var(--theme-primary-dark);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
   color: #ffffff;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--theme-primary) 28%, transparent);
+}
+
+.sa-btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary-dark) 100%);
+  border-color: var(--theme-primary-dark);
+  color: #ffffff;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--theme-primary) 40%, transparent);
 }
 
 .sa-btn:disabled {
@@ -76,7 +120,7 @@
   background: #ffffff;
   border: 0;
   border-radius: 12px;
-  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 20px 45px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
 }
 
 .sa-stat-card {
@@ -98,7 +142,7 @@
 
 .sa-stat-card:not(:disabled):hover {
   transform: translateY(-2px);
-  box-shadow: 0 22px 50px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 22px 50px color-mix(in srgb, var(--theme-primary-dark) 12%, transparent);
 }
 
 .sa-stat-icon {
@@ -112,13 +156,13 @@
 }
 
 .sa-stat-icon--teal {
-  background: linear-gradient(180deg, #ecfeff 0%, #ccfbf1 100%);
-  color: #0f766e;
+  background: linear-gradient(180deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary-dark);
 }
 
 .sa-stat-icon--blue {
-  background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%);
-  color: #2563eb;
+  background: linear-gradient(180deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
 }
 
 .sa-stat-icon--green {
@@ -144,13 +188,13 @@
 }
 
 .sa-stat-card--teal {
-  border-color: #b5f4e8;
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+  border-color: var(--theme-primary-glow);
+  background: linear-gradient(135deg, #ffffff 0%, var(--theme-primary-soft) 100%);
 }
 
 .sa-stat-card--blue {
-  border-color: #bfdbfe;
-  background: linear-gradient(135deg, #ffffff 0%, #eff6ff 100%);
+  border-color: var(--theme-primary-soft);
+  background: linear-gradient(135deg, #ffffff 0%, var(--theme-primary-soft) 100%);
 }
 
 .sa-stat-card--amber {
@@ -191,27 +235,160 @@
 }
 
 .sa-dashboard-page .sa-stat-card {
-  min-height: 96px;
-  padding: 16px;
+  min-height: 112px;
+  padding: 24px;
   border-radius: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  box-shadow: 0 16px 34px rgba(15, 23, 42, 0.07);
+  border: 1px solid color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--theme-primary-dark) 7%, transparent);
   box-sizing: border-box;
 }
 
 .sa-dashboard-page .sa-stat-icon {
-  width: 48px;
-  height: 48px;
-  flex-basis: 48px;
-  border-radius: 14px;
+  width: 64px;
+  height: 64px;
+  flex-basis: 64px;
+  border-radius: 16px;
+}
+/* Dashboard-only color treatment; shared Super Admin pages remain unchanged. */
+.sa-dashboard-page .sa-page-header {
+  margin-bottom: 8px;
+  padding: 4px 0 8px;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sa-dashboard-page .sa-page-header {
+  align-items: center;
+  gap: 12px;
+  justify-content: flex-start;
+}
+
+.sa-dashboard-page .sa-page-header__leading {
+  display: grid;
+  flex: 0 0 42px;
+  place-items: center;
+}
+
+.sa-dashboard-page .sa-dashboard-greeting-icon {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.sa-dashboard-page .sa-dashboard-greeting-icon--morning {
+  color: #d97706;
+  background: #fef3c7;
+}
+
+.sa-dashboard-page .sa-dashboard-greeting-icon--afternoon {
+  color: #ea580c;
+  background: #ffedd5;
+}
+
+.sa-dashboard-page .sa-dashboard-greeting-icon--evening {
+  color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+}
+
+.sa-dashboard-page .sa-page-header__copy h1 {
+  font-size: 22px !important;
+}
+
+.sa-dashboard-page .sa-page-header__copy p {
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.sa-dashboard-page .sa-stat-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.sa-dashboard-page .sa-stat-card::after {
+  display: none;
+}
+
+.sa-dashboard-page .sa-stat-card--teal {
+  color: var(--theme-primary-dark);
+  border-color: var(--theme-primary-glow);
+  background: linear-gradient(135deg, #ffffff 12%, var(--theme-primary-soft) 100%);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--theme-primary-dark) 13%, transparent);
+}
+
+.sa-dashboard-page .sa-stat-card--blue {
+  color: var(--theme-primary);
+  border-color: var(--theme-primary-soft);
+  background: linear-gradient(135deg, #ffffff 12%, var(--theme-primary-soft) 100%);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--theme-primary) 13%, transparent);
+}
+
+.sa-dashboard-page .sa-stat-card--amber {
+  color: #b45309;
+  border-color: #fde68a;
+  background: linear-gradient(135deg, #ffffff 12%, #fff7d6 100%);
+  box-shadow: 0 16px 34px rgba(217, 119, 6, 0.13);
+}
+
+.sa-dashboard-page .sa-stat-card h2 {
+  color: var(--theme-primary-dark);
+}
+
+.sa-dashboard-page .sa-stat-copy {
+  min-width: 0;
+}
+
+.sa-dashboard-page .sa-stat-copy p {
+  overflow: hidden;
+  margin: 0 0 8px;
+  color: #64748b;
+  font-size: 16px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-dashboard-page .sa-stat-copy h2 {
+  margin: 0;
+  font-size: 28px;
+}
+
+.sa-dashboard-page .sa-stat-card:not(:disabled):hover {
+  transform: translateY(-4px);
+}
+
+.sa-dashboard-page .sa-stat-card--teal:not(:disabled):hover {
+  border-color: var(--theme-primary);
+  box-shadow: 0 22px 44px color-mix(in srgb, var(--theme-primary-dark) 20%, transparent);
+}
+
+.sa-dashboard-page .sa-stat-card--blue:not(:disabled):hover {
+  border-color: var(--theme-primary);
+  box-shadow: 0 22px 44px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+}
+
+.sa-dashboard-page .sa-stat-card--amber:not(:disabled):hover {
+  border-color: #fbbf24;
+  box-shadow: 0 22px 44px rgba(217, 119, 6, 0.2);
 }
 
 .sa-dashboard-shell {
   display: flex;
   flex-direction: column;
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
   overflow: visible;
+}
+
+.sa-dashboard-page .sa-stat-card,
+.sa-dashboard-page .sa-panel {
+  height: 100% !important;
+  align-self: stretch;
 }
 
 .sa-grid {
@@ -219,7 +396,7 @@
   grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
   gap: 16px;
   margin-top: 16px;
-  flex: 1;
+  flex: 0 0 auto;
   min-height: 0;
   align-items: stretch;
 }
@@ -230,8 +407,8 @@
   padding: 16px;
   border-radius: 12px;
   background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.07);
+  border: 1px solid color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--theme-primary-dark) 7%, transparent);
   box-sizing: border-box;
 }
 
@@ -240,6 +417,7 @@
   display: flex;
   flex-direction: column;
   align-self: start;
+  min-height: 300px;
   overflow: hidden;
 }
 
@@ -253,6 +431,21 @@
   overflow: hidden;
 }
 
+.sa-dashboard-page .sa-panel--activity {
+  max-height: none;
+}
+.sa-dashboard-page .sa-panel--highlighted {
+  border-top: 4px solid var(--theme-primary);
+  background: linear-gradient(180deg, var(--theme-primary-soft) 0%, #ffffff 24%);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--theme-primary-dark) 11%, transparent);
+}
+
+.sa-dashboard-page .sa-panel--activity {
+  border-top: 4px solid var(--theme-primary);
+  background: linear-gradient(180deg, var(--theme-primary-soft) 0%, #ffffff 24%);
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--theme-primary) 11%, transparent);
+}
+
 .sa-panel__header {
   display: flex;
   align-items: flex-start;
@@ -261,11 +454,38 @@
   margin-bottom: 12px;
 }
 
+.sa-dashboard-chart-picker {
+  flex: 0 0 auto;
+}
+
+.sa-dashboard-chart-picker select {
+  min-height: 38px;
+  max-width: 240px;
+  padding: 0 32px 0 12px;
+  border: 1px solid #dbe5e7;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #334155;
+  font: inherit;
+  font-size: 12px;
+}
+
+.sa-dashboard-chart-error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 9px;
+  background: #fef2f2;
+  color: #b91c1c;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
 .sa-panel h3 {
   margin: 0;
   font-size: 16px;
   letter-spacing: 0;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
 }
 
 .sa-panel p {
@@ -282,9 +502,9 @@
   height: 38px;
   padding: 0 16px;
   border-radius: 12px;
-  background: #eff8ff;
-  color: #2563eb;
-  border: 1px solid #dbeafe;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
+  border: 1px solid var(--theme-primary-soft);
   font-size: 13px;
   font-weight: 700;
 }
@@ -296,13 +516,19 @@
   margin-top: 16px;
 }
 
+.sa-chart-summary-grid--dashboard {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 4px;
+}
+
 .sa-chart-summary-card {
   min-height: 72px;
   padding: 12px;
   border-radius: 10px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent);
 }
 
 .sa-chart-summary-card span {
@@ -319,7 +545,7 @@
   margin-top: 8px;
   font-size: 21px;
   line-height: 1.1;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
 }
 
 .sa-chart-summary-card--green {
@@ -328,13 +554,13 @@
 }
 
 .sa-chart-summary-card--blue {
-  border-color: #dbeafe;
-  background: linear-gradient(180deg, #eff6ff 0%, #ffffff 100%);
+  border-color: var(--theme-primary-soft);
+  background: linear-gradient(180deg, var(--theme-primary-soft) 0%, #ffffff 100%);
 }
 
 .sa-chart-summary-card--purple {
-  border-color: #ede9fe;
-  background: linear-gradient(180deg, #f5f3ff 0%, #ffffff 100%);
+  border-color: var(--theme-primary-soft);
+  background: linear-gradient(180deg, var(--theme-primary-soft) 0%, #ffffff 100%);
 }
 
 .sa-chart-summary-card--rose {
@@ -342,14 +568,75 @@
   background: linear-gradient(180deg, #fff1f2 0%, #ffffff 100%);
 }
 
+.sa-chart-summary-card--compact {
+  min-width: 0;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+}
+
+.sa-chart-summary-card--teal {
+  border-color: var(--theme-primary-glow);
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, #ffffff 100%);
+}
+
+.sa-chart-summary-card--amber {
+  border-color: #fde4c7;
+  background: linear-gradient(135deg, #fff8ed 0%, #ffffff 100%);
+}
+
+.sa-chart-summary-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid !important;
+  place-items: center;
+  border-radius: 11px;
+  color: var(--theme-primary-dark) !important;
+  background: var(--theme-primary-soft);
+}
+
+.sa-chart-summary-card--blue .sa-chart-summary-icon {
+  color: var(--theme-primary) !important;
+  background: var(--theme-primary-soft);
+}
+
+.sa-chart-summary-card--amber .sa-chart-summary-icon {
+  color: #c26a06 !important;
+  background: #fff0d7;
+}
+
+.sa-chart-summary-copy {
+  min-width: 0;
+}
+
+.sa-chart-summary-card--compact .sa-chart-summary-copy > span {
+  overflow: hidden;
+  color: #64748b;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-overflow: ellipsis;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.sa-chart-summary-card--compact .sa-chart-summary-copy > strong {
+  margin-top: 4px;
+  font-size: 18px;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
 .sa-activity-panel-header {
   align-items: center;
 }
 
 .sa-btn--ghost {
-  border-color: rgba(15, 23, 42, 0.08);
+  border-color: color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
   background: rgba(255, 255, 255, 0.92);
-  color: #0f172a;
+  color: var(--theme-primary-dark);
 }
 
 .sa-activity-list {
@@ -364,6 +651,7 @@
   scrollbar-color: #cbd5e1 transparent;
   scrollbar-width: thin;
 }
+
 
 .sa-activity-list::-webkit-scrollbar {
   width: 5px;
@@ -406,13 +694,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 10px;
-  color: #0f766e;
+  color: var(--theme-primary-dark);
   background: #d9fbef;
-  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.1);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--theme-primary-dark) 10%, transparent);
 }
 
 .sa-activity-icon--login {
-  color: #0f9f7a;
+  color: var(--theme-primary-dark);
   background: #d8f9eb;
 }
 
@@ -426,9 +714,9 @@
 }
 
 .sa-panel--activity .sa-activity-item:hover {
-  border-color: #c4f1ed;
+  border-color: var(--theme-primary-glow);
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.07);
+  box-shadow: 0 14px 28px color-mix(in srgb, var(--theme-primary-dark) 7%, transparent);
 }
 
 .sa-panel--activity .sa-activity-item span {
@@ -441,7 +729,7 @@
 .sa-panel--activity .sa-activity-item b {
   display: block;
   font-size: 14px;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
 }
 
 .sa-panel--activity .sa-activity-item p {
@@ -459,10 +747,19 @@
 
 .sa-chart {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
   width: 100%;
-  min-height: 260px;
-  height: clamp(260px, 32vh, 330px);
+  min-height: 0;
+  height: auto;
   overflow: visible;
+}
+
+.sa-chart-plot {
+  width: 100%;
+  min-height: 280px;
+  height: clamp(280px, 34vh, 350px);
 }
 
 .sa-chart--empty {
@@ -480,8 +777,8 @@
   padding: 16px;
   text-align: center;
   color: #64748b;
-  background: #f8fcff;
-  border: 1px solid #dbeef6;
+  background: var(--theme-primary-soft);
+  border: 1px solid var(--theme-primary-soft);
   border-radius: 12px;
 }
 
@@ -492,13 +789,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 12px;
-  background: #ecfeff;
-  color: #0f766e;
-  border: 1px solid #b7f0e4;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-glow);
 }
 
 .sa-empty-state b {
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 15px;
 }
 
@@ -542,7 +839,7 @@
   border: 1px solid #e6edf5;
   border-radius: 10px;
   background: #ffffff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 3.5%, transparent);
 }
 
 .sa-report-metric-icon {
@@ -561,8 +858,8 @@
 }
 
 .sa-report-metric-icon--violet {
-  background: #f3e8ff;
-  color: #8b5cf6;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
 }
 
 .sa-report-metric-icon--amber {
@@ -584,7 +881,7 @@
 
 .sa-report-metric h2 {
   margin-top: 3px;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 22px;
   line-height: 1.1;
 }
@@ -614,7 +911,7 @@
   border: 1px solid #e6edf5;
   border-radius: 10px;
   background: #ffffff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 3.5%, transparent);
 }
 
 .sa-report-panel h3 {
@@ -649,8 +946,8 @@
   min-height: 8px;
   display: block;
   border-radius: 8px 8px 0 0;
-  background: linear-gradient(180deg, #14b8a6 0%, #0f766e 100%);
-  box-shadow: 0 5px 12px rgba(20, 184, 166, 0.25);
+  background: linear-gradient(180deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  box-shadow: 0 5px 12px color-mix(in srgb, var(--theme-primary) 25%, transparent);
 }
 
 .sa-report-bar-item small {
@@ -676,7 +973,7 @@
   width: 9px;
   height: 9px;
   border-radius: 2px;
-  background: #0f9f8f;
+  background: var(--theme-primary-dark);
 }
 
 .sa-report-donut-wrap {
@@ -777,8 +1074,8 @@
 
 .sa-notification-item:hover,
 .sa-notification-item:focus-visible {
-  border-color: #99f6e4;
-  background: #f0fdfa;
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
   outline: 0;
 }
 
@@ -828,7 +1125,7 @@
 .sa-notification-detail {
   margin-bottom: 12px;
   padding: 16px;
-  border: 1px solid #bae6fd;
+  border: 1px solid var(--theme-primary-soft);
   border-radius: 8px;
   background: #f8fafc;
 }
@@ -843,7 +1140,7 @@
 
 .sa-notification-detail-header b {
   display: block;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 16px;
 }
 
@@ -913,13 +1210,18 @@
     align-items: center;
     justify-content: center;
     border-radius: 10px;
-    border: 1px solid #e6eef6;
-    background: #fff;
-    color: #ef4444;
+    border: 1px solid #fca5a5;
+    background: linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%);
+    color: #dc2626;
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.08);
+    transition: all 0.2s ease;
   }
   .sa-delete-icon:hover {
-    background: #fff6f6;
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    border-color: #dc2626;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
   }
 
 .sa-empty-state-icon {
@@ -929,13 +1231,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 18px;
-  background: #ecfeff;
-  color: #0f766e;
-  border: 1px solid #bae6fd;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-soft);
 }
 
 .sa-empty-state b {
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 14px;
 }
 
@@ -947,9 +1249,16 @@
 
 .sa-search-filter {
   display: flex;
-  gap: 12px;
+  gap: 14px;
   align-items: center;
-  margin: 12px 0 14px;
+  margin: 0 0 16px;
+  padding: 14px 20px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .sa-search-box {
@@ -958,11 +1267,26 @@
   height: 46px;
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 0 12px;
-  border: 1px solid #d7e0ea;
-  border-radius: 10px;
-  background: #f8fafc;
+  gap: 12px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-sizing: border-box;
+  transition: all 0.25s ease;
+}
+
+.sa-search-box:focus-within {
+  border-color: var(--theme-primary);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+}
+
+.sa-search-box svg {
+  color: var(--theme-primary-dark);
+  flex-shrink: 0;
 }
 
 .sa-search-box input,
@@ -970,21 +1294,95 @@
   border: none;
   outline: none;
   background: transparent;
-  color: #111827;
-  font-size: 13px;
+  color: var(--theme-primary-dark);
+  font-size: 0.94rem;
+  font-weight: 600;
 }
 
 .sa-search-box input {
   width: 100%;
 }
 
+.sa-search-box input::placeholder {
+  color: #475569;
+}
+
 .sa-search-filter select {
   height: 46px;
-  min-width: 150px;
-  border: 1px solid #d7e0ea;
-  border-radius: 10px;
-  padding: 0 10px;
-  background: #ffffff;
+  min-width: 160px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+  padding: 0 16px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--theme-primary-dark);
+  font-weight: 600;
+  box-sizing: border-box;
+  transition: all 0.2s ease;
+}
+
+.sa-search-filter select:focus {
+  border-color: var(--theme-primary);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+}
+
+.sa-admin-search-filter {
+  width: 100%;
+  margin-bottom: 16px !important;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-sizing: border-box;
+}
+
+.content.superadmin-content .sa-admin-search-filter {
+  position: relative;
+  z-index: 2;
+  margin: 8px 0 28px !important;
+}
+
+.sa-admin-search-filter .sa-search-box {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sa-admin-search-filter select {
+  flex: 0 1 160px;
+  width: 160px;
+  max-width: 100%;
+}
+
+.sa-search-filter--reports {
+  width: 100%;
+  margin: 0 0 16px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-sizing: border-box;
+}
+
+.sa-search-filter--reports .sa-search-box {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.sa-search-filter--reports select {
+  flex: 0 1 240px;
+  width: min(240px, 28vw);
+  max-width: 100%;
+}
+
+.sa-search-filter--reports + .sa-report-shell {
+  margin-top: 16px;
 }
 
 .sa-audit-summary-grid {
@@ -992,6 +1390,11 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
   margin: 0 0 12px;
+}
+
+html body .content.superadmin-content .sa-audit-logs-page > .sa-page-header[data-page-header] {
+  margin-bottom: 2px !important;
+  padding-bottom: 0 !important;
 }
 
 .sa-audit-summary-card {
@@ -1004,7 +1407,24 @@
   border: 1px solid #e6edf5;
   border-radius: 12px;
   background: #ffffff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 3.5%, transparent);
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
+}
+
+.sa-audit-summary-card:hover,
+.sa-audit-summary-card:focus-visible,
+.sa-audit-summary-card.is-active {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--theme-primary-dark) 11%, transparent);
+  outline: 0;
+}
+
+.sa-audit-summary-card.is-active {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 16%, transparent), 0 16px 34px color-mix(in srgb, var(--theme-primary-dark) 10%, transparent);
 }
 
 .sa-audit-summary-card span:last-child {
@@ -1020,7 +1440,7 @@
 }
 
 .sa-audit-summary-card strong {
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 25px;
   font-weight: 900;
   line-height: 1;
@@ -1043,17 +1463,17 @@
 }
 
 .sa-audit-summary-icon--total {
-  background: #e8fbf5;
-  color: #0f9f8f;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
 }
 
 .sa-audit-summary-icon--login {
-  background: #eafbea;
+  background: var(--theme-primary-soft);
   color: #16a34a;
 }
 
 .sa-audit-summary-icon--changes {
-  background: #fff7df;
+  background: var(--theme-primary-soft);
   color: #d97706;
 }
 
@@ -1121,19 +1541,122 @@
 
 .sa-table {
   overflow-x: auto;
-  border: 1px solid #e2e8f0;
-  border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
-.sa-table-head,
+.sa-table-head {
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  color: #1e293b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  min-width: 760px;
+  display: grid;
+  column-gap: 8px;
+  align-items: center;
+  padding: 16px 20px;
+}
+
+.sa-table-head > :last-child,
+.sa-actions-header,
+.sa-table-cell--actions,
+.sa-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-table-head .sa-sno-head,
+.sa-table-row .sa-table-cell--sno,
+.sa-sno-head,
+.sa-table-cell--sno {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-table-head .sa-status-head,
+.sa-table-row .sa-table-cell--status,
+.sa-status-head,
+.sa-table-cell--status {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-align-center,
+.sa-table-head .sa-align-center,
+.sa-table-row .sa-align-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-align-right,
+.sa-table-head .sa-align-right,
+.sa-table-row .sa-align-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+
+.sa-align-left,
+.sa-name-head,
+.sa-table-cell--name,
+.sa-admin-name-cell,
+.sa-clinic-name-cell,
+.sa-admin-clinic-cell,
+.sa-table-head .sa-align-left,
+.sa-table-row .sa-align-left {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
 .sa-table-row {
   min-width: 760px;
   display: grid;
-  column-gap: 6px;
+  column-gap: 8px;
   align-items: center;
-  padding: 10px 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--theme-primary-dark);
+  min-height: 58px;
+  font-size: 0.92rem;
+  transition: all 0.2s ease;
+}
+
+.sa-table-row:hover {
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 10%, transparent);
+}
+
+.sa-table-row:last-child {
+  border-bottom: none;
 }
 
 /* User rows have several fixed-width columns. Keep their grid wide enough so
@@ -1157,43 +1680,57 @@
 }
 
 .sa-table--audit {
-  overflow-x: hidden;
+  overflow-x: auto;
   border-radius: 10px;
   border-color: #e6edf5;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--theme-primary-dark) 3.5%, transparent);
 }
 
 .sa-table--audit .sa-table-head,
 .sa-table--audit .sa-table-row {
-  min-width: 0;
+  min-width: 880px;
   width: 100%;
-  column-gap: 3px;
-  padding: 5px 10px;
+  grid-template-columns: 40px minmax(160px, 1fr) minmax(128px, 1.15fr) minmax(72px, 0.55fr) minmax(112px, 0.75fr) 54px minmax(125px, 1fr) minmax(88px, 0.72fr) !important;
+  column-gap: 12px !important;
+  padding: 8px 12px;
   box-sizing: border-box;
 }
 
+.sa-table--audit .sa-table-head > :nth-child(2),
+.sa-table--audit .sa-table-row > :nth-child(2) {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
 .sa-table--audit .sa-table-head {
-  background: #fbfcff;
-  color: #0f172a;
-  font-size: 9.5px;
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  color: var(--theme-primary-dark);
+  font-size: 11px;
   font-weight: 850;
   letter-spacing: 0;
 }
 
 .sa-table--audit .sa-table-row {
-  min-height: 36px;
-  background: #ffffff;
-  font-size: 9.5px;
+  min-height: 46px;
+  background: rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  font-size: 11px;
   color: #1f2937;
+  transition: all 0.2s ease;
+}
+
+.sa-table--audit .sa-table-row:hover {
+  background: rgba(255, 255, 255, 0.65);
 }
 
 .sa-table--audit .sa-table-row:nth-child(even) {
-  background: #fcfdff;
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .sa-table--audit .sa-table-cell {
   min-width: 0;
-  padding-left: 2px;
+  padding-left: 0;
   box-sizing: border-box;
   overflow: hidden;
   line-height: 1.2;
@@ -1213,11 +1750,14 @@
   display: inline-flex;
   align-items: center;
   gap: 7px;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
+  justify-content: flex-start;
 }
 
 .sa-audit-user b {
+  flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
   color: #263142;
@@ -1239,12 +1779,22 @@
   font-size: 8px;
   font-weight: 900;
   background: #eefdf7;
-  color: #0f9f8f;
+  color: var(--theme-primary-dark);
+}
+
+html body .content.superadmin-content .sa-audit-logs-page .sa-audit-user .sa-audit-avatar {
+  width: 20px !important;
+  height: 20px !important;
+  min-width: 20px !important;
+  flex: 0 0 20px !important;
+  padding: 0 !important;
+  font-size: 9px !important;
+  line-height: 1 !important;
 }
 
 .sa-audit-avatar--patient {
-  background: #eafaf6;
-  color: #0f9f8f;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
 }
 
 .sa-audit-avatar--receptionist {
@@ -1253,8 +1803,8 @@
 }
 
 .sa-audit-avatar--doctor {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
 }
 
 .sa-audit-avatar--admin {
@@ -1264,7 +1814,7 @@
 
 .sa-audit-avatar--superadmin {
   background: #eefdf7;
-  color: #0f9f8f;
+  color: var(--theme-primary-dark);
 }
 
 .sa-audit-pill,
@@ -1284,8 +1834,8 @@
 }
 
 .sa-audit-pill--login {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
 }
 
 .sa-audit-pill--logout {
@@ -1324,8 +1874,8 @@
 }
 
 .sa-audit-role--patient {
-  background: #f5f3ff;
-  color: #8b5cf6;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
 }
 
 .sa-audit-role--receptionist {
@@ -1334,8 +1884,8 @@
 }
 
 .sa-audit-role--doctor {
-  background: #eff6ff;
-  color: #2563eb;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
 }
 
 .sa-audit-role--admin {
@@ -1345,7 +1895,7 @@
 
 .sa-audit-role--superadmin {
   background: #eefdf7;
-  color: #0f9f8f;
+  color: var(--theme-primary-dark);
 }
 
 /* Clinics has four row actions. Reserve space for all controls and keep a
@@ -1365,15 +1915,24 @@
 }
 
 .sa-table--clinics {
-  overflow-x: auto;
+  overflow-x: hidden;
+  max-width: 100%;
+  width: 100%;
   border-radius: 12px;
   border-color: #dde6f1;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 4%, transparent);
+}
+
+@media (max-width: 900px) {
+  .sa-table--clinics {
+    overflow-x: auto;
+  }
 }
 
 .sa-table--clinics .sa-table-head {
-  background: #f7f9fc;
-  color: #0f172a;
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  color: var(--theme-primary-dark);
   font-weight: 850;
   font-size: 9.5px;
   letter-spacing: 0;
@@ -1381,17 +1940,25 @@
 
 .sa-table--clinics .sa-table-row {
   min-height: 46px;
-  background: #fff;
-  color: #0f172a;
+  background: rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  color: var(--theme-primary-dark);
   font-size: 10px;
+  transition: all 0.2s ease;
 }
 
 .sa-table--clinics .sa-table-cell {
   overflow: hidden;
+  min-width: 0;
+}
+
+.sa-table--clinics .sa-table-cell--actions {
+  overflow: visible !important;
 }
 
 .sa-table--clinics .sa-table-row:hover {
-  background: #fbfdff;
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 10%, transparent);
 }
 
 .sa-clinic-name-cell {
@@ -1402,7 +1969,7 @@
 }
 
 .sa-clinic-name-cell b {
-  color: #1d65c1;
+  color: var(--theme-primary);
   font-weight: 850;
   font-size: 10px;
   overflow-wrap: anywhere;
@@ -1417,11 +1984,11 @@
   align-items: center;
   justify-content: center;
   gap: 1px;
-  border: 1px solid #e4ecf7;
+  border: 1px solid var(--theme-primary-soft);
   border-radius: 7px;
-  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  background: linear-gradient(180deg, #ffffff 0%, var(--theme-primary-soft) 100%);
   color: #0aa36d;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
 }
 
 .sa-clinic-logo img {
@@ -1432,17 +1999,17 @@
 }
 
 .sa-clinic-logo--emerald {
-  color: #10b981;
+  color: var(--theme-primary);
 }
 
 .sa-clinic-logo--blue {
-  color: #2563eb;
+  color: var(--theme-primary);
 }
 
 .sa-clinic-logo--dental {
-  color: #1d7ff2;
-  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
-  border-color: #dbeafe;
+  color: var(--theme-primary);
+  background: linear-gradient(180deg, #ffffff 0%, var(--theme-primary-soft) 100%);
+  border-color: var(--theme-primary-soft);
 }
 
 .sa-clinic-logo--amber {
@@ -1454,7 +2021,7 @@
 }
 
 .sa-clinic-logo--sky {
-  color: #0ea5e9;
+  color: var(--theme-primary);
 }
 
 /* Super admin role table and notifications refresh. */
@@ -1487,13 +2054,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #e9fbf5;
-  color: #0f9f8f;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
 }
 
 .sa-role-main b {
   display: block;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 16px;
   font-weight: 850;
 }
@@ -1503,8 +2070,8 @@
   margin-top: 7px;
   padding: 4px 8px;
   border-radius: 6px;
-  background: #dff9f1;
-  color: #0f9f8f;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
   font-size: 11px;
   font-style: normal;
   font-weight: 850;
@@ -1516,9 +2083,12 @@
 }
 
 .sa-role-module b {
-  color: #0f172a;
+  flex-shrink: 0;
+  padding-left: 3px;
+  color: var(--theme-primary-dark);
   font-size: 14px;
   font-weight: 800;
+  white-space: nowrap;
 }
 
 .sa-role-module span {
@@ -1535,7 +2105,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 14px;
   font-weight: 850;
 }
@@ -1554,7 +2124,7 @@
 }
 
 .sa-role-admin-more {
-  color: #0f9f8f;
+  color: var(--theme-primary-dark);
   font-weight: 850;
 }
 
@@ -1617,9 +2187,9 @@
 }
 
 .sa-notification-tab--all {
-  border-color: #bde7e4;
-  background: #f0fdfa;
-  color: #0f766e;
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
 }
 
 .sa-notification-tab--unread {
@@ -1635,9 +2205,9 @@
 }
 
 .sa-notification-tab--sent {
-  border-color: #bfdbfe;
-  background: #eff6ff;
-  color: #1d4ed8;
+  border-color: var(--theme-primary-soft);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
 }
 
 .sa-notification-tab.active {
@@ -1664,7 +2234,7 @@
   border: 1px solid #dbe5f0;
   border-radius: 8px;
   background: #fff;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 12px;
   font-weight: 850;
 }
@@ -1683,23 +2253,23 @@
 }
 
 .sa-notification-item:first-child {
-  border-color: #99f6e4;
-  background: #f0fdfa;
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-item--appointment-0 {
-  border-color: #99f6e4;
-  background: #f0fdfa;
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-item--appointment-1 {
-  border-color: #bfdbfe;
-  background: #eff6ff;
+  border-color: var(--theme-primary-soft);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-item--appointment-2 {
-  border-color: #e9d5ff;
-  background: #faf5ff;
+  border-color: var(--theme-primary-soft);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-item--appointment-3,
@@ -1715,8 +2285,8 @@
 
 .sa-notification-item--system,
 .sa-notification-item--sent {
-  border-color: #a5f3fc;
-  background: #ecfeff;
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-icon {
@@ -1727,18 +2297,18 @@
   align-items: center;
   justify-content: center;
   border-radius: 18px;
-  color: #10b981;
+  color: var(--theme-primary);
   background: #dcfce7;
 }
 
 .sa-notification-icon--1 {
-  color: #2563eb;
-  background: #eff6ff;
+  color: var(--theme-primary);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-icon--2 {
-  color: #9333ea;
-  background: #faf5ff;
+  color: var(--theme-primary);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-icon--3 {
@@ -1747,24 +2317,37 @@
 }
 
 .sa-notification-icon--appointment-0 {
-  color: #10b981;
+  color: var(--theme-primary);
   background: #dcfce7;
 }
 
 .sa-notification-icon--appointment-1 {
-  color: #2563eb;
-  background: #dbeafe;
+  color: var(--theme-primary);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-icon--appointment-2 {
-  color: #9333ea;
-  background: #f3e8ff;
+  color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+}
+
+.sa-notification-icon svg {
+  display: block !important;
+  width: 22px !important;
+  height: 22px !important;
+  stroke: currentColor !important;
+  stroke-width: 2.2 !important;
+  flex-shrink: 0 !important;
 }
 
 .sa-notification-icon--appointment-3,
 .sa-notification-icon--payment {
-  color: #f59e0b;
-  background: #ffedd5;
+  color: #d97706 !important;
+  background: #fef3c7 !important;
+}
+
+.sa-notification-icon--payment svg {
+  stroke: #d97706 !important;
 }
 
 .sa-notification-icon--cancelled {
@@ -1774,13 +2357,13 @@
 
 .sa-notification-icon--system,
 .sa-notification-icon--default {
-  color: #0891b2;
-  background: #cffafe;
+  color: var(--theme-primary-dark);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-icon--sent {
-  color: #2563eb;
-  background: #dbeafe;
+  color: var(--theme-primary);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-icon--read {
@@ -1789,8 +2372,8 @@
 }
 
 .sa-notification-send-card {
-  border-color: #bde7e4;
-  background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+  border-color: var(--theme-primary-glow);
+  background: linear-gradient(135deg, #ffffff 0%, var(--theme-primary-soft) 100%);
 }
 
 .sa-notification-send-header {
@@ -1808,13 +2391,13 @@
   align-items: center;
   justify-content: center;
   border-radius: 16px;
-  color: #0f766e;
-  background: #ccfbf1;
+  color: var(--theme-primary-dark);
+  background: var(--theme-primary-soft);
 }
 
 .sa-notification-send-header h3 {
   margin: 0;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 19px;
 }
 
@@ -1824,9 +2407,45 @@
   font-size: 13px;
 }
 
+.sa-notification-item {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 14px !important;
+}
+
 .sa-notification-item-btn {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  text-align: left !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
+.sa-notification-item-btn > div {
+  width: 100% !important;
+  text-align: left !important;
+}
+
+.sa-notification-item-btn b,
+.sa-notification-item-btn p {
+  text-align: left !important;
+  margin: 0 !important;
+}
+
+.sa-notification-item-btn p {
+  margin-top: 3px !important;
+}
+
+.sa-notification-actions {
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
 }
 
 .sa-notification-item-btn span {
@@ -1863,6 +2482,11 @@
 
 .sa-table--roles .sa-table-row {
   min-height: 96px;
+}
+
+.sa-table--roles .sa-table-row > :nth-child(5) {
+  grid-column: 2 / -1;
+  grid-row: 2;
 }
 
 .sa-role-main {
@@ -1908,14 +2532,55 @@
 }
 
 .sa-role-permissions {
-  gap: 5px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
 }
 
-.sa-role-permissions span {
-  min-height: 24px;
-  padding: 0 7px;
+.sa-table--roles .sa-role-permissions {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sa-role-permissions > .sa-role-permission-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  min-height: 28px;
+  padding: 3px 8px;
   border-radius: 7px;
-  font-size: 10.5px;
+  background: #effdf6;
+  color: #166534;
+  font-size: 10px;
+  font-weight: 750;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sa-role-permission-chip > b {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sa-role-permission-chip > .sa-role-permission-count {
+  display: inline-flex !important;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-height: 20px !important;
+  padding: 0 6px !important;
+  border-radius: 6px !important;
+  background: #f1f5f9;
+  color: #64748b;
+  font-size: 9px !important;
+  font-weight: 850 !important;
 }
 
 .sa-table--roles .sa-actions {
@@ -2012,7 +2677,7 @@
 }
 
 .sa-clinic-icon-text--phone svg {
-  color: #0ea5a3;
+  color: var(--theme-primary-dark);
 }
 
 .sa-table--clinics .sa-table-cell--nowrap {
@@ -2057,15 +2722,74 @@
   width: 23px;
   height: 23px;
   border-color: #e2e8f0;
-  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 4%, transparent);
+}
+
+.sa-table--admins {
+  overflow-x: auto;
+  max-width: 100%;
+  width: 100%;
+}
+
+@media (max-width: 900px) {
+  .sa-table--admins {
+    overflow-x: auto;
+  }
 }
 
 .sa-table--admins .sa-table-head,
 .sa-table--admins .sa-table-row {
-  min-width: 0;
-  width: 100%;
-  column-gap: 6px;
-  padding: 8px 10px;
+  min-width: 1080px !important;
+  width: max(100%, 1080px) !important;
+  column-gap: 5px !important;
+  padding: 8px 0 8px 10px !important;
+}
+
+.sa-table--admins .sa-table-head > :nth-child(1),
+.sa-table--admins .sa-table-row > :nth-child(1) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  margin: 0 auto !important;
+}
+
+.sa-table--admins .sa-table-head > :nth-child(2),
+.sa-table--admins .sa-table-row > :nth-child(2),
+.sa-table--admins .sa-admin-name-cell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+.sa-table .actions-group,
+.sa-table-cell--actions .actions-group {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 3px !important;
+  padding: 0 !important;
+  width: auto !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-table .actions-group .action-btn,
+.sa-table-cell--actions .action-btn {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  min-height: 26px !important;
+  border-radius: 7px !important;
+}
+
+.sa-table .actions-group .action-btn svg,
+.sa-table-cell--actions .action-btn svg {
+  width: 14px !important;
+  height: 14px !important;
 }
 
 .sa-table--admins .sa-table-row {
@@ -2080,50 +2804,68 @@
 }
 
 .sa-admin-name-cell {
-  gap: 8px;
+  gap: 10px;
 }
 
 .sa-admin-avatar {
-  width: 25px;
-  height: 25px;
-  flex: 0 0 25px;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  background: #ccfbf1;
-  color: #0f9f8f;
-  font-size: 9px;
-  font-weight: 900;
-  border: 1px solid rgba(15, 159, 143, 0.18);
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  color: #ffffff;
+  font-size: 0.82rem;
+  font-weight: 800;
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+  flex-shrink: 0;
 }
 
 .sa-admin-avatar--1 {
-  background: #fff7ed;
-  color: #f59e0b;
-  border-color: rgba(245, 158, 11, 0.18);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary) 100%);
+  color: #ffffff;
 }
 
 .sa-admin-avatar--2 {
-  background: #dcfce7;
-  color: #16a34a;
-  border-color: rgba(22, 163, 74, 0.18);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  color: #ffffff;
 }
 
 .sa-admin-avatar--3 {
-  background: #fdf2f8;
-  color: #db2777;
-  border-color: rgba(219, 39, 119, 0.18);
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary) 100%);
+  color: #ffffff;
 }
 
-.sa-admin-name-cell b {
+/* Highlighted Admin Name Styling */
+.sa-admin-name-highlight {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--theme-primary) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 35%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary) 12%, transparent);
   min-width: 0;
-  color: #0f172a;
-  font-size: 12px;
-  font-weight: 850;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.sa-admin-name-highlight b {
+  color: var(--theme-primary-dark) !important;
+  font-weight: 900;
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
+}
+
+.sa-admin-email {
+  color: var(--theme-primary) !important;
+  font-weight: 800 !important;
+  font-size: 0.92rem;
 }
 
 .sa-admin-icon-text {
@@ -2135,7 +2877,7 @@
 
 .sa-admin-icon-text svg {
   flex: 0 0 auto;
-  color: #2563eb;
+  color: var(--theme-primary);
   stroke-width: 2.3;
 }
 
@@ -2158,8 +2900,8 @@
 
 .sa-admin-clinic-cell > span:last-child {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
 }
 
@@ -2170,7 +2912,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #2563eb;
+  color: var(--theme-primary);
 }
 
 .sa-admin-clinic-logo img {
@@ -2181,11 +2923,11 @@
 }
 
 .sa-admin-clinic-logo--emerald {
-  color: #2563eb;
+  color: var(--theme-primary);
 }
 
 .sa-admin-clinic-logo--dental {
-  color: #1d7ff2;
+  color: var(--theme-primary);
 }
 
 .sa-admin-clinic-logo--green {
@@ -2193,7 +2935,7 @@
 }
 
 .sa-admin-clinic-logo--sky {
-  color: #0ea5e9;
+  color: var(--theme-primary);
 }
 
 .sa-admin-clinic-logo--amber {
@@ -2201,18 +2943,20 @@
 }
 
 .sa-table--admins .sa-badge {
-  min-width: 82px;
-  min-height: 28px;
+  min-width: 72px;
+  min-height: 26px;
+  padding: 2px 8px;
+  font-size: 12px;
 }
 
 .sa-table--admins .sa-actions {
-  gap: 6px;
+  gap: 4px;
   justify-content: flex-start;
 }
 
 .sa-table--admins .sa-icon-btn {
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
 }
 
@@ -2236,7 +2980,57 @@
   border: 1px solid #e6edf5;
   border-radius: 10px;
   background: #ffffff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.035);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 3.5%, transparent);
+}
+
+html body .content.superadmin-content .sa-report-search-filter {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 10px;
+  padding: 0 !important;
+  margin-bottom: 12px !important;
+  min-height: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+html body .content.superadmin-content .sa-report-search-filter .sa-search-box {
+  flex: 0 1 380px !important;
+  width: 380px !important;
+  max-width: 100%;
+  min-width: 0 !important;
+  height: 40px !important;
+  padding: 8px 12px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+html body .content.superadmin-content .sa-report-search-filter > select {
+  flex: 0 0 140px !important;
+  width: 140px !important;
+  height: 40px !important;
+  padding: 8px 12px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 8px;
+  background-color: #ffffff !important;
+}
+
+@media screen {
+  html body .content.superadmin-content .sa-subscription-table-section .sa-table.sa-subscription-report-table {
+    display: block !important;
+    grid-template-columns: none !important;
+  }
+
+  html body .content.superadmin-content .sa-subscription-table-section .sa-subscription-report-table > :is(.sa-table-head, .sa-table-row) {
+    display: grid !important;
+    grid-template-columns: var(--report-columns) !important;
+    column-gap: 12px !important;
+    align-items: center;
+  }
 }
 
 .sa-report-table-wrap .sa-table {
@@ -2246,23 +3040,43 @@
 }
 
 .sa-table--report {
-  overflow-x: hidden;
+  overflow-x: auto;
 }
 
 .sa-table--report .sa-table-head,
 .sa-table--report .sa-table-row {
-  min-width: 0;
   width: 100%;
+  min-width: 980px;
+  grid-template-columns: 42px minmax(120px, 1.2fr) minmax(100px, 0.9fr) repeat(3, minmax(75px, 0.65fr)) minmax(110px, 0.9fr) minmax(135px, 1fr) !important;
   column-gap: 6px;
   padding: 8px 12px;
+  box-sizing: border-box;
+}
+
+.sa-table--report .sa-table-head > :last-child,
+.sa-table--report .sa-table-cell--actions,
+.sa-table--report .sa-actions {
+  min-width: 0 !important;
+  width: 100% !important;
+  padding-right: 0 !important;
+}
+
+.sa-table--report .sa-table-cell {
+  min-width: 0;
+  overflow: hidden;
 }
 
 .sa-table--report .sa-table-head {
-  background: #fbfcff;
-  color: #0f172a;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
   font-size: 10px;
   font-weight: 850;
   letter-spacing: 0;
+}
+
+.sa-table--report .sa-report-performance-head {
+  white-space: nowrap;
+  font-size: inherit;
 }
 
 .sa-table--report .sa-table-row {
@@ -2285,8 +3099,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 999px;
-  background: #ccfbf1;
-  color: #0f766e;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
   font-size: 8px;
   font-weight: 900;
 }
@@ -2295,6 +3109,7 @@
   min-width: 0;
   overflow: hidden;
   color: #1f2937;
+  font-size: inherit;
   font-weight: 850;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2319,12 +3134,12 @@
   height: 100%;
   display: block;
   border-radius: inherit;
-  background: linear-gradient(90deg, #0f9f8f, #2dd4bf);
+  background: linear-gradient(90deg, var(--theme-primary-dark), var(--theme-primary));
 }
 
 .sa-report-performance strong {
   color: #475569;
-  font-size: 10px;
+  font-size: inherit;
 }
 
 .sa-table-head {
@@ -2378,9 +3193,9 @@
 }
 
 .sa-pagination button.sa-btn {
-  background-color: #e0f2fe;
-  border-color: #bae6fd;
-  color: #0369a1;
+  background-color: var(--theme-primary-soft);
+  border-color: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
 }
 
 .sa-pagination button.sa-btn:disabled {
@@ -2395,11 +3210,47 @@
   text-align: center;
 }
 
+html body .content.superadmin-content .sa-audit-logs-page .sa-pagination {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 6px;
+}
+
+html body .content.superadmin-content .sa-audit-logs-page > .sa-table-footer {
+  margin-top: 0 !important;
+  padding: 8px 12px !important;
+}
+
+html body .content.superadmin-content .sa-audit-logs-page .sa-pagination > :is(button, .sa-pagination-label) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  margin: 0 !important;
+  padding: 4px 9px !important;
+  min-width: 0 !important;
+  font-size: 11px !important;
+  border-radius: 7px;
+  line-height: 1 !important;
+  white-space: nowrap;
+  box-sizing: border-box;
+  align-self: center !important;
+}
+
 .sa-table-cell--nowrap {
   white-space: nowrap;
   overflow-wrap: normal;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.sa-table--admins .sa-admin-email {
+  height: auto;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: nowrap;
 }
 
 .sa-table-text-overflow {
@@ -2417,24 +3268,50 @@
 }
 
 .sa-role-admin-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: flex !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: flex-start !important;
+  gap: 3px !important;
+  line-height: 1.35 !important;
+  padding: 4px 0 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow: visible !important;
+}
+
+.sa-role-admin-list > b {
+  display: block !important;
+  color: var(--theme-primary-dark) !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  line-height: 1.35 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
 }
 
 .sa-role-admin-names {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 12px;
-  color: #444;
-  max-height: 120px;
-  overflow-y: auto;
-  padding-right: 4px;
+  display: block !important;
+  color: #64748b !important;
+  font-size: 11.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
 }
 
 .sa-role-admin-name {
-  white-space: normal;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
 }
 
 .sa-role-admin-names::-webkit-scrollbar {
@@ -2452,38 +3329,46 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  padding: 0 10px;
-  font-size: 11px;
+  border-radius: 20px;
+  padding: 0 12px;
+  font-size: 0.78rem;
   font-weight: 800;
+  letter-spacing: 0.02em;
 }
 
 .sa-badge.is-active {
-  background: #e8f6ee;
-  color: #169b47;
+  background: rgba(16, 185, 129, 0.25);
+  color: #064e3b;
+  border: 1px solid rgba(16, 185, 129, 0.4);
 }
 
 .sa-badge.is-muted {
-  background: #f1f5f9;
-  color: #475569;
+  background: rgba(100, 116, 139, 0.2);
+  color: #334155;
+  border: 1px solid rgba(100, 116, 139, 0.35);
 }
 
 .sa-badge.is-danger {
-  background: #fff1f2;
-  color: #dc2626;
+  background: rgba(239, 68, 68, 0.25);
+  color: #7f1d1d;
+  border: 1px solid rgba(239, 68, 68, 0.4);
 }
 
 .sa-actions {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+  white-space: nowrap !important;
+  min-width: max-content !important;
+  padding-right: 12px !important;
+  box-sizing: border-box !important;
 }
 
 .sa-table-cell--actions {
-  padding-right: 8px;
-  box-sizing: border-box;
+  padding-right: 12px !important;
+  box-sizing: border-box !important;
 }
 
 .sa-icon-btn {
@@ -2496,7 +3381,7 @@
   border: 1px solid #dbe3ed;
   border-radius: 10px;
   background: #ffffff;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.16s ease;
   padding: 0;
@@ -2514,21 +3399,21 @@
 }
 
 .sa-icon-btn--view {
-  color: #2563eb;
+  color: var(--theme-primary);
 }
 
 .sa-icon-btn--view:hover:not(:disabled) {
-  border-color: #bfdbfe;
-  background: #eff6ff;
+  border-color: var(--theme-primary-soft);
+  background: var(--theme-primary-soft);
 }
 
 .sa-icon-btn--edit {
-  color: #0f9f8f;
+  color: var(--theme-primary-dark);
 }
 
 .sa-icon-btn--edit:hover:not(:disabled) {
-  border-color: #99f6e4;
-  background: #f0fdfa;
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
 }
 
 .sa-icon-btn--status {
@@ -2574,6 +3459,217 @@
   padding: 18px;
 }
 
+.sa-pending-admin-creations {
+  display: block !important;
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 0 0 auto !important;
+  min-width: 0;
+  margin: 24px 0 18px;
+  padding: 20px;
+  border: 1px solid #dbe3ed;
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: visible;
+}
+
+.sa-pending-admin-header {
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.sa-pending-admin-header h3 {
+  min-width: 0;
+  line-height: 1.35;
+}
+
+.sa-pending-admin-table {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 12px;
+  max-height: 320px;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  scrollbar-width: thin !important;
+  -ms-overflow-style: auto !important;
+}
+
+.sa-pending-admin-table::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+
+.sa-pending-admin-table::-webkit-scrollbar-track {
+  display: block !important;
+  border-radius: 8px;
+  background: #e2e8f0 !important;
+}
+
+.sa-pending-admin-table::-webkit-scrollbar-thumb {
+  display: block !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 8px;
+  background: var(--theme-primary-dark) !important;
+}
+
+.content.superadmin-content .sa-table--admins {
+  display: block !important;
+  flex: 0 0 auto !important;
+  height: auto !important;
+  min-height: max-content !important;
+  margin: 0 0 12px;
+  max-height: min(52vh, 440px);
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+  overscroll-behavior: auto;
+  border: 1px solid #dbe3ed;
+  border-radius: 14px;
+  background: #ffffff;
+  scrollbar-width: thin !important;
+  -ms-overflow-style: auto !important;
+}
+
+.content.superadmin-content .sa-table--admins + .sa-pending-admin-creations {
+  clear: both;
+  margin-top: 8px !important;
+}
+
+.content.superadmin-content .sa-pending-admin-creations {
+  padding: 12px 16px !important;
+}
+
+.content.superadmin-content .sa-pending-admin-creations .sa-pending-admin-header {
+  padding: 0 !important;
+  margin: 0 0 8px !important;
+  min-height: 0 !important;
+}
+
+.content.superadmin-content .sa-pending-admin-header h3 {
+  margin: 0 !important;
+}
+
+.content.superadmin-content .sa-pending-admin-creations .sa-pending-admin-table {
+  margin: 0 !important;
+}
+
+.content.superadmin-content .sa-pending-admin-table .sa-state {
+  padding: 14px 12px !important;
+}
+
+.content.superadmin-content .sa-table-footer {
+  clear: both;
+  padding: 12px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.content.superadmin-content .sa-table--admins::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+  height: 10px !important;
+}
+
+.content.superadmin-content .sa-table--admins::-webkit-scrollbar-track {
+  display: block !important;
+  border-radius: 8px;
+  background: #e2e8f0 !important;
+}
+
+.content.superadmin-content .sa-table--admins::-webkit-scrollbar-thumb {
+  display: block !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 8px;
+  background: var(--theme-primary-dark) !important;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.sa-pending-admin-details {
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 0 0 auto !important;
+  min-width: 0;
+  margin-top: 16px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+  box-shadow: none;
+}
+
+.sa-pending-admin-details > h3 {
+  margin: 0 0 16px;
+  color: var(--theme-primary-dark);
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.sa-pending-admin-details > .sa-pending-admin-detail-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 12px;
+}
+
+.sa-pending-admin-detail {
+  min-width: 0;
+  min-height: 76px;
+  padding: 12px 14px;
+  gap: 7px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.sa-pending-admin-detail > label {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.sa-pending-admin-detail > div {
+  min-width: 0;
+  color: var(--theme-primary-dark);
+  font-size: 14px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.sa-pending-admin-actions {
+  margin-top: 16px;
+}
+
+.sa-admin-form > .sa-state--error,
+.sa-clinic-form > .sa-state--error {
+  margin: 0 0 14px;
+  padding: 8px 0;
+}
+
+.sa-admin-form,
+.sa-clinic-form {
+  height: auto !important;
+  min-height: max-content;
+}
+
+.sa-admin-form {
+  margin-top: 16px !important;
+}
+
 .sa-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -2582,7 +3678,7 @@
   align-items: center;
   justify-content: center;
   padding: 18px;
-  background: rgba(15, 23, 42, 0.46);
+  background: color-mix(in srgb, var(--theme-primary-dark) 46%, transparent);
 }
 
 .sa-modal {
@@ -2595,7 +3691,7 @@
 }
 
 .sa-modal-card {
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.22);
+  box-shadow: 0 24px 70px color-mix(in srgb, var(--theme-primary-dark) 22%, transparent);
   max-height: calc(100vh - 36px);
 }
 
@@ -2609,7 +3705,7 @@
 
 .sa-modal-header h3 {
   margin: 0;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 18px;
   line-height: 1.2;
 }
@@ -2653,6 +3749,314 @@
 .sa-form-actions,
 .sa-permission-card {
   margin-top: 16px;
+}
+
+.sa-permission-card {
+  height: fit-content;
+  min-height: 0;
+  align-self: flex-start;
+}
+
+.sa-permission-card > .sa-form-grid {
+  margin-bottom: 16px;
+}
+
+/* Page-specific color accents for the super-admin workspace. */
+.sa-roles-permissions-page .sa-page-header h1 {
+  color: var(--theme-primary-dark);
+}
+
+.sa-roles-permissions-page .sa-table--roles {
+  border-color: var(--theme-primary-soft);
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+.sa-roles-permissions-page .sa-table--roles .sa-table-head {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
+}
+
+.sa-roles-permissions-page .sa-table--roles .sa-table-head > :nth-child(2),
+.sa-roles-permissions-page .sa-table--roles .sa-table-head > :nth-child(3),
+.sa-roles-permissions-page .sa-table--roles .sa-table-head > :nth-child(4) {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+.sa-roles-permissions-page .sa-table--roles .sa-table-head > :nth-child(2) {
+  padding-left: 82px;
+}
+
+.sa-roles-permissions-page .sa-permission-card {
+  height: auto !important;
+  min-height: 0 !important;
+  border-top: 4px solid var(--theme-primary-dark);
+  background: linear-gradient(135deg, #ffffff 0%, var(--theme-primary-soft) 100%);
+}
+
+.sa-settings-form {
+  border: 1px solid var(--theme-primary-soft);
+  background: linear-gradient(135deg, #ffffff 0%, var(--theme-primary-soft) 100%);
+}
+
+.sa-settings-form .sa-tabs {
+  border-bottom-color: var(--theme-primary-soft);
+}
+
+.sa-settings-form .sa-tab {
+  color: var(--theme-primary-dark);
+}
+
+.sa-settings-form .sa-tab.active {
+  border-color: var(--theme-primary-dark);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.sa-settings-form .sa-tab:nth-child(2) {
+  color: var(--theme-primary);
+}
+
+.sa-settings-form .sa-tab:nth-child(3) {
+  color: #db2777;
+}
+
+.sa-settings-form .sa-tab:nth-child(4) {
+  color: #b45309;
+}
+
+.sa-settings-form .sa-form-field:nth-child(3n + 1) input,
+.sa-settings-form .sa-form-field:nth-child(3n + 1) select,
+.sa-settings-form .sa-form-field:nth-child(3n + 1) textarea {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+}
+
+.sa-settings-form .sa-form-field:nth-child(3n + 2) input,
+.sa-settings-form .sa-form-field:nth-child(3n + 2) select,
+.sa-settings-form .sa-form-field:nth-child(3n + 2) textarea {
+  border-color: var(--theme-primary-soft);
+  background: var(--theme-primary-soft);
+}
+
+.sa-settings-form .sa-form-field:nth-child(3n) input,
+.sa-settings-form .sa-form-field:nth-child(3n) select,
+.sa-settings-form .sa-form-field:nth-child(3n) textarea {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.sa-roles-permissions-page .sa-permission-head {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.sa-roles-permissions-page .sa-permission-row:nth-child(odd) {
+  background: var(--theme-primary-soft);
+}
+
+.sa-roles-permissions-page .sa-permission-row:nth-child(even) {
+  background: var(--theme-primary-soft);
+}
+
+.sa-roles-permissions-page .sa-permission-row:hover {
+  background: #fef3c7;
+}
+
+.sa-report-shell .sa-report-filters {
+  background: #f8fafc;
+  border: 1px solid var(--theme-primary-soft);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.sa-report-shell .sa-report-filters .sa-form-field:nth-child(1) input {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+}
+
+.sa-report-shell .sa-report-filters .sa-form-field:nth-child(2) input {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+}
+
+.sa-report-shell .sa-report-bar-item:nth-child(3n + 1) span {
+  background: linear-gradient(180deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+}
+
+.sa-report-shell .sa-report-bar-item:nth-child(3n + 2) span {
+  background: linear-gradient(180deg, var(--theme-primary-glow) 0%, var(--theme-primary) 100%);
+}
+
+.sa-report-shell .sa-report-bar-item:nth-child(3n) span {
+  background: linear-gradient(180deg, #fbbf24 0%, #d97706 100%);
+}
+
+.sa-report-shell .sa-report-table-wrap .sa-table-head {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
+}
+
+/* Revenue report table: use soft row tones and distinct revenue colours so
+   values can be scanned quickly without reducing readability. */
+.sa-report-table-wrap .sa-table--report .sa-table-row:nth-of-type(even) {
+  background: var(--theme-primary-soft);
+}
+
+.sa-report-table-wrap .sa-table--report .sa-table-row:hover {
+  background: var(--theme-primary-soft);
+}
+
+.sa-table--report .sa-table-row > :nth-child(3) {
+  color: var(--theme-primary);
+  font-weight: 700;
+}
+
+.sa-table--report .sa-table-row > :nth-child(4) {
+  color: var(--theme-primary);
+  font-weight: 700;
+}
+
+.sa-table--report .sa-table-row > :nth-child(5) {
+  color: var(--theme-primary);
+  font-weight: 700;
+}
+
+.sa-table--report .sa-table-row > :nth-child(6) {
+  color: #d97706;
+  font-weight: 700;
+}
+
+.sa-table--report .sa-table-row > :nth-child(7) {
+  color: var(--theme-primary-dark);
+  font-weight: 800;
+}
+
+.sa-audit-logs-page .sa-audit-scope-filter {
+  padding: 12px;
+  border: 1px solid var(--theme-primary-glow);
+  border-radius: 12px;
+  background: var(--theme-primary-soft);
+}
+
+.sa-audit-logs-page .sa-audit-scope-filter label:nth-child(1) span {
+  color: var(--theme-primary-dark);
+}
+
+.sa-audit-logs-page .sa-audit-scope-filter label:nth-child(2) span {
+  color: var(--theme-primary);
+}
+
+.sa-audit-logs-page .sa-audit-scope-filter label:nth-child(3) span {
+  color: #c2410c;
+}
+
+.sa-audit-logs-page .sa-audit-scope-filter label:nth-child(4) span {
+  color: #be185d;
+}
+
+.sa-audit-logs-page .sa-table-row:nth-child(odd) {
+  background: #f8fafc;
+}
+
+.sa-audit-logs-page .sa-table-row:nth-child(even) {
+  background: var(--theme-primary-soft);
+}
+
+.sa-audit-logs-page .sa-table-row:hover {
+  background: #fefce8;
+}
+
+/* Keep every super-admin table header and row on the same grid geometry. */
+.sa-table-head > *,
+.sa-table-row > *,
+.sa-table-cell {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.sa-table-head > *,
+.sa-table-row > * {
+  align-self: stretch;
+}
+
+.sa-table-cell > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.sa-table--clinics .sa-table-head,
+.sa-table--clinics .sa-table-row,
+.sa-table--admins .sa-table-head,
+.sa-table--admins .sa-table-row,
+.sa-table--users .sa-table-head,
+.sa-table--users .sa-table-row,
+.sa-table--audit .sa-table-head,
+.sa-table--audit .sa-table-row,
+.sa-table--report .sa-table-head,
+.sa-table--report .sa-table-row,
+.sa-table--roles .sa-table-head,
+.sa-table--roles .sa-table-row {
+  align-items: center;
+}
+
+.sa-table--clinics .sa-table-cell,
+.sa-table--admins .sa-table-cell,
+.sa-table--users .sa-table-cell,
+.sa-table--audit .sa-table-cell,
+.sa-table--report .sa-table-cell,
+.sa-table--roles .sa-table-cell {
+  overflow-wrap: anywhere;
+}
+
+.sa-table--clinics .sa-table-cell--actions,
+.sa-table--admins .sa-table-cell--actions,
+.sa-table--users .sa-table-cell--actions,
+.sa-table--audit .sa-table-cell--actions,
+.sa-table--report .sa-table-cell--actions,
+.sa-table--roles .sa-table-cell--actions {
+  justify-content: center !important;
+}
+
+.sa-report-shell .sa-report-metric:nth-child(1) {
+  border-color: var(--theme-primary-glow);
+  background: linear-gradient(135deg, #ffffff 0%, var(--theme-primary-soft) 100%);
+}
+
+.sa-report-shell .sa-report-metric:nth-child(2) {
+  border-color: var(--theme-primary-soft);
+  background: linear-gradient(135deg, #ffffff 0%, var(--theme-primary-soft) 100%);
+}
+
+.sa-report-shell .sa-report-metric:nth-child(3) {
+  border-color: #fde68a;
+  background: linear-gradient(135deg, #ffffff 0%, #fffbeb 100%);
+}
+
+.sa-report-shell .sa-report-panel {
+  border-color: var(--theme-primary-soft);
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+.sa-audit-logs-page .sa-audit-summary-card:nth-child(1) {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+}
+
+.sa-audit-logs-page .sa-audit-summary-card:nth-child(2) {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.sa-audit-logs-page .sa-audit-summary-card:nth-child(3) {
+  border-color: #fed7aa;
+  background: #fff7ed;
+}
+
+.sa-audit-logs-page .sa-table .sa-table-head {
+  background: #fef3c7;
+  color: #92400e;
 }
 
 .sa-permissions-field {
@@ -2731,7 +4135,7 @@
 }
 
 .sa-toggle-row b {
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 13px;
 }
 
@@ -2745,7 +4149,7 @@
   width: 36px;
   height: 20px;
   flex: 0 0 36px;
-  accent-color: #0f766e;
+  accent-color: var(--theme-primary-dark);
 }
 
 .sa-tabs {
@@ -2772,9 +4176,9 @@
 }
 
 .sa-tab.active {
-  border-color: #0f766e;
-  background: #dff3f3;
-  color: #0f766e;
+  border-color: var(--theme-primary-dark);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
 }
 
 .sa-permission-matrix {
@@ -2846,8 +4250,8 @@
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: #dff3f3;
-  color: #0f766e;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
   font-size: 26px;
   font-weight: 800;
 }
@@ -2862,9 +4266,15 @@
     min-height: 0;
   }
 
-  .sa-chart {
-    height: clamp(220px, 30vh, 320px);
-    min-height: 220px;
+  .sa-chart-plot {
+    height: clamp(260px, 32vh, 330px);
+    min-height: 260px;
+  }
+}
+
+@media (max-width: 680px) {
+  .sa-chart-summary-grid--dashboard {
+    grid-template-columns: 1fr;
   }
 }
 
@@ -2886,6 +4296,14 @@
 }
 
 @media (max-width: 720px) {
+  .sa-pending-admin-details {
+    padding: 16px;
+  }
+
+  .sa-pending-admin-details > .sa-pending-admin-detail-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .sa-page-header,
   .sa-search-filter {
     flex-direction: column;
@@ -2898,12 +4316,30 @@
     grid-template-columns: 1fr;
   }
 
+  .sa-pending-admin-details > .sa-pending-admin-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
   .sa-dashboard-page .sa-card-grid {
     grid-template-columns: 1fr;
   }
 
   .sa-dashboard-page .sa-page-header {
     margin-bottom: 16px;
+  }
+
+  .sa-search-filter--reports {
+    gap: 10px;
+  }
+
+  .sa-search-filter--reports select {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .sa-admin-search-filter select {
+    width: 100%;
+    flex-basis: auto;
   }
 
   .sa-dashboard-page .sa-panel {
@@ -2961,4 +4397,2610 @@
   .sa-notification-actions {
     margin-left: auto;
   }
+}
+
+
+.sa-module-price-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.sa-module-price-tile {
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 18px 1fr 18px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--theme-primary-soft);
+  border-radius: 8px;
+  background: #ffffff;
+  color: var(--theme-primary-dark);
+}
+
+.sa-module-price-tile input {
+  width: 16px;
+  height: 16px;
+}
+
+.sa-module-price-tile span {
+  display: grid;
+  gap: 2px;
+}
+
+.sa-module-price-tile small {
+  color: #64748b;
+  font-size: 12px;
+}
+
+.sa-subscriptions-page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-bottom: 28px;
+}
+
+html body .content.superadmin-content .sa-subscriptions-page > .sa-page-header[data-page-header] {
+  margin-bottom: -8px !important;
+  min-height: 0 !important;
+  padding-block: 0 !important;
+}
+
+.sa-subscriptions-page > .sa-subscription-kpis + .sa-subscription-panel {
+  margin-top: 8px !important;
+}
+
+.sa-subscriptions-page > .sa-subscription-panel:has(> h3:first-child) {
+  padding-top: 12px !important;
+}
+
+.sa-subscriptions-page > .sa-subscription-panel > h3:first-child {
+  margin-top: 0 !important;
+}
+
+.sa-subscription-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) > .sa-subscription-kpis {
+  margin-bottom: 16px;
+}
+
+.sa-subscription-kpi {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 12px 30px color-mix(in srgb, var(--theme-primary-dark) 7%, transparent);
+}
+
+.sa-subscription-kpi svg {
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  padding: 9px;
+  border-radius: 10px;
+}
+
+.sa-subscription-kpi b {
+  display: block;
+  font-size: 21px;
+  line-height: 1.1;
+  color: var(--theme-primary-dark);
+}
+
+.sa-subscription-kpi span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.sa-subscription-kpi.is-green svg { background: #dcfce7; color: #15803d; }
+.sa-subscription-kpi.is-blue svg { background: var(--theme-primary-soft); color: var(--theme-primary); }
+.sa-subscription-kpi.is-amber svg { background: #fef3c7; color: #b45309; }
+
+.sa-subscription-designer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 14px;
+  align-items: start;
+}
+
+.sa-subscription-panel,
+.sa-subscription-summary,
+.sa-subscription-table-section {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 18px 42px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+}
+
+.sa-subscription-panel,
+.sa-subscription-summary {
+  padding: 16px;
+}
+
+.sa-subscription-panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sa-subscription-panel-head h3,
+.sa-subscription-summary h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.sa-subscription-panel-head span {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--theme-primary-dark);
+}
+
+.sa-subscription-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 721px) {
+  .sa-subscription-form-grid > .sa-form-field:has(#plan-benefits) {
+    grid-column: 2;
+    grid-row: 3 / span 2;
+  }
+
+  .sa-subscription-form-grid > .sa-form-field:has(#pricing-amount) {
+    grid-column: 1;
+    grid-row: 4;
+  }
+}
+
+.sa-module-price-grid--compact {
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+  gap: 8px;
+}
+
+.sa-module-price-grid--compact .sa-module-price-tile {
+  min-height: 50px;
+  padding: 8px 10px;
+  border-radius: 8px;
+}
+
+.sa-module-price-tile.is-selected {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+}
+
+.sa-module-price-grid--compact .sa-module-price-tile b {
+  font-size: 14px;
+  line-height: 1.15;
+}
+
+.sa-module-price-grid--compact .sa-module-price-tile small {
+  font-size: 12px;
+}
+
+.sa-subscription-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.sa-subscription-admin-card {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+
+.sa-subscription-admin-card b,
+.sa-subscription-admin-card span,
+.sa-subscription-admin-card small {
+  display: block;
+}
+
+.sa-subscription-admin-card b { color: var(--theme-primary-dark); }
+.sa-subscription-admin-card span { color: #334155; font-size: 13px; }
+.sa-subscription-admin-card small { color: #64748b; font-size: 12px; }
+
+.sa-subscription-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.sa-subscription-summary-grid span {
+  padding: 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.sa-subscription-summary-grid b,
+.sa-subscription-summary-grid small {
+  display: block;
+}
+
+.sa-subscription-summary-grid small { color: #64748b; font-size: 12px; }
+
+.sa-subscription-summary h4 {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 14px 0 8px;
+  font-size: 14px;
+}
+
+.sa-subscription-module-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 164px;
+  overflow: auto;
+}
+
+.sa-subscription-module-list span {
+  padding: 5px 8px;
+  border-radius: 999px;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.sa-subscription-table-section {
+  padding: 12px;
+  overflow: visible;
+}
+
+.sa-subscription-table-section .sa-search-filter {
+  margin-bottom: 12px;
+}
+
+.sa-subscription-table-scroll {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: auto !important;
+  -ms-overflow-style: auto !important;
+  touch-action: pan-x;
+}
+
+.sa-subscription-table-scroll--plans {
+  max-height: 360px;
+  overflow-x: auto !important;
+  overflow-y: auto;
+  overscroll-behavior: auto;
+  touch-action: pan-x pan-y;
+}
+
+.sa-subscription-table-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: 12px !important;
+  height: 12px !important;
+}
+
+.sa-subscription-table-scroll::-webkit-scrollbar-track {
+  display: block !important;
+  background: #e2e8f0 !important;
+  border-radius: 8px;
+}
+
+.sa-subscription-table-scroll::-webkit-scrollbar-thumb {
+  display: block !important;
+  background: var(--theme-primary-dark) !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 8px;
+}
+
+.sa-subscription-table-scroll > .sa-table {
+  width: 100%;
+  min-width: 0;
+  overflow: visible;
+  box-sizing: border-box;
+}
+
+.sa-subscription-table-scroll .sa-table--subscription-requests {
+  width: 1320px;
+  min-width: 1320px;
+}
+
+.sa-subscription-table-scroll .sa-table--subscription-plans {
+  width: 1160px;
+  min-width: 1160px;
+}
+
+.sa-subscription-table-scroll .sa-table--assigned-subscriptions {
+  width: 1580px;
+  min-width: 1580px;
+}
+
+@media (max-width: 1100px) {
+  .sa-subscription-designer,
+  .sa-subscription-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .sa-subscription-form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.layout:has(.superadmin-main) {
+  background: #f5f6f7 !important;
+}
+
+.layout:has(.superadmin-main) .sidebar {
+  background: #f5f6f7 !important;
+}
+
+.layout:has(.superadmin-main) .nav-label {
+  color: #27343a !important;
+}
+
+.layout:has(.superadmin-main) .nav-icon-box {
+  color: #4b7477 !important;
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.layout:has(.superadmin-main) .sidebar .nav-item.active {
+  border-color: var(--theme-primary) !important;
+  background: var(--theme-primary) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.layout:has(.superadmin-main) .sidebar .nav-item.active .nav-label,
+.layout:has(.superadmin-main) .sidebar .nav-item.active .nav-icon-box {
+  color: #ffffff !important;
+}
+
+.layout:has(.superadmin-main) .sidebar .nav-item.active .nav-icon-box {
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .content:has(.profile-page) {
+  background: #f5f6f7 !important;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-page {
+  color: #27343a;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-hero,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-layout,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-panel,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-tabs {
+  border-color: #dbe5e7;
+  background: #ffffff;
+  box-shadow: 0 12px 32px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-hero,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-layout {
+  border-left-color: var(--theme-primary);
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-back-btn,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-back-btn:hover {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 12%, transparent);
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-hero-avatar {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-primary-dark) 14%, transparent);
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-hero-role-badge {
+  background: #4b9da3;
+  color: #ffffff;
+  box-shadow: 0 2px 6px rgba(54, 127, 130, 0.2);
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-med-cross-tag,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-station-status,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-verified-badge,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-security-badge {
+  border-color: #b9d8d6;
+  background: #e2f2f1;
+  color: #367f82;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-tabs-header,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-tab-btn > svg,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .field-label-icon {
+  color: var(--theme-primary-dark);
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-panel-icon-badge,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-panel-icon-badge.badge--security,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-card-instrument-badge {
+  border-color: #b9d8d6;
+  background: #e2f2f1;
+  color: #367f82;
+  box-shadow: 0 4px 12px rgba(54, 127, 130, 0.12);
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .profile-card-label {
+  color: #46565c;
+}
+
+.sa-dashboard-page .sa-page-header,
+.sa-dashboard-page .sa-stat-card,
+.sa-dashboard-page .sa-panel,
+.sa-dashboard-page .sa-chart-summary-card {
+  background: #ffffff;
+}
+
+.sa-dashboard-page .sa-empty-state {
+  background: #f8f9fa;
+}
+
+.layout:has(.superadmin-main) .sidebar-brand-icon {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: none;
+}
+
+.sa-dashboard-page .sa-page-header {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.sa-dashboard-page .sa-stat-card--teal,
+.sa-dashboard-page .sa-stat-card--blue,
+.sa-dashboard-page .sa-stat-card--amber {
+  color: var(--theme-primary-dark);
+  border-color: var(--theme-primary-soft);
+  background: #ffffff;
+  box-shadow: 0 16px 34px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
+}
+
+.sa-dashboard-page .sa-stat-card::after {
+  background: var(--theme-primary-dark);
+}
+
+.sa-dashboard-page .sa-stat-icon {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.sa-dashboard-page .sa-stat-card--teal:not(:disabled):hover,
+.sa-dashboard-page .sa-stat-card--blue:not(:disabled):hover,
+.sa-dashboard-page .sa-stat-card--amber:not(:disabled):hover {
+  border-color: var(--theme-primary);
+  box-shadow: 0 22px 44px color-mix(in srgb, var(--theme-primary-dark) 12%, transparent);
+}
+
+.sa-dashboard-page .sa-panel--highlighted,
+.sa-dashboard-page .sa-panel--activity {
+  border-top-color: var(--theme-primary-dark);
+  background: #ffffff;
+  box-shadow: 0 18px 40px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
+}
+
+.content.superadmin-content:has(.sa-settings-form) .sa-page-header h1 {
+  color: #27343a;
+}
+
+.content.superadmin-content:has(.sa-settings-form) .sa-page-header p {
+  color: #56666c;
+}
+
+.sa-settings-form {
+  border-color: #dbe5e7;
+  background: #f8fafb;
+}
+
+.sa-settings-form .sa-tab,
+.sa-settings-form .sa-tab:nth-child(2),
+.sa-settings-form .sa-tab:nth-child(3),
+.sa-settings-form .sa-tab:nth-child(4) {
+  border-color: #dbe5e7;
+  background: #ffffff;
+  color: #46565c;
+}
+
+.sa-settings-form .sa-tab.active {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.sa-settings-form .sa-form-field label {
+  color: #46565c;
+}
+
+.sa-settings-form .sa-form-field input,
+.sa-settings-form .sa-form-field select,
+.sa-settings-form .sa-form-field textarea {
+  background: #ffffff !important;
+}
+
+.sa-settings-form .sa-form-field input:focus,
+.sa-settings-form .sa-form-field select:focus,
+.sa-settings-form .sa-form-field textarea:focus {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 12%, transparent);
+}
+
+.sa-subscriptions-page .sa-subscription-kpi svg {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.content.superadmin-content:has(.sa-subscription-kpis) .sa-subscription-kpi svg {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) > .sa-subscription-kpis {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) > .sa-subscription-kpis .sa-subscription-kpi {
+  min-width: 0;
+  min-height: 68px;
+  gap: 10px;
+  padding: 10px 12px;
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) > .sa-page-header .sa-page-actions > .sa-btn:nth-child(2) {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) > .sa-page-header .sa-page-actions > .sa-btn:nth-child(2):hover:not(:disabled) {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) > .sa-page-header .sa-page-actions > .sa-btn:nth-child(3) {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: #ffffff;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) > .sa-page-header .sa-page-actions > .sa-btn:nth-child(3):hover:not(:disabled) {
+  border-color: var(--theme-primary-dark);
+  background: var(--theme-primary-dark);
+  color: #ffffff;
+}
+
+.content.superadmin-content:has(.sa-subscription-kpis) .sa-subscription-table-section .sa-table-head > * {
+  color: #56666c !important;
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) .sa-subscription-table-section .sa-table-head > * {
+  color: #27343a !important;
+}
+
+.content.superadmin-content:has(> .sa-subscription-kpis) .sa-subscription-table-section .sa-table-row > * {
+  color: #34464c;
+}
+
+.sa-subscriptions-page .sa-subscription-table-section .sa-table-head > * {
+  color: #56666c !important;
+}
+
+.sa-roles-permissions-page .sa-page-header h1 {
+  color: #27343a;
+}
+
+.sa-roles-permissions-page .sa-table--roles .sa-table-head > * {
+  color: #56666c !important;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-page-header h1,
+.content.superadmin-content:has(.sa-table--admins) .sa-pending-admin-header h3 {
+  color: #27343a;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-page-header p,
+.content.superadmin-content:has(.sa-table--admins) .sa-table-summary,
+.content.superadmin-content:has(.sa-table--admins) .sa-pagination-label,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row {
+  color: #56666c;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > *,
+.content.superadmin-content:has(.sa-table--admins) .sa-pending-admin-table .sa-table-head > * {
+  color: #56666c !important;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight b,
+.content.superadmin-content:has(.sa-table--admins) .sa-admin-email {
+  color: #34464c !important;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-admin-icon-text,
+.content.superadmin-content:has(.sa-table--admins) .sa-admin-clinic-cell {
+  color: #46565c;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-btn:not(.sa-btn-primary) {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-btn:not(.sa-btn-primary):hover:not(:disabled) {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-btn-primary {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: #ffffff;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-btn-primary:hover:not(:disabled) {
+  border-color: var(--theme-primary-dark);
+  background: var(--theme-primary-dark);
+  color: #ffffff;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-icon-btn--view,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-icon-btn--edit,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-icon-btn--status,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .action-btn {
+  border-color: #b9d8d6 !important;
+  background: #f3f8f8 !important;
+  color: #367f82 !important;
+  box-shadow: none;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-icon-btn--view:hover:not(:disabled),
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-icon-btn--edit:hover:not(:disabled),
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-icon-btn--status:hover:not(:disabled),
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .action-btn:hover:not(:disabled) {
+  border-color: #82b8b5 !important;
+  background: #e4f1f0 !important;
+  color: #286d70 !important;
+}
+
+@media (max-width: 900px) {
+  .content.superadmin-content:has(> .sa-subscription-kpis) > .sa-subscription-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 520px) {
+  .content.superadmin-content:has(> .sa-subscription-kpis) > .sa-subscription-kpis {
+    grid-template-columns: 1fr;
+  }
+}
+
+  .sa-audit-logs-page .sa-audit-summary-card,
+  .sa-audit-logs-page .sa-audit-summary-card:nth-child(1),
+  .sa-audit-logs-page .sa-audit-summary-card:nth-child(2),
+  .sa-audit-logs-page .sa-audit-summary-card:nth-child(3) {
+    border-color: #dbe5e7;
+    background: #ffffff;
+  }
+
+  .sa-audit-logs-page .sa-audit-summary-card b {
+    color: #27343a;
+  }
+
+  .sa-audit-logs-page .sa-audit-summary-card small {
+    color: #56666c;
+  }
+
+  .sa-audit-logs-page .sa-audit-scope-filter {
+    border-color: #dbe5e7;
+    background: #f8fafb;
+  }
+
+  .sa-audit-logs-page .sa-audit-scope-filter label span,
+  .sa-audit-logs-page .sa-audit-scope-filter label:nth-child(1) span,
+  .sa-audit-logs-page .sa-audit-scope-filter label:nth-child(2) span,
+  .sa-audit-logs-page .sa-audit-scope-filter label:nth-child(3) span,
+  .sa-audit-logs-page .sa-audit-scope-filter label:nth-child(4) span {
+    color: #46565c;
+  }
+
+  .sa-audit-logs-page .sa-table .sa-table-head {
+    border-bottom-color: #dbe3ed;
+    background: #f8fafc;
+  }
+
+  .sa-audit-logs-page .sa-table .sa-table-head > * {
+    color: #33464c !important;
+  }
+
+.sa-audit-logs-page .sa-table .sa-table-head {
+  border-bottom-color: #dbe3ed;
+  background: #f1f5f9;
+}
+
+.sa-audit-logs-page .sa-table .sa-table-head > * {
+  color: #27343a !important;
+}
+
+.sa-audit-logs-page .sa-table--audit .sa-table-row,
+.sa-audit-logs-page .sa-table--audit .sa-table-row:nth-child(odd),
+.sa-audit-logs-page .sa-table--audit .sa-table-row:nth-child(even) {
+  background: #ffffff;
+  color: #334155;
+}
+
+.sa-audit-logs-page .sa-table--audit .sa-table-row:nth-child(even) {
+  background: #f8fafc;
+}
+
+.sa-audit-logs-page .sa-table--audit .sa-table-row:hover {
+  background: #f1f5f9;
+}
+
+.sa-audit-logs-page .sa-audit-pill--login,
+.sa-audit-logs-page .sa-audit-login.is-yes,
+.sa-audit-logs-page .sa-audit-role--superadmin {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.layout:has(.sidebar a[href="/audit-logs"]) .sa-audit-logs-page .sa-audit-login.is-yes {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+.layout:has(.sidebar a[href="/audit-logs"]) .sa-audit-logs-page .sa-audit-login.is-no {
+  background: #fee2e2 !important;
+  color: #dc2626 !important;
+}
+
+.layout:has(.sidebar a[href="/audit-logs"]) .sa-audit-logs-page .sa-audit-role--patient {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary) !important;
+}
+
+.layout:has(.sidebar a[href="/audit-logs"]) .sa-audit-logs-page .sa-audit-role--receptionist {
+  background: #fff0f6 !important;
+  color: #c92c70 !important;
+}
+
+.layout:has(.sidebar a[href="/audit-logs"]) .sa-audit-logs-page .sa-audit-role--doctor {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary) !important;
+}
+
+.layout:has(.sidebar a[href="/audit-logs"]) .sa-audit-logs-page .sa-audit-role--admin {
+  background: #fff7ed !important;
+  color: #f59e0b !important;
+}
+
+.layout:has(.sidebar a[href="/audit-logs"]) .sa-audit-logs-page .sa-audit-role--superadmin {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+.content.superadmin-content:has(.sa-subscriptions-page) .sa-subscription-kpi svg {
+  background: var(--theme-primary-dark) !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 16%, transparent);
+}
+
+.sa-subscriptions-page .sa-subscription-kpis {
+  grid-template-columns: repeat(3, minmax(0, 300px));
+  justify-content: center;
+  gap: 18px;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi {
+  position: relative;
+  box-sizing: border-box;
+  height: 116px;
+  min-height: 116px;
+  padding: 14px 16px 38px;
+  overflow: hidden;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 28px;
+  background: var(--theme-primary-soft);
+  border-bottom: 4px solid var(--theme-primary);
+  pointer-events: none;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi > div {
+  position: relative;
+  z-index: 1;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi svg {
+  position: relative;
+  z-index: 1;
+  flex-basis: 44px;
+  width: 44px;
+  height: 44px;
+  padding: 11px;
+  box-sizing: border-box;
+  background: var(--theme-primary-dark);
+  color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 16%, transparent);
+}
+
+@media (max-width: 900px) {
+  .sa-subscriptions-page .sa-subscription-kpis {
+    grid-template-columns: repeat(2, minmax(0, 300px));
+  }
+}
+
+@media (max-width: 520px) {
+  .sa-subscriptions-page .sa-subscription-kpis {
+    grid-template-columns: minmax(0, 300px);
+  }
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis {
+  grid-template-columns: repeat(4, minmax(0, 260px));
+  justify-content: center;
+  gap: 16px;
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis > .sa-subscription-kpi {
+  position: relative;
+  box-sizing: border-box;
+  height: 108px;
+  min-height: 108px;
+  padding: 12px 14px 38px;
+  overflow: hidden;
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis > .sa-subscription-kpi::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 30px;
+  background: var(--theme-primary-soft);
+  border-bottom: 4px solid var(--theme-primary);
+  pointer-events: none;
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis > .sa-subscription-kpi > div {
+  position: relative;
+  z-index: 1;
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis > .sa-subscription-kpi > svg {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  padding: 11px;
+  box-sizing: border-box;
+  background: var(--theme-primary-dark) !important;
+  color: #ffffff !important;
+  border-radius: 12px;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 16%, transparent);
+}
+
+@media (max-width: 1200px) {
+  .content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis {
+    grid-template-columns: repeat(2, minmax(0, 260px));
+  }
+}
+
+@media (max-width: 620px) {
+  .content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis {
+    grid-template-columns: minmax(0, 300px);
+  }
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .nav-label {
+  color: #27343a !important;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .nav-icon-box {
+  background: transparent !important;
+  color: #4b7477 !important;
+  box-shadow: none;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar {
+  background: #f5f6f7 !important;
+  border-right-color: #e2e8f0 !important;
+  box-shadow: none;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar-brand-icon {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: none;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .nav-item.active {
+  border-color: var(--theme-primary) !important;
+  background: var(--theme-primary) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .nav-item.active .nav-label,
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .nav-item.active .nav-icon-box {
+  color: #ffffff !important;
+}
+
+.layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .nav-item.active .nav-icon-box {
+  background: transparent !important;
+  box-shadow: none;
+}
+
+.layout:has(.superadmin-main) .user-profile-chip,
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip {
+  background: var(--theme-primary-soft);
+}
+
+.layout:has(.superadmin-main) .user-profile-chip:hover,
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip:hover {
+  background: var(--theme-primary-soft);
+}
+
+.layout:has(.superadmin-main) .user-profile-chip,
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 16%, transparent);
+}
+
+.layout:has(.superadmin-main) .user-profile-chip:hover,
+.layout:has(.superadmin-main) .user-profile-chip.is-open,
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip:hover,
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip.is-open {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+}
+
+.layout:has(.superadmin-main) .user-profile-avatar,
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-avatar {
+  background: var(--theme-primary);
+}
+
+.layout:has(.superadmin-main) .user-profile-chip .user-profile-dropdown-arrow,
+.layout:has(.superadmin-main) .user-profile-chip.is-open .user-profile-dropdown-arrow,
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip .user-profile-dropdown-arrow,
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip.is-open .user-profile-dropdown-arrow {
+  color: var(--theme-primary-dark);
+}
+
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-copy strong {
+  color: #27343a !important;
+}
+
+.layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-copy em {
+  color: #56666c !important;
+}
+
+.sa-notifications-page .sa-btn-primary {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary);
+  color: #ffffff;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.sa-notifications-page .sa-btn-primary:hover:not(:disabled) {
+  border-color: var(--theme-primary-dark);
+  background: var(--theme-primary-dark);
+  color: #ffffff;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 22%, transparent);
+}
+
+.sa-notifications-page .sa-notification-tab,
+.sa-notifications-page .sa-notification-tab--all,
+.sa-notifications-page .sa-notification-tab--unread,
+.sa-notifications-page .sa-notification-tab--read,
+.sa-notifications-page .sa-notification-tab--sent {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+.sa-notifications-page .sa-notification-tab.active {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  filter: none;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--theme-primary-dark) 12%, transparent);
+}
+
+.sa-notifications-page .sa-notification-tab span {
+  background: #ffffff;
+  color: var(--theme-primary-dark);
+}
+
+.sa-notifications-page .sa-notification-icon,
+.sa-notifications-page .sa-notification-icon--1,
+.sa-notifications-page .sa-notification-icon--2,
+.sa-notifications-page .sa-notification-icon--3,
+.sa-notifications-page .sa-notification-icon--appointment-0,
+.sa-notifications-page .sa-notification-icon--appointment-1,
+.sa-notifications-page .sa-notification-icon--appointment-2,
+.sa-notifications-page .sa-notification-icon--appointment-3,
+.sa-notifications-page .sa-notification-icon--payment,
+.sa-notifications-page .sa-notification-icon--cancelled,
+.sa-notifications-page .sa-notification-icon--system,
+.sa-notifications-page .sa-notification-icon--default,
+.sa-notifications-page .sa-notification-icon--sent,
+.sa-notifications-page .sa-notification-icon--read {
+  background: #e2f2f1 !important;
+  color: #367f82 !important;
+}
+
+.sa-notifications-page .sa-notification-icon svg,
+.sa-notifications-page .sa-notification-icon--payment svg {
+  stroke: currentColor !important;
+}
+
+.sa-notifications-page .sa-notification-item,
+.sa-notifications-page .sa-notification-item:first-child,
+.sa-notifications-page .sa-notification-item--appointment-0,
+.sa-notifications-page .sa-notification-item--appointment-1,
+.sa-notifications-page .sa-notification-item--appointment-2,
+.sa-notifications-page .sa-notification-item--appointment-3,
+.sa-notifications-page .sa-notification-item--payment,
+.sa-notifications-page .sa-notification-item--cancelled,
+.sa-notifications-page .sa-notification-item--system,
+.sa-notifications-page .sa-notification-item--sent {
+  border-color: #d3e6e5;
+  background: #f5f9f9;
+}
+
+.sa-notifications-page .sa-notification-item:hover,
+.sa-notifications-page .sa-notification-item:focus-visible {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+}
+
+.sa-notifications-page .sa-notification-actions .sa-badge.is-active {
+  border-color: #9dcac7;
+  background: #d9eeeb;
+  color: #286d70;
+}
+
+.sa-dashboard-page .sa-card-grid {
+  width: 100%;
+  max-width: 100%;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  justify-content: stretch;
+  align-self: center;
+  margin-left: 0;
+  margin-right: 0;
+  gap: 10px;
+}
+
+.sa-dashboard-page .sa-stat-card {
+  box-sizing: border-box;
+  min-height: 88px;
+  padding: 10px 12px;
+}
+
+.sa-dashboard-page .sa-stat-icon {
+  width: 40px;
+  height: 40px;
+  flex-basis: 40px;
+}
+
+.sa-dashboard-page .sa-stat-copy p {
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+
+.sa-dashboard-page .sa-stat-copy h2 {
+  font-size: 22px;
+}
+
+@media (max-width: 1024px) {
+  .sa-dashboard-page .sa-card-grid {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 280px));
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .sa-dashboard-page .sa-card-grid {
+    grid-template-columns: minmax(0, 280px);
+  }
+}
+
+.layout:has(.sidebar a[href="/dashboard"]),
+.layout:has(.sidebar a[href="/dashboard"]) .main,
+.layout:has(.sidebar a[href="/dashboard"]) .content,
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar {
+  background: #f5f6f7 !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar {
+  border-right-color: #e2e8f0 !important;
+  box-shadow: none;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar-header {
+  border-bottom-color: #dbe5e7;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .nav-label,
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar-brand-text h3 {
+  color: #27343a !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar-brand-text span {
+  color: #56666c !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .nav-icon-box {
+  background: transparent !important;
+  color: #4b7477 !important;
+  box-shadow: none;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar .nav-item.active .nav-icon-box {
+  background: transparent !important;
+  color: #ffffff !important;
+  box-shadow: none;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .user-profile-chip {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 16%, transparent);
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .user-profile-chip:hover,
+.layout:has(.sidebar a[href="/dashboard"]) .user-profile-chip.is-open {
+  border-color: var(--theme-primary);
+  background: var(--theme-primary-soft);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .user-profile-avatar {
+  background: var(--theme-primary);
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .user-profile-copy strong {
+  color: #27343a !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .user-profile-copy em {
+  color: #56666c !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .user-profile-dropdown-arrow {
+  color: var(--theme-primary-dark);
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-kpi-icon-box,
+.layout:has(.sidebar a[href="/dashboard"]) .db-clinic-badge-icon,
+.layout:has(.sidebar a[href="/dashboard"]) .db-panel-icon,
+.layout:has(.sidebar a[href="/dashboard"]) .db-apt-avatar,
+.layout:has(.sidebar a[href="/dashboard"]) .db-sum-icon,
+.layout:has(.sidebar a[href="/dashboard"]) .db-mini-icon,
+.layout:has(.sidebar a[href="/dashboard"]) .db-noti-icon {
+  background: #e2f2f1 !important;
+  color: #367f82 !important;
+  box-shadow: none !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-info-label svg {
+  color: var(--theme-primary-dark) !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-status-pill.active {
+  border-color: #9dcac7 !important;
+  background: #d9eeeb !important;
+  color: #286d70 !important;
+  box-shadow: none !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar .nav-item.active {
+  border-color: var(--theme-primary) !important;
+  background: var(--theme-primary) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar .nav-item.active .nav-label {
+  color: #ffffff !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .sidebar .nav-item.active .nav-icon-box {
+  background: transparent !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .content :is(h1, h2, h3, h4, h5, h6) {
+  color: #27343a !important;
+  text-shadow: none !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .content :is(p, small) {
+  color: #56666c !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .content :is(label, th) {
+  color: #46565c !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .content :is(td, [class*="value"], [class*="name"], [class*="title"]) {
+  color: #33464c;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .content :is(
+  [class*="card"]:not([class*="icon"]):not([class*="badge"]):not([class*="avatar"]),
+  [class*="panel"],
+  [class*="table"],
+  [class*="form-card"]
+) {
+  border-color: #dbe5e7 !important;
+  background: #ffffff !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .content .doctors-page .doctors-toolbar {
+  margin-bottom: 8px !important;
+  z-index: 3;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .content .doctors-page .doctors-card-grid {
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-clinic-front,
+.layout:has(.sidebar a[href="/dashboard"]) .db-clinic-back {
+  border-color: var(--theme-primary-glow) !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.95);
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-clinic-card:hover .db-clinic-front,
+.layout:has(.sidebar a[href="/dashboard"]) .db-clinic-card:hover .db-clinic-back {
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--theme-primary-dark) 12%, transparent), inset 0 1px 0 #ffffff;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-clinic-badge-header {
+  color: #367f82;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-info-label {
+  color: #46565c;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-info-val {
+  color: #33464c;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-info-email {
+  color: #33464c;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-6-kpi-grid {
+  grid-auto-rows: 110px;
+  align-content: center;
+  gap: 12px;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-kpi-card {
+  min-height: 0;
+  padding: 12px 14px !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-kpi-num {
+  max-width: 100%;
+  font-size: 23px;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-chart-container .recharts-bar-rectangle path {
+  fill: var(--theme-primary) !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-chart-container .recharts-area-curve {
+  stroke: var(--theme-primary) !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-chart-container .recharts-area-area {
+  fill: var(--theme-primary-soft) !important;
+  fill-opacity: 0.8;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-chart-container .recharts-area-dot {
+  fill: var(--theme-primary) !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-apt-badge.confirmed {
+  border-color: #9dcac7 !important;
+  background: #d9eeeb !important;
+  color: #286d70 !important;
+}
+
+.layout:has(.sidebar a[href="/dashboard"]) .db-view-all-btn,
+.layout:has(.sidebar a[href="/dashboard"]) .db-view-all-btn:hover {
+  border-color: var(--theme-primary-glow);
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+@media screen {
+  html body .content.superadmin-content .sa-subscription-panel .sa-plan-benefits-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    table-layout: auto !important;
+    border-collapse: collapse;
+    margin: 12px 0 0 !important;
+  }
+
+  html body .content.superadmin-content .sa-plan-benefits-table :is(th, td) {
+    padding: 8px 12px !important;
+    text-align: left !important;
+    vertical-align: middle !important;
+  }
+
+  html body .content.superadmin-content .sa-plan-benefits-table tr {
+    height: auto !important;
+    min-height: 0 !important;
+  }
+
+  html body .content.superadmin-content .sa-plan-benefits-table th:first-child { width: 18%; }
+  html body .content.superadmin-content .sa-plan-benefits-table th:nth-child(2) { width: 28%; }
+  html body .content.superadmin-content .sa-plan-benefits-table th:nth-child(3) { width: 32%; }
+  html body .content.superadmin-content .sa-plan-benefits-table th:last-child { width: 22%; }
+  html body .content.superadmin-content .sa-subscription-panel .sa-plan-benefits-table :is(th, td):nth-child(3) {
+    text-align: left !important;
+  }
+  html body .content.superadmin-content .sa-subscription-panel .sa-plan-benefits-table :is(th, td):last-child {
+    text-align: center !important;
+  }
+  html body .content.superadmin-content .sa-plan-benefits-table td:last-child .sa-btn {
+    width: auto !important;
+    min-width: 100px !important;
+    padding: 8px 16px !important;
+    white-space: nowrap !important;
+    flex-shrink: 0;
+  }
+  html body .content.superadmin-content .sa-plan-benefits-table td form {
+    display: flex !important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+  }
+  html body .content.superadmin-content .sa-plan-benefits-table input {
+    box-sizing: border-box;
+    width: 110px !important;
+    max-width: 100% !important;
+    min-width: 0;
+    margin: 0 !important;
+    height: 34px;
+    padding: 6px 10px;
+  }
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card {
+  position: relative;
+  height: 108px !important;
+  min-height: 108px;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 14px 38px;
+  border: 0;
+  border-radius: 12px;
+  background: linear-gradient(to bottom, #ffffff 0, #ffffff calc(100% - 18px), var(--theme-primary-soft) calc(100% - 18px), var(--theme-primary-soft) 100%);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent);
+  color: var(--theme-primary-dark);
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card h2 {
+  order: 2;
+  color: var(--theme-primary-dark);
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card p {
+  order: 1;
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-icon {
+  position: static;
+  order: 0;
+  width: 32px;
+  height: 32px;
+  flex-basis: 32px;
+  border-radius: 9px;
+  background: var(--theme-primary-dark);
+  color: #ffffff;
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: block;
+  height: 4px;
+  background: var(--theme-primary);
+  opacity: 1;
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card {
+  height: 88px !important;
+  min-height: 88px;
+  padding: 10px 10px 32px !important;
+  padding-left: 10px !important;
+  justify-content: flex-start !important;
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card .sa-stat-icon {
+  margin-left: 0 !important;
+  flex-shrink: 0;
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card p {
+  font-size: 11px;
+}
+
+.sa-dashboard-page .sa-card-grid .sa-stat-card h2 {
+  font-size: 20px;
+}
+
+.sa-dashboard-page .sa-card-grid {
+  column-gap: 4px;
+  row-gap: 4px;
+}
+
+/* Keep the dashboard content cards compact without changing their contents. */
+.sa-dashboard-page .sa-grid {
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.sa-dashboard-page .sa-panel {
+  padding: 10px;
+}
+
+.sa-dashboard-page .sa-panel--highlighted,
+.sa-dashboard-page .sa-panel--activity {
+  min-height: 0;
+}
+
+/* Let Recent Activities end with its content instead of leaving an empty footer area. */
+.sa-dashboard-page .sa-panel--activity {
+  height: fit-content !important;
+  align-self: start;
+  padding-bottom: 4px !important;
+}
+
+.sa-dashboard-page .sa-panel--activity > .sa-activity-list {
+  height: auto !important;
+  max-height: 140px;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+/* Match the Recent Activities card height to Charts & Statistics. */
+.sa-dashboard-page .sa-panel--activity {
+  height: 100% !important;
+  align-self: stretch;
+}
+
+.sa-dashboard-page .sa-panel--activity > .sa-activity-list {
+  flex: 1 1 auto;
+  max-height: none;
+  overflow-y: auto;
+}
+
+/* Keep the dashboard greeting anchored at the upper-left of the page. */
+.sa-dashboard-page .sa-page-header {
+  align-self: flex-start;
+  width: fit-content;
+  margin-left: 0 !important;
+  justify-content: flex-start;
+}
+
+.sa-dashboard-page .sa-panel--highlighted {
+  height: auto !important;
+  min-height: 320px;
+  overflow: visible;
+}
+
+.sa-dashboard-page .sa-panel__header {
+  margin-bottom: 8px;
+}
+
+.sa-dashboard-page .sa-chart-plot {
+  min-height: 220px;
+  height: 260px;
+}
+
+.sa-dashboard-page .sa-activity-list {
+  height: 140px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+
+.sa-dashboard-page .sa-panel--activity {
+  padding: 4px !important;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-panel__header {
+  gap: 8px;
+  margin: 0 0 2px !important;
+  padding: 0;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-panel__header h3 {
+  font-size: 16px;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-panel__header p {
+  margin-top: 1px;
+  font-size: 10px;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-panel__header .sa-btn {
+  min-height: 26px;
+  padding: 0 8px;
+  font-size: 11px;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-activity-item {
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 6px;
+  padding: 6px 8px;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-activity-icon {
+  width: 28px;
+  height: 28px;
+  flex-basis: 28px;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-activity-item b {
+  font-size: 12px;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-activity-item p {
+  margin-top: 1px;
+  font-size: 11px;
+}
+
+.sa-dashboard-page .sa-panel--activity .sa-activity-item span {
+  font-size: 10px;
+}
+
+/* Fit the dashboard into the available viewport without page-level scrolling. */
+.content.sa-dashboard-content {
+  overflow: hidden !important;
+  padding: 0 !important;
+}
+
+.sa-dashboard-page {
+  height: 100%;
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.sa-dashboard-page .sa-page-header {
+  min-height: 0;
+  margin: 0 0 4px !important;
+  padding: 0 !important;
+}
+
+.sa-dashboard-page .sa-dashboard-shell {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: -34px;
+}
+
+.sa-dashboard-page .sa-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin-top: 0 !important;
+}
+
+.sa-dashboard-page .sa-panel--highlighted,
+.sa-dashboard-page .sa-panel--activity {
+  min-height: 0;
+}
+
+@media (max-width: 720px) {
+  .content.sa-dashboard-content {
+    overflow-y: auto !important;
+  }
+
+  .sa-dashboard-page {
+    height: auto;
+    overflow: visible;
+  }
+}
+
+/* Keep all Admin Management columns inside the table; scroll on narrow screens. */
+.content.superadmin-content .sa-table--admins {
+  max-height: none !important;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-head,
+.content.superadmin-content .sa-table--admins .sa-table-row {
+  min-width: 940px !important;
+  width: max(100%, 940px) !important;
+  column-gap: 10px !important;
+  padding: 12px !important;
+  box-sizing: border-box;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-cell,
+.content.superadmin-content .sa-table--admins .sa-table-head > span {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Keep Admin Management headers and row content aligned to the same column edges. */
+.content.superadmin-content .sa-table--admins .sa-table-head,
+.content.superadmin-content .sa-table--admins .sa-table-row {
+  align-items: center;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-head > :nth-child(3),
+.content.superadmin-content .sa-table--admins .sa-table-row > :nth-child(3),
+.content.superadmin-content .sa-table--admins .sa-table-head > :nth-child(4),
+.content.superadmin-content .sa-table--admins .sa-table-row > :nth-child(4),
+.content.superadmin-content .sa-table--admins .sa-table-head > :nth-child(5),
+.content.superadmin-content .sa-table--admins .sa-table-row > :nth-child(5) {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-head > :nth-child(6),
+.content.superadmin-content .sa-table--admins .sa-table-row > :nth-child(6),
+.content.superadmin-content .sa-table--admins .sa-table-head > :nth-child(7),
+.content.superadmin-content .sa-table--admins .sa-table-row > :nth-child(7) {
+  justify-content: center;
+  text-align: center;
+}
+
+/* Keep row content compact so the Actions column stays inside the table. */
+.content.superadmin-content .sa-table--admins .sa-table-row {
+  font-size: 11px;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-row .sa-admin-name-highlight b,
+.content.superadmin-content .sa-table--admins .sa-table-row .sa-admin-email,
+.content.superadmin-content .sa-table--admins .sa-table-row .sa-admin-clinic-cell,
+.content.superadmin-content .sa-table--admins .sa-table-row .sa-admin-icon-text {
+  font-size: 11px;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-cell--actions {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-cell--actions .actions-group {
+  gap: 2px !important;
+  justify-content: center !important;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-cell--actions .action-btn {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  padding: 0 !important;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-cell--actions .action-btn svg {
+  width: 12px !important;
+  height: 12px !important;
+}
+
+/* Compact only the Subscriptions & Renewals KPI cards. */
+.sa-subscriptions-page .sa-subscription-kpis {
+  grid-template-columns: repeat(3, minmax(0, 280px));
+  gap: 14px;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi {
+  height: 100px;
+  min-height: 100px;
+  padding: 12px 14px 34px;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi svg {
+  flex-basis: 40px;
+  width: 40px;
+  height: 40px;
+  padding: 10px;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi b {
+  font-size: 19px;
+}
+
+/* Center the Appointments per day and Action columns in Plan Type Benefits. */
+.sa-subscriptions-page .sa-subscription-panel table {
+  table-layout: fixed;
+}
+
+.sa-subscriptions-page .sa-subscription-panel table th:nth-child(2),
+.sa-subscriptions-page .sa-subscription-panel table td:nth-child(2),
+.sa-subscriptions-page .sa-subscription-panel table th:nth-child(3),
+.sa-subscriptions-page .sa-subscription-panel table td:nth-child(3) {
+  text-align: center;
+  vertical-align: middle;
+}
+
+.sa-subscriptions-page .sa-subscription-panel table th:nth-child(2),
+.sa-subscriptions-page .sa-subscription-panel table td:nth-child(2) {
+  width: 40%;
+}
+
+.sa-subscriptions-page .sa-subscription-panel table th:nth-child(3),
+.sa-subscriptions-page .sa-subscription-panel table td:nth-child(3) {
+  width: 25%;
+}
+
+.sa-subscriptions-page .sa-subscription-panel table td:nth-child(2) form {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sa-subscriptions-page .sa-subscription-panel table td:nth-child(2) input {
+  margin-inline: auto;
+}
+
+/* Match the Admin Management status filter height to the search container. */
+.content.superadmin-content .sa-admin-search-filter .sa-search-box,
+.content.superadmin-content .sa-admin-search-filter select {
+  height: 46px !important;
+  min-height: 46px !important;
+  align-self: center;
+  box-sizing: border-box;
+}
+
+/* Align compact subscription KPIs with the full-width Plan Type Benefits panel. */
+.sa-subscriptions-page .sa-subscription-kpis {
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  justify-content: stretch;
+  gap: 14px;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi {
+  height: 92px;
+  min-height: 92px;
+  padding: 10px 14px 30px;
+}
+
+.sa-subscriptions-page .sa-subscription-kpi::after {
+  height: 22px;
+  border-bottom-width: 4px;
+}
+
+/* Apply the reference KPI treatment only to Audit Logs summary cards. */
+.sa-audit-logs-page .sa-audit-summary-card {
+  position: relative;
+  justify-content: flex-start;
+  min-height: 88px !important;
+  height: auto !important;
+  padding: 10px 12px 30px !important;
+  overflow: hidden;
+  border: 0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.sa-audit-logs-page .sa-audit-summary-card::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 14px;
+  box-sizing: border-box;
+  background: var(--theme-primary-soft);
+  border-bottom: 4px solid var(--theme-primary);
+  pointer-events: none;
+}
+
+.sa-audit-logs-page .sa-audit-summary-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.sa-audit-logs-page .sa-audit-summary-icon {
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+  border-radius: 10px;
+  transform: none;
+  z-index: 2;
+}
+
+.sa-audit-logs-page .sa-audit-summary-card > span:last-child {
+  flex: 1 1 auto;
+  min-width: 0;
+  text-align: left;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: end;
+  column-gap: 8px;
+  row-gap: 2px;
+}
+
+.sa-audit-logs-page .sa-audit-summary-card b {
+  grid-column: 1 / -1;
+  font-size: 12px;
+}
+
+.sa-audit-logs-page .sa-audit-summary-card strong {
+  grid-column: 1;
+  font-size: 23px;
+}
+
+.sa-audit-logs-page .sa-audit-summary-card small {
+  grid-column: 2;
+  align-self: end;
+  font-size: 11px;
+  transform: translateY(-3px);
+}
+
+/* Compact the Assign Permissions selector into the same row as its label. */
+.sa-permission-card > .sa-form-grid {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.sa-permission-card > .sa-form-grid .sa-form-field {
+  display: grid;
+  grid-template-columns: max-content minmax(220px, 360px);
+  align-items: center;
+  gap: 12px;
+}
+
+.sa-permission-card > .sa-form-grid .sa-form-field label {
+  margin: 0;
+  white-space: nowrap;
+}
+
+.sa-permission-card > .sa-form-grid .sa-form-field select {
+  width: 100%;
+  min-height: 38px;
+}
+
+/* Compact only the Subscription Reports KPI cards. */
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis {
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  justify-content: stretch;
+  width: 100%;
+  margin-inline: 0;
+  gap: 12px;
+}
+
+html body .content.superadmin-content:has(> .sa-subscription-table-section .sa-subscription-report-table) > .sa-page-header[data-page-header] {
+  margin-bottom: 8px !important;
+  padding-bottom: 0 !important;
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis > .sa-subscription-kpi {
+  height: 78px;
+  min-height: 78px;
+  padding: 10px 12px 20px;
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) > .sa-subscription-kpis > .sa-subscription-kpi::after {
+  height: 12px;
+}
+
+/* Reduce the Subscription Reports search and status controls. */
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section > .sa-search-filter {
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section > .sa-search-filter .sa-search-box,
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section > .sa-search-filter select {
+  height: 40px;
+  min-height: 40px;
+}
+
+.content.superadmin-content:has(> .sa-page-header + .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section > .sa-search-filter select {
+  flex-basis: 180px;
+  width: 180px;
+}
+
+/* Keep Configuration Notes inside the System Settings form grid. */
+.content.superadmin-content:has(.sa-settings-form) .sa-settings-form {
+  display: block !important;
+  height: auto !important;
+  min-height: max-content !important;
+  max-height: none !important;
+  flex: 0 0 auto !important;
+  align-self: stretch;
+  overflow: visible !important;
+  box-sizing: border-box;
+}
+
+.content.superadmin-content:has(.sa-settings-form) .sa-settings-form .sa-form-grid {
+  height: auto !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  align-items: start;
+}
+
+.content.superadmin-content:has(.sa-settings-form) .sa-settings-form .sa-form-field-full {
+  grid-column: 1 / -1;
+  width: 100%;
+  min-width: 0;
+}
+
+.content.superadmin-content:has(.sa-settings-form) .sa-settings-form .sa-form-field-full textarea {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+
+@media (max-width: 620px) {
+  .sa-permission-card > .sa-form-grid .sa-form-field {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+/* Keep the Admin Management table header fixed and opaque while rows scroll. */
+.content.superadmin-content .sa-table--admins .sa-table-head {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background-color: #f8fafc !important;
+  background-image: none !important;
+  opacity: 1 !important;
+  border-bottom: 1px solid #dbe3ed !important;
+  box-shadow: 0 8px 0 #ffffff, 0 9px 0 #dbe3ed;
+  isolation: isolate;
+}
+
+.content.superadmin-content .sa-table--admins {
+  position: relative;
+  isolation: isolate;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-row {
+  position: relative;
+  z-index: 0;
+}
+
+/* Keep the Audit Logs search container compact without affecting other screens. */
+.sa-audit-logs-page > .sa-search-filter {
+  margin-bottom: 12px;
+  padding: 8px 14px;
+  gap: 12px;
+  border-radius: 14px;
+}
+
+.sa-audit-logs-page > .sa-search-filter .sa-search-box,
+.sa-audit-logs-page > .sa-search-filter select {
+  height: 40px;
+  min-height: 40px;
+}
+
+.sa-audit-logs-page > .sa-search-filter .sa-search-box {
+  padding: 0 14px;
+}
+
+.sa-audit-logs-page > .sa-search-filter select {
+  min-width: 140px;
+  padding: 0 12px;
+}
+
+/* Audit Logs search and table surfaces follow the active theme. */
+html[data-cms-theme] .sa-audit-logs-page > .sa-search-filter {
+  background: #ffffff !important;
+  border-color: var(--theme-primary-glow) !important;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--theme-primary) 10%, transparent) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page > .sa-search-filter .sa-search-box,
+html[data-cms-theme] .sa-audit-logs-page > .sa-search-filter select {
+  background: #ffffff !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-table--audit {
+  border-color: var(--theme-primary-glow) !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary) 9%, transparent) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-table--audit .sa-table-head {
+  background: var(--theme-primary-soft) !important;
+  border-bottom-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-table--audit .sa-table-row,
+html[data-cms-theme] .sa-audit-logs-page .sa-table--audit .sa-table-row:nth-child(odd),
+html[data-cms-theme] .sa-audit-logs-page .sa-table--audit .sa-table-row:nth-child(even) {
+  background: color-mix(in srgb, var(--theme-primary-soft) 32%, #ffffff) !important;
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-table--audit .sa-table-row:hover {
+  background: color-mix(in srgb, var(--theme-primary-soft) 62%, #ffffff) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-pill,
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-login,
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-role {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Keep KPI logo surfaces aligned with the selected theme's light card shade. */
+html[data-cms-theme] .content.superadmin-content .sa-subscription-kpi > svg,
+html[data-cms-theme] .content.superadmin-content .sa-audit-summary-icon,
+html[data-cms-theme] .content.superadmin-content .sa-stat-icon,
+html[data-cms-theme] .content.superadmin-content .db-kpi-icon-box {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Audit Logs filter fields and page scrollbar use the selected theme. */
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-scope-filter {
+  border-color: var(--theme-primary-glow) !important;
+  background: color-mix(in srgb, var(--theme-primary-soft) 28%, #ffffff) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-scope-filter label > span {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-scope-filter input,
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-scope-filter select {
+  background: #ffffff !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-scope-filter input:focus,
+html[data-cms-theme] .sa-audit-logs-page .sa-audit-scope-filter select:focus {
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 3px var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .content.superadmin-content,
+html[data-cms-theme] .content.superadmin-content * {
+  scrollbar-color: var(--theme-primary) #ffffff !important;
+}
+
+html[data-cms-theme] .content.superadmin-content::-webkit-scrollbar {
+  width: 12px !important;
+  height: 12px !important;
+  display: block !important;
+}
+
+html[data-cms-theme] .content.superadmin-content::-webkit-scrollbar-track {
+  background: #ffffff !important;
+}
+
+html[data-cms-theme] .content.superadmin-content::-webkit-scrollbar-thumb {
+  background: var(--theme-primary) !important;
+  border: 3px solid #ffffff !important;
+  border-radius: 999px !important;
+}
+
+html[data-cms-theme] .content.superadmin-content::-webkit-scrollbar-thumb:hover {
+  background: var(--theme-primary-dark) !important;
+}
+
+/* Admin Management S.No. and Name columns follow the active theme. */
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > :nth-child(1),
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > :nth-child(2) {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  border-bottom-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head {
+  background: #ffffff !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row > :nth-child(1),
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row > :nth-child(2) {
+  background: color-mix(in srgb, var(--theme-primary-soft) 34%, #ffffff) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-avatar,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight {
+  background: #ffffff !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-avatar {
+  background: var(--theme-primary-soft) !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 0 0 1px var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight {
+  background: var(--theme-primary-soft) !important;
+}
+
+/* Keep the Admin Management header and avatar shells white; theme only the inner accents. */
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > * {
+  background: #ffffff !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-avatar {
+  background: #ffffff !important;
+  border: 3px solid #ffffff !important;
+  box-shadow: 0 0 0 1px var(--theme-primary) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Revert Admin Management table surfaces to the white reference treatment. */
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > *,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row > *,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-avatar,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight {
+  background: #ffffff !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > *,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row > *,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight b {
+  color: #334155 !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight {
+  border-color: #e2e8f0 !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-avatar {
+  border-color: #ffffff !important;
+  box-shadow: 0 0 0 1px #e2e8f0 !important;
+}
+
+html body .content.superadmin-content .sa-table--admins .sa-admin-name-cell .sa-admin-avatar {
+  width: 26px !important;
+  height: 26px !important;
+  min-width: 26px !important;
+  flex: 0 0 26px !important;
+  padding: 0 !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+}
+
+/* Admin Management table: use a fully white surface regardless of theme state. */
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > *,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row > *,
+.content.superadmin-content:has(.sa-table--admins) .sa-admin-avatar,
+.content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight {
+  background: #ffffff !important;
+}
+
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row,
+.content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight {
+  border-color: #e2e8f0 !important;
+}
+
+/* Force the Admin Management table fields to the white reference background. */
+.sa-table--admins,
+.sa-table--admins .sa-table-head,
+.sa-table--admins .sa-table-head > *,
+.sa-table--admins .sa-table-row,
+.sa-table--admins .sa-table-row > *,
+.sa-table--admins .sa-table-cell,
+.sa-table--admins .sa-admin-name-highlight {
+  background: #ffffff !important;
+}
+
+/* Remove the visible separator lines around and between Admin Management rows. */
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-row,
+.content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-cell {
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-admin-name-highlight b {
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Saved Plans table follows the selected theme. */
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section {
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table--subscription-plans {
+  border-color: var(--theme-primary-glow) !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary) 9%, transparent) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table--subscription-plans .sa-table-head {
+  background: var(--theme-primary-soft) !important;
+  border-bottom-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table--subscription-plans .sa-table-head > * {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table--subscription-plans .sa-table-row,
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table--subscription-plans .sa-table-row:nth-child(odd),
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table--subscription-plans .sa-table-row:nth-child(even) {
+  background: #ffffff !important;
+  border-bottom-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table--subscription-plans .sa-table-row:hover {
+  background: color-mix(in srgb, var(--theme-primary-soft) 42%, #ffffff) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-scroll--plans::-webkit-scrollbar-track {
+  background: #ffffff !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-scroll--plans::-webkit-scrollbar-thumb {
+  background: var(--theme-primary) !important;
+  border-color: #ffffff !important;
+}
+
+/* Keep the subscription and report tables aligned with the selected theme.
+   These selectors are limited to the requested screens only. */
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table,
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table,
+html[data-cms-theme] .content.superadmin-content:has(> .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section .sa-table {
+  border-color: var(--theme-primary-glow) !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary) 9%, transparent) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table thead,
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table thead tr,
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table th,
+html[data-cms-theme] .content.superadmin-content:has(> .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section .sa-table .sa-table-head {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table td,
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table tbody tr,
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table .sa-table-row,
+html[data-cms-theme] .content.superadmin-content:has(> .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section .sa-table .sa-table-row {
+  background: #ffffff !important;
+  color: var(--theme-primary-dark) !important;
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table tbody tr:hover,
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table .sa-table-row:hover,
+html[data-cms-theme] .content.superadmin-content:has(> .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section .sa-table .sa-table-row:hover {
+  background: color-mix(in srgb, var(--theme-primary-soft) 42%, #ffffff) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table input,
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-section .sa-table .sa-table-cell,
+html[data-cms-theme] .content.superadmin-content:has(> .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section .sa-table .sa-table-cell {
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-panel > .sa-table input:focus {
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 3px var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-scroll::-webkit-scrollbar-track,
+html[data-cms-theme] .content.superadmin-content:has(> .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section > div::-webkit-scrollbar-track {
+  background: #ffffff !important;
+}
+
+html[data-cms-theme] .sa-subscriptions-page .sa-subscription-table-scroll::-webkit-scrollbar-thumb,
+html[data-cms-theme] .content.superadmin-content:has(> .sa-subscription-kpis):not(:has(.sa-subscriptions-page)) .sa-subscription-table-section > div::-webkit-scrollbar-thumb {
+  background: var(--theme-primary) !important;
+  border: 2px solid #ffffff !important;
+  border-radius: 999px;
+}
+
+/* Admin Management header must remain completely white in every theme. */
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head,
+html[data-cms-theme] .content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > * {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+/* Roles & Permissions text stays black; theme colors remain limited to surfaces and controls. */
+html[data-cms-theme] .sa-roles-permissions-page :is(h1, h2, h3, h4, p, label, span, b, em, th, td) {
+  color: #000000 !important;
+}
+
+/* Notifications follow the selected theme without changing notification data. */
+html[data-cms-theme] .sa-notifications-page .sa-panel {
+  border-color: var(--theme-primary-glow) !important;
+  background: #ffffff !important;
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary) 9%, transparent) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab,
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab--all,
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab--unread,
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab--read,
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab--sent {
+  border-color: var(--theme-primary-glow) !important;
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab.active,
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab:hover,
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab:focus-visible {
+  border-color: var(--theme-primary) !important;
+  background: color-mix(in srgb, var(--theme-primary-soft) 70%, #ffffff) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-notification-tab span {
+  background: #ffffff !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-notification-item,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item:first-child,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item--appointment-0,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item--appointment-1,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item--appointment-2,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item--appointment-3,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item--payment,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item--cancelled,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item--system,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item--sent {
+  border-color: var(--theme-primary-glow) !important;
+  background: color-mix(in srgb, var(--theme-primary-soft) 24%, #ffffff) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-notification-item:hover,
+html[data-cms-theme] .sa-notifications-page .sa-notification-item:focus-visible {
+  border-color: var(--theme-primary) !important;
+  background: color-mix(in srgb, var(--theme-primary-soft) 48%, #ffffff) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--1,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--2,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--3,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--appointment-0,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--appointment-1,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--appointment-2,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--appointment-3,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--payment,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--cancelled,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--system,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--default,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--sent,
+html[data-cms-theme] .sa-notifications-page .sa-notification-icon--read {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-notification-actions .sa-badge.is-active,
+html[data-cms-theme] .sa-notifications-page .sa-notification-actions .sa-badge.is-muted {
+  border-color: var(--theme-primary-glow) !important;
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-notification-date {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-delete-icon {
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+  background: #ffffff !important;
+}
+
+html[data-cms-theme] .sa-notifications-page .sa-delete-icon:hover,
+html[data-cms-theme] .sa-notifications-page .sa-delete-icon:focus-visible {
+  border-color: var(--theme-primary) !important;
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Allow long admin details to wrap without widening the shared header/row grid. */
+.content.superadmin-content .sa-table--admins .sa-admin-name-highlight {
+  max-width: 100%;
+  padding: 4px 8px;
+  box-sizing: border-box;
+}
+.content.superadmin-content .sa-table--admins .sa-admin-name-highlight b,
+.content.superadmin-content .sa-table--admins .sa-admin-email,
+.content.superadmin-content .sa-table--admins .sa-admin-clinic-cell > span:last-child {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.content.superadmin-content .sa-table--admins .sa-admin-clinic-cell {
+  max-width: 100%;
+}
+.content.superadmin-content .sa-table--admins .sa-table-cell--actions {
+  overflow: visible;
+}
+.content.superadmin-content .sa-table--admins .sa-table-cell--actions .actions-group {
+  flex-wrap: nowrap;
+  gap: 4px !important;
+}
+.content.superadmin-content .sa-table--admins .sa-table-cell--actions .action-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  flex-shrink: 0;
+}
+
+
+/* Compact page heading; the JSX marker excludes modals and navigation. */
+@media screen {
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .role-dashboard-greeting[data-page-header],
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .sa-page-header[data-page-header] {
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 0 6px !important;
+  padding: 4px 0 !important;
+  gap: 6px 10px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .role-dashboard-greeting[data-page-header] > *,
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .sa-page-header[data-page-header] > * { min-width: 0; max-width: 100%; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .role-dashboard-greeting[data-page-header] :is(h1, h2),
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .sa-page-header[data-page-header] :is(h1, h2) { font-size: var(--app-page-heading-size, 18px) !important; line-height: 1.2 !important; margin: 0 !important; letter-spacing: 0 !important; white-space: normal !important; overflow-wrap: anywhere; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .role-dashboard-greeting[data-page-header] p,
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .sa-page-header[data-page-header] p { font-size: 12px !important; line-height: 1.35 !important; margin: 3px 0 0 !important; white-space: normal !important; overflow-wrap: anywhere; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .role-dashboard-greeting[data-page-header] [class*="actions"],
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .sa-page-header[data-page-header] [class*="actions"] { min-width: 0; max-width: 100%; height: auto !important; flex-wrap: wrap !important; gap: 6px !important; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .role-dashboard-greeting[data-page-header] button,
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .sa-page-header[data-page-header] button { max-width: 100%; min-height: 34px !important; height: auto !important; padding: 7px 10px !important; font-size: 12px !important; line-height: 1.3; white-space: normal; }
+}
+
+@media screen {
+  html body .content .sa-audit-logs-page .sa-page-header:has(> .admin-heading-search) { display: flex; flex-wrap: wrap; gap: 8px 12px !important; align-items: center !important; }
+  html body .content .sa-audit-logs-page .sa-page-header__copy { flex: 0 1 300px; min-width: 0; }
+  html body .content .sa-audit-logs-page .admin-heading-search { flex: 1 1 280px; min-width: 0; max-width: 600px; }
+  html body .content .sa-audit-logs-page .admin-heading-search .sa-search-filter { margin: 0 !important; padding: 0 !important; display: flex; flex-wrap: wrap; gap: 8px !important; }
+  html body .content .sa-audit-logs-page .admin-heading-search .sa-search-box { flex: 1 1 180px; min-width: 0; height: 34px !important; }
+  html body .content .sa-audit-logs-page .admin-heading-search input { min-width: 0; font-size: 12px; }
+  html body .content .sa-audit-logs-page .admin-heading-search select { height: 34px !important; max-width: 100%; }
+}
+
+html body .content .sa-audit-logs-page > .sa-tabs { margin-bottom: 4px !important; }
+html body .content .sa-audit-logs-page > .sa-audit-scope-filter { margin: 0 0 4px !important; }
+
+html body .content:not(.superadmin-content) .sa-audit-logs-page > .sa-table-footer {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  margin-top: 0 !important;
+  padding: 8px 12px !important;
+}
+
+html body .content:not(.superadmin-content) .sa-audit-logs-page .sa-pagination {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 6px !important;
+}
+
+html body .content:not(.superadmin-content) .sa-audit-logs-page .sa-pagination > :is(button, .sa-pagination-label) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  height: 28px !important;
+  min-height: 28px !important;
+  margin: 0 !important;
+  padding: 4px 9px !important;
+  min-width: 0 !important;
+  font-size: 11px !important;
+  border-radius: 7px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+  box-sizing: border-box !important;
 }

@@ -1,14 +1,16 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import "./Doctors.css";
 import {
+  Eye,
   Search,
+  SlidersHorizontal,
   Plus,
   Pencil,
   Trash2,
-  Calendar,
   X,
   Camera,
-  RotateCw,
+  Phone,
+  Mail,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AuthImage, {
@@ -112,24 +114,67 @@ const cleanDisplayText = (value) => {
 };
 
 const getImageUrl = (entity = {}) => {
-  const candidates = [
-    entity?.imageUrl,
-    entity?.ImageUrl,
-    entity?.image,
-    entity?.Image,
-    entity?.profileImage,
-    entity?.ProfileImage,
-    entity?.profileImageUrl,
-    entity?.ProfileImageUrl,
-    entity?.imagePath,
-    entity?.ImagePath,
+  const imageKeys = [
+    "imageBase64",
+    "ImageBase64",
+    "profileImagePath",
+    "ProfileImagePath",
+    "imageUrl",
+    "ImageUrl",
+    "image",
+    "Image",
+    "profileImage",
+    "ProfileImage",
+    "profileImageUrl",
+    "ProfileImageUrl",
+    "profilePicture",
+    "ProfilePicture",
+    "profilePictureUrl",
+    "ProfilePictureUrl",
+    "profilePhoto",
+    "ProfilePhoto",
+    "profilePhotoUrl",
+    "ProfilePhotoUrl",
+    "doctorImage",
+    "DoctorImage",
+    "doctorImageUrl",
+    "DoctorImageUrl",
+    "doctorImagePath",
+    "DoctorImagePath",
+    "doctorPhoto",
+    "DoctorPhoto",
+    "doctorPhotoUrl",
+    "DoctorPhotoUrl",
+    "photo",
+    "Photo",
+    "photoUrl",
+    "PhotoUrl",
+    "imagePath",
+    "ImagePath",
+    "filePath",
+    "FilePath",
+    "path",
+    "Path",
+    "url",
+    "Url",
   ];
+
+  const sources = [entity, entity?.doctor, entity?.Doctor, entity?.data, entity?.Data];
+  const candidates = sources.flatMap((source) =>
+    source && typeof source === "object"
+      ? imageKeys.map((key) => source[key])
+      : []
+  );
 
   for (const candidate of candidates) {
     const text = String(candidate ?? "").trim();
-    if (text && text.toLowerCase() !== "string") {
-      return text;
+    if (!text || text.toLowerCase() === "string") continue;
+
+    if (/^[a-z0-9+/=\r\n]+$/i.test(text) && text.length > 120) {
+      return `data:image/jpeg;base64,${text.replace(/\s/g, "")}`;
     }
+
+    return text;
   }
 
   return "";
@@ -341,7 +386,7 @@ const getInitialEditForm = (doctor = {}) => ({
     : doctor.branchId || doctor.BranchId || doctor.branchID || doctor.BranchID
       ? [String(doctor.branchId ?? doctor.BranchId ?? doctor.branchID ?? doctor.BranchID)]
       : [],
-  name: cleanFormValue(doctor.name),
+  name: formatTitleCase(cleanFormValue(doctor.name)),
   specialization: cleanFormValue(doctor.specialization),
   areaofExpertise: cleanFormValue(getDoctorAreaOfExpertise(doctor)),
   experience:
@@ -449,7 +494,7 @@ const buildDoctorUpdateBody = ({
       : [];
 
   const body = {
-    name: cleanFormValue(form.name ?? doctor.name),
+    name: formatTitleCase(cleanFormValue(form.name ?? doctor.name)),
     specialization: cleanFormValue(form.specialization ?? doctor.specialization),
     areaofExpertise: cleanFormValue(
       form.areaofExpertise ?? getDoctorAreaOfExpertise(doctor)
@@ -478,6 +523,33 @@ const buildDoctorUpdateBody = ({
   return body;
 };
 
+const formatDirectorySchedule = (doctor) => {
+  const schedule = doctor.directorySchedule;
+  if (!schedule || schedule.exists === false) return getDoctorWorkingHours(doctor) || 'No recurring schedule set';
+  const week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const rawDays = Array.isArray(schedule.days) ? schedule.days : String(schedule.days || '').split(',');
+  const days = week.filter(day => rawDays.some(value => String(value).trim().toLowerCase() === day.toLowerCase()));
+  const groups = [];
+  for (const day of days) {
+    const last = groups[groups.length - 1];
+    if (last && week.indexOf(day) === week.indexOf(last[last.length - 1]) + 1) last.push(day);
+    else groups.push([day]);
+  }
+  const dash = ' \u2013 ';
+  const dayLabel = groups.map(group => group.length > 1 ? group[0] + dash + group[group.length - 1] : group[0]).join(', ');
+  const formatTime = value => {
+    const match = String(value || '').trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+    if (!match) return String(value || '');
+    let hour = Number(match[1]);
+    if (match[3]) hour = hour % 12 + (match[3].toUpperCase() === 'PM' ? 12 : 0);
+    return String(hour).padStart(2, '0') + ':' + match[2];
+  };
+  const start = formatTime(schedule.workStart);
+  const end = formatTime(schedule.workEnd);
+  const hours = start && end ? '(' + start + dash + end + ')' : start || end;
+  return [dayLabel, hours].filter(Boolean).join(' ') || 'No working hours set';
+};
+
 function Doctors() {
   const navigate = useNavigate();
   const toast = useToast();
@@ -497,7 +569,6 @@ function Doctors() {
     key: "dateAdded",
     direction: "desc",
   });
-  const [flippedDoctorIds, setFlippedDoctorIds] = useState({});
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -559,9 +630,7 @@ function Doctors() {
 
     try {
       const response = await fetch(DOCTORS_API_URL, {
-        headers: {
-          "ngrok-skip-browser-warning": "true",
-        },
+        headers: getApiHeaders(),
       });
 
       if (!response.ok) {
@@ -574,7 +643,34 @@ function Doctors() {
         doctorRows.map(async (doctor) => {
           const doctorId = doctor.id ?? doctor.Id ?? doctor.doctorId ?? doctor.DoctorId;
           const branches = await fetchDoctorBranchAssignments(doctorId).catch(() => []);
-          return mergeDoctorBranchAssignments(doctor, branches);
+          let enriched = mergeDoctorBranchAssignments({ ...doctor, id: doctorId }, branches);
+          if (!getImageUrl(enriched)) {
+            try {
+              const detailResponse = await fetch(apiUrl(`Doctor/${encodeURIComponent(doctorId)}`), { headers: getApiHeaders() });
+              if (detailResponse.ok) {
+                const detail = await detailResponse.json();
+                enriched = { ...enriched, ...((detail.data || detail.doctor || detail)), id: doctorId, branches: enriched.branches, branchIds: enriched.branchIds };
+              }
+            } catch { /* Keep the list record when details are unavailable. */ }
+          }
+          const branchId = enriched.branchIds?.[0] || getDoctorBranchId(enriched);
+          try {
+            const query = branchId ? `?branchId=${encodeURIComponent(branchId)}` : "";
+            const scheduleResponse = await fetch(apiUrl(`Schedule/doctor/${encodeURIComponent(doctorId)}${query}`), { headers: getApiHeaders() });
+            if (scheduleResponse.ok) {
+              const data = await scheduleResponse.json();
+              enriched.directorySchedule = data.data || data;
+            }
+            const date = new Date();
+            const today = `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`;
+            const slotsResponse = await fetch(apiUrl(`Schedule/day-slots?doctorId=${encodeURIComponent(doctorId)}&date=${today}${branchId ? '&branchId=' + encodeURIComponent(branchId) : ''}`), { headers: getApiHeaders() });
+            if (slotsResponse.ok) {
+              const data = await slotsResponse.json();
+              const slots = Array.isArray(data) ? data : data.slots || data.data;
+              if (Array.isArray(slots)) enriched.directoryAvailable = slots.some(slot => slot.isBooked !== true && slot.IsBooked !== true && slot.isAvailable !== false && slot.available !== false);
+            } else if (slotsResponse.status === 404) enriched.directoryAvailable = false;
+          } catch { /* Availability remains unknown if scheduling is unreachable. */ }
+          return enriched;
         })
       );
       setDoctors(enrichedDoctors);
@@ -894,12 +990,6 @@ function Doctors() {
 
 
 
-  const toggleDoctorCardFlip = (doctorKey) => {
-    setFlippedDoctorIds((previous) => ({
-      ...previous,
-      [doctorKey]: !previous[doctorKey],
-    }));
-  };
 
   const editInitial = useMemo(() => {
     return (editForm.name.trim()[0] || "D").toUpperCase();
@@ -1096,6 +1186,7 @@ function Doctors() {
     });
     const duplicateMobileMessage = await validateUniqueMobileNumber(requestBody.phoneNumber, {
       current: { id: editingDoctor.id, source: "Doctor" },
+      originalMobileNumber: getDoctorPhone(editingDoctor),
       localRecords: doctors,
       localSource: "Doctor",
     });
@@ -1133,7 +1224,11 @@ function Doctors() {
       removeImage: removeEditImage,
     });
     if (editImageFile) {
-      formData.append("Image", editImageFile);
+      // Backends in use expose different DTO property names; submit the same
+      // selected image under each supported name so it is retained on update.
+      formData.append("Image", editImageFile, editImageFile.name);
+      formData.append("ProfileImage", editImageFile, editImageFile.name);
+      formData.append("ProfilePicture", editImageFile, editImageFile.name);
     }
     if (removeEditImage) {
       params.set("RemoveImage", "true");
@@ -1319,7 +1414,7 @@ function Doctors() {
 
   return (
     <div className="doctors-page">
-      <div className="doctors-page-header">
+      <div className="doctors-page-header" data-page-header>
         <div>
           <h2>Doctors</h2>
           <p>
@@ -1328,25 +1423,43 @@ function Doctors() {
               : `Total Doctors: ${filteredDoctors.length}`}
           </p>
         </div>
-
-        <div className="doctors-header-actions">
-          <button
-            className="doctors-btn doctors-btn-light"
-            onClick={() => navigate("/doctors/schedule")}
-            title="Manage schedule"
-          >
-            <Calendar size={16} /> Manage Schedule
-          </button>
-
-          <button
-            className="doctors-btn doctors-btn-primary"
-            onClick={openAddDoctor}
-            disabled={!canCreate}
-            title="Add doctor"
-          >
-            <Plus size={16} /> Add Doctor
-          </button>
+        <div className="admin-heading-search doctors-search-bar">
+          <Search size={16} />
+          <input
+            aria-label="Search doctors"
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Search by name, specialty, email..."
+          />
         </div>
+
+      <div className="doctors-toolbar">
+        
+
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value)}
+          aria-label="Filter by status"
+        >
+          <option value="">All Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <details className="doctor-extra-filters">
+          <summary aria-label="More doctor filters" title="Filter by experience"><SlidersHorizontal size={16} /></summary>
+          <div><label>Experience        <select
+          value={experienceFilter}
+          onChange={(event) => setExperienceFilter(event.target.value)}
+          aria-label="Filter by experience"
+        >
+          <option value="">All Experience</option>
+          <option value="0-5">0-5 years</option>
+          <option value="6-10">6-10 years</option>
+          <option value="11+">11+ years</option>
+        </select></label></div>
+        </details>
+        <button type="button" className="doctors-btn doctors-btn-primary doctor-add-button" onClick={openAddDoctor} disabled={!canCreate}><Plus size={15} /> Add New Doctor</button>
+      </div>
       </div>
 
       {/* <div className="doctors-clinic-card">
@@ -1357,48 +1470,17 @@ function Doctors() {
         <p>{doctors.length} Doctors Registered</p>
       </div> */}
 
-      <div className="doctors-toolbar">
-        <div className="doctors-search-bar">
-          <Search size={16} />
-          <input
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Search by name, specialty, email..."
-          />
-        </div>
-        <select
-          value={specializationFilter}
-          onChange={(event) => setSpecializationFilter(event.target.value)}
-          aria-label="Filter by specialization"
-        >
-          <option value="">All Specializations</option>
-          {specializationOptions.map((specialization) => (
-            <option key={specialization} value={specialization}>
-              {getSpecializationDisplayName(specialization)}
-            </option>
-          ))}
-        </select>
-        <select
-          value={statusFilter}
-          onChange={(event) => setStatusFilter(event.target.value)}
-          aria-label="Filter by status"
-        >
-          <option value="">All Status</option>
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
-        <select
-          value={experienceFilter}
-          onChange={(event) => setExperienceFilter(event.target.value)}
-          aria-label="Filter by experience"
-        >
-          <option value="">All Experience</option>
-          <option value="0-5">0-5 years</option>
-          <option value="6-10">6-10 years</option>
-          <option value="11+">11+ years</option>
-        </select>
-      </div>
+      <div className="doctor-directory-controls">
+      
 
+      <div className="doctor-specialty-tabs" aria-label="Doctor specialties">
+        {["", ...specializationOptions].map((specialty) => (
+          <button type="button" key={specialty} aria-pressed={specializationFilter === specialty} className={specializationFilter === specialty ? "is-selected" : ""} onClick={() => setSpecializationFilter(specialty)}>
+            {specialty ? getSpecializationDisplayName(specialty) : "All"}
+          </button>
+        ))}
+      </div>
+      </div>
       {error ? <div className="doctors-error">{error}</div> : null}
 
       {/* <div className="doctors-sortbar">
@@ -1438,159 +1520,37 @@ function Doctors() {
               .slice(0, 2)
               .toUpperCase() || "D";
           const isActive = getDoctorIsActive(doc);
+          const isAvailable = isActive && doc.directoryAvailable === true;
           const isStatusUpdating = toggleLoadingId === doc.id;
           const isDeleting = deleteLoadingId === doc.id;
           const doctorKey = doc.id ?? `${doc.name}-${doc.email}`;
-          const isFlipped = Boolean(flippedDoctorIds[doctorKey]);
 
           return (
-            <article
-              className={`doctor-profile-card ${!isActive ? "doctor-profile-card-inactive" : ""} ${isFlipped ? "doctor-profile-card-flipped" : ""}`}
-              key={doctorKey}
-            >
-              <div className="doctor-card-inner">
-                <div className="doctor-card-face doctor-card-front">
-                  <div className="doctor-card-corner" />
-                  <button
-                    type="button"
-                    className="doctor-card-flip-btn"
-                    onClick={() => toggleDoctorCardFlip(doctorKey)}
-                    title="View fee and availability"
-                    aria-label="View fee and availability"
-                  >
-                    <RotateCw size={15} />
-                  </button>
-
-                  <div className="doctor-card-profile">
-                    <div className="doctor-card-avatar" title="Profile">
-                      <AuthImage
-                        src={getImageUrl(doc)}
-                        alt={doc.name || "Doctor"}
-                        fallback={<span>{initials}</span>}
-                        style={{
-                          width: "100%",
-                          height: "100%",
-                          borderRadius: "50%",
-                          objectFit: "cover",
-                          display: "flex",
-                        }}
-                      />
-                    </div>
+            <article className="doctor-directory-card" key={doctorKey}>
+              <div className="doctor-directory-heading">
+                <h3>{doc.name || "Doctor"}</h3>
+                <details className="doctor-directory-menu">
+                  <summary aria-label={`Actions for ${doc.name}`}>...</summary>
+                  <div>
+                    <button onClick={() => openEditDoctor(doc)} disabled={!canEdit}>Edit doctor</button>
+                    <button onClick={() => handleToggleDoctorStatus(doc)} disabled={!canEdit || isStatusUpdating || isDeleting}>Set {isActive ? "inactive" : "active"}</button>
+                    <button onClick={() => handleDeleteDoctor(doc.id)} disabled={!canDelete || isDeleting || isStatusUpdating}>Delete doctor</button>
                   </div>
-
-                  <div className="doctor-card-identity">
-                    <h3>{doc.name || "-"}</h3>
-                    <p>{getSpecializationDisplayName(doc.specialization) || "-"}</p>
-                  </div>
-
-                  <div className="doctor-card-details">
-                    <div>
-                      <span>Branch</span>
-                      <b>{getDoctorBranchName(doc, branchNameById) || "-"}</b>
-                    </div>
-                    <div>
-                      <span>Specialization</span>
-                      <b>{getSpecializationDisplayName(doc.specialization) || "-"}</b>
-                    </div>
-                    <div>
-                      <span>Area of Expertise</span>
-                      <b>{cleanDisplayText(getDoctorAreaOfExpertise(doc))}</b>
-                    </div>
-                    <div>
-                      <span>Exp</span>
-                      <b>
-                        {doc.experience !== undefined && doc.experience !== null
-                          ? `${doc.experience} yrs`
-                          : "-"}
-                      </b>
-                    </div>
-                    <div>
-                      <span>Phone</span>
-                      <b>{formatPhoneValue(getDoctorPhone(doc))}</b>
-                    </div>
-                    <div>
-                      <span>Email</span>
-                      <b>{cleanDisplayText(doc.email)}</b>
-                    </div>
-                    <div>
-                      <span>Status</span>
-                      <button
-                        type="button"
-                        className="doctors-status-button"
-                        onClick={() => handleToggleDoctorStatus(doc)}
-                        disabled={!doc.id || isStatusUpdating || isDeleting || !canEdit}
-                        title="Toggle status"
-                      >
-                        <span
-                          className={`doctors-status ${isActive ? "doctors-status-active" : "doctors-status-inactive"
-                            } ${isStatusUpdating ? "doctors-status-updating" : ""}`}
-                        >
-                          {isStatusUpdating
-                            ? "Updating..."
-                            : isActive
-                              ? "Active"
-                              : "Inactive"}
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="doctor-card-face doctor-card-back">
-                  <button
-                    type="button"
-                    className="doctor-card-flip-btn"
-                    onClick={() => toggleDoctorCardFlip(doctorKey)}
-                    title="Back to profile"
-                    aria-label="Back to profile"
-                  >
-                    <RotateCw size={15} />
-                  </button>
-                  <div className="doctor-card-back-title">
-                    <h3>{doc.name || "-"}</h3>
-                    <p>Availability & Actions</p>
-                  </div>
-
-                  <div className="doctor-card-details doctor-card-back-details">
-                    <div>
-                      <span>Consultation Fee</span>
-                      <b>
-                        {getDoctorFee(doc) !== undefined && getDoctorFee(doc) !== null && getDoctorFee(doc) !== ""
-                          ? formatIndianCurrency(getDoctorFee(doc))
-                          : "-"}
-                      </b>
-                    </div>
-                    <div>
-                      <span>Working Hrs</span>
-                      <b>{getDoctorWorkingHours(doc) || "9:00 AM - 5:00 PM"}</b>
-                    </div>
-                    <div>
-                      <span>Date Availability</span>
-                      <b>{formatDateAdded(getDoctorAvailabilityDateValue(doc))}</b>
-                    </div>
-                  </div>
-
-                  <div className="doctor-card-actions">
-                    <button
-                      type="button"
-                      className="doctors-action-icon"
-                      onClick={() => openEditDoctor(doc)}
-                      disabled={!doc.id || isDeleting || !canEdit}
-                      title="Edit doctor"
-                    >
-                      <Pencil size={14} />
-                    </button>
-
-                    <button
-                      type="button"
-                      className="doctors-action-icon doctors-action-icon-delete"
-                      onClick={() => handleDeleteDoctor(doc.id)}
-                      disabled={!doc.id || isDeleting || isStatusUpdating || !canDelete}
-                      title="Delete doctor"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  </div>
+                </details>
+              </div>
+              <span className={`doctor-directory-status ${isAvailable ? "is-available" : "is-inactive"}`} title={!isActive ? "Doctor is inactive" : doc.directoryAvailable == null ? "Availability could not be confirmed" : isAvailable ? "Appointment slots are available today" : "No appointment slots available today"}>{isAvailable ? "Available" : "Unavailable"}</span>
+              <div className="doctor-directory-portrait">
+                <AuthImage src={getImageUrl(doc)} authenticatedFallback alt={doc.name || "Doctor"} fallback={<span>{initials}</span>} className="doctor-directory-photo" />
+              </div>
+              <div className="doctor-directory-info">
+                <h4>{getSpecializationDisplayName(doc.specialization) || "Specialty not specified"}</h4>
+                <p className="doctor-directory-schedule">{formatDirectorySchedule(doc)}</p>
+                <p>{getDoctorFee(doc) !== "" ? formatIndianCurrency(getDoctorFee(doc)) : "Fee not provided"}</p>
+                <p>{getDoctorBranchName(doc, branchNameById) || "Branch not specified"}</p>
+                <div className="doctor-directory-footer">
+                  {getDoctorPhone(doc) ? <a href={`tel:${getDoctorPhone(doc)}`} aria-label={`Call ${doc.name}`}><Phone size={16} /></a> : null}
+                  {doc.email ? <a href={`mailto:${doc.email}`} aria-label={`Email ${doc.name}`}><Mail size={16} /></a> : null}
+                  <button onClick={() => navigate("/doctors/schedule", { state: { doctorId: doc.id, branchId: doc.branchIds?.[0] || getDoctorBranchId(doc) } })}>Manage Schedule</button>
                 </div>
               </div>
             </article>
@@ -1632,34 +1592,35 @@ function Doctors() {
                       display: "flex",
                     }}
                   />
+                </div>
+                <div className="doctor-edit-image-actions">
                   <button
                     type="button"
                     className="doctor-edit-image-btn"
                     onClick={() => editImageInputRef.current?.click()}
-                    title="Upload profile image"
-                    aria-label="Upload profile image"
                   >
-                    <Camera size={17} />
+                    <Camera size={17} /> Choose File
                   </button>
                   {editImagePreview ? (
                     <button
                       type="button"
                       className="doctor-edit-image-remove-btn"
                       onClick={handleRemoveEditImage}
-                      title="Remove profile image"
-                      aria-label="Remove profile image"
                     >
-                      <X size={15} />
+                      <X size={15} /> Remove
                     </button>
                   ) : null}
-                  <input
-                    ref={editImageInputRef}
-                    type="file"
-                    className="doctor-edit-image-input"
-                    accept="image/*"
-                    onChange={handleEditImageChange}
-                  />
                 </div>
+                <span className="doctor-edit-image-file-name">
+                  {editImageFile ? editImageFile.name : "No new file selected"}
+                </span>
+                <input
+                  ref={editImageInputRef}
+                  type="file"
+                  className="doctor-edit-image-input"
+                  accept="image/*"
+                  onChange={handleEditImageChange}
+                />
               </div>
 
               <div className="doctor-edit-grid">
@@ -1892,7 +1853,7 @@ function Doctors() {
                   className="doctor-edit-save"
                   disabled={savingEdit || !canEdit}
                 >
-                  {savingEdit ? "Saving..." : "Save Changes"}
+                  {savingEdit ? "Updating..." : "Update Doctor"}
                 </button>
               </div>
             </form>

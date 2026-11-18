@@ -9,13 +9,21 @@ import "./Patients.css";
 import {
   Search,
   Eye,
+  UserCheck,
+  HeartPulse,
+  CalendarCheck,
+  ShieldCheck,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import { apiUrl } from "../../config/api";
 import { formatDateMMDDYYYY } from "../../utils/dateFormat";
-
-// ================= API =================
+import {
+  buildBranchOptions,
+  fetchBranchesForHospital,
+  getRecordBranchIds,
+  getStoredHospitalId,
+} from "../../utils/branchApi";
 
 const PATIENT_API_URL =
   apiUrl("Patient");
@@ -27,43 +35,41 @@ const formatPatientLastVisit = (value) => {
   return formatDateMMDDYYYY(value, "-");
 };
 
-// ================= RESPONSE =================
-
 const parsePatientResponse = (data) => {
-
-  if (Array.isArray(data))
-    return data;
-
-  if (Array.isArray(data?.data))
-    return data.data;
-
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data?.data)) return data.data;
   return [];
 };
 
-function Patients() {
+const getPatientBranchName = (patient = {}, branchNameById = {}) => {
+  const directName =
+    patient.branchName ||
+    patient.BranchName ||
+    patient.branch?.name ||
+    patient.branch?.branchName ||
+    patient.Branch?.name ||
+    patient.Branch?.Name ||
+    "";
 
+  if (directName) return directName;
+
+  const branchId = getRecordBranchIds(patient)[0];
+  return branchId ? branchNameById[String(branchId)] || "-" : "-";
+};
+
+function Patients() {
   const navigate = useNavigate();
 
-  const [patients, setPatients] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(true);
-
-  const [error, setError] =
-    useState("");
-
-  const [search, setSearch] =
-    useState("");
-
-  // ================= FETCH =================
+  const [patients, setPatients] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const [branchFilter, setBranchFilter] = useState("all");
 
   const fetchPatients = async () => {
-
     try {
-
       setLoading(true);
-
       setError("");
 
       const token =
@@ -71,89 +77,79 @@ function Patients() {
         localStorage.getItem("adminToken") ||
         localStorage.getItem("superAdminToken");
 
-      const response = await fetch(
-        PATIENT_API_URL,
-        {
-          headers: {
-            "ngrok-skip-browser-warning":
-              "true",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-        }
-      );
+      const response = await fetch(PATIENT_API_URL, {
+        headers: {
+          "ngrok-skip-browser-warning": "true",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+      });
 
-      if (!response.ok) {
-        throw new Error(
-          "Unable to load patients."
-        );
-      }
+      if (!response.ok) throw new Error("Unable to load patients.");
 
-      const data =
-        await response.json();
-
-      console.log(
-        "PATIENT API:",
-        data
-      );
-
-      setPatients(
-        parsePatientResponse(data)
-      );
-
+      const data = await response.json();
+      console.log("PATIENT API:", data);
+      setPatients(parsePatientResponse(data));
     } catch (error) {
-
       console.error(error);
-
-      setError(
-        error.message ||
-        "Unable to load patients."
-      );
-
+      setError(error.message || "Unable to load patients.");
     } finally {
-
       setLoading(false);
     }
   };
-
-  // ================= LOAD =================
 
   useEffect(() => {
     fetchPatients();
   }, []);
 
-  // ================= SEARCH =================
+  useEffect(() => {
+    let cancelled = false;
 
-  const filteredPatients =
-    useMemo(() => {
+    const loadBranches = async () => {
+      try {
+        const list = await fetchBranchesForHospital(getStoredHospitalId());
+        if (!cancelled) setBranches(buildBranchOptions(list));
+      } catch (error) {
+        console.error("Unable to load branches for patient filter.", error);
+      }
+    };
 
-      return patients.filter(
-        (patient) => {
+    loadBranches();
 
-          const query =
-            search
-              .trim()
-              .toLowerCase();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-          if (!query)
-            return true;
+  const branchNameById = useMemo(
+    () => Object.fromEntries(branches.map((branch) => [String(branch.id), branch.name])),
+    [branches]
+  );
 
-          return (
-            patient.name
-              ?.toLowerCase()
-              .includes(query) ||
+  const filteredPatients = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    const selectedBranch = branches.find((branch) => String(branch.id) === String(branchFilter));
+    const selectedBranchName = selectedBranch?.name?.trim().toLowerCase() || "";
 
-            patient.phone
-              ?.toLowerCase()
-              .includes(query)
-          );
-        }
+    return patients.filter((patient) => {
+      const branchIds = getRecordBranchIds(patient);
+      const branchName = getPatientBranchName(patient, branchNameById).trim().toLowerCase();
+      const matchesBranch =
+        branchFilter === "all" ||
+        branchIds.some((id) => String(id) === String(branchFilter)) ||
+        (selectedBranchName && branchName === selectedBranchName);
+
+      if (!matchesBranch) return false;
+      if (!query) return true;
+
+      return (
+        patient.name?.toLowerCase().includes(query) ||
+        patient.phone?.toLowerCase().includes(query) ||
+        getPatientBranchName(patient, branchNameById).toLowerCase().includes(query)
       );
-    }, [patients, search]);
-
-  // ================= INITIALS =================
+    });
+  }, [branchNameById, branches, branchFilter, patients, search]);
 
   const getInitials = (name) => {
-
     return (
       name
         ?.split(" ")
@@ -167,191 +163,111 @@ function Patients() {
 
   return (
     <div className="patients-page">
+      <div className="patients-bg-overlay" />
 
-      {/* HEADER */}
-
-      <div className="patients-header">
-
-        <div>
-
-          <h2 className="patients-title">
-            Patients
-          </h2>
-
-          <p className="patients-subtitle">
-
-            {loading
-              ? "Loading..."
-              : `${filteredPatients.length} patients in records`}
-
-          </p>
-
-        </div>
+      {/* 3D Floating Patient Care & Health Telemetry Particles */}
+      <div className="patients-patient-particle patient-part-1" title="Patient Care & Records">
+        <UserCheck size={28} />
+      </div>
+      <div className="patients-patient-particle patient-part-2" title="Cardio & Vitals Telemetry">
+        <HeartPulse size={26} />
+      </div>
+      <div className="patients-patient-particle patient-part-3" title="Appointment Scheduling">
+        <CalendarCheck size={26} />
+      </div>
+      <div className="patients-patient-particle patient-part-4" title="Health Shield & Safety">
+        <ShieldCheck size={26} />
       </div>
 
-      {/* ERROR */}
-
-      {error ? (
-        <div className="patients-empty">
-          {error}
+      <div className="patients-header" data-page-header>
+        <div>
+          <h2 className="patients-title">Patients</h2>
+          <p className="patients-subtitle">
+            {loading ? "Loading..." : `${filteredPatients.length} patients in records`}
+          </p>
         </div>
-      ) : null}
-
-      {/* TABLE */}
-
-      <div className="patients-table">
-
-        {/* SEARCH */}
-
-        <div className="patients-search-wrap">
-
+        <div className="admin-heading-search patients-search-wrap">
           <div className="patients-search-bar">
-
             <Search size={20} />
-
             <input
               value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Search by name or phone..."
             />
-
           </div>
+
+          <select
+            className="patients-branch-filter"
+            value={branchFilter}
+            onChange={(e) => setBranchFilter(e.target.value)}
+          >
+            <option value="all">All branches</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
         </div>
+
+      </div>
+
+      {error ? <div className="patients-empty">{error}</div> : null}
+
+      <div className="patients-table">
+        
 
         <div className="patients-table-scroll" tabIndex="0">
-
-        {/* HEADER */}
-
-        <div className="patients-thead">
-
-          <span>S.No.</span>
-
-          <span>Patient</span>
-
-          <span>Phone</span>
-
-          <span>Age</span>
-
-          <span>Gender</span>
-
-          <span>Last Visit</span>
-
-          <span>Actions</span>
-
-        </div>
-
-        {/* EMPTY */}
-
-        {!loading &&
-          filteredPatients.length === 0 ? (
-
-          <div className="patients-empty">
-            No patients found.
+          <div className="patients-thead">
+            <span className="patients-sno-head">S.No.</span>
+            <span className="patients-name-head">Patient</span>
+            <span className="patients-phone-head">Phone</span>
+            <span className="patients-age-head">Age</span>
+            <span className="patients-gender-head">Gender</span>
+            <span className="patients-visit-head">Last Visit</span>
+            <span className="patients-actions-head">Actions</span>
           </div>
 
-        ) : null}
+          {!loading && filteredPatients.length === 0 ? (
+            <div className="patients-empty">No patients found.</div>
+          ) : null}
 
-        {/* ROWS */}
+          {filteredPatients.map((patient, index) => (
+            <div className="patients-row" key={patient.id || patient.patientCode || index}>
+              <span className="patients-sno-cell">{index + 1}</span>
 
-        {filteredPatients.map(
-          (patient, index) => {
-
-            return (
-
-              <div
-                className="patients-row"
-                key={patient.id}
-              >
-                <span>{index + 1}</span>
-
-                {/* INFO */}
-
-                <div className="patients-info">
-
-                  <div className="patients-avatar">
-
-                    {getInitials(
-                      patient.name
-                    )}
-
-                  </div>
-
-                  <div>
-
-                    <b>
-                      {patient.name}
-                    </b>
-
-                    <p>
-                      {patient.patientCode ||
-                        `P${String(
-                          patient.id
-                        ).padStart(
-                          3,
-                          "0"
-                        )}`}
-                    </p>
-
-                  </div>
+              <div className="patients-info">
+                <div className="patients-avatar">{getInitials(patient.name)}</div>
+                <div className="patients-name-stack">
+                  <b>{patient.name}</b>
+                  <p>
+                    {patient.patientCode ||
+                      `P${String(patient.id).padStart(3, "0")}`}
+                  </p>
                 </div>
+              </div>
 
-                {/* PHONE */}
+              <span className="patients-phone-cell">{patient.phone || "-"}</span>
+              <span className="patients-age-cell">{patient.age || "-"}</span>
+              <span className="patients-gender-cell">{patient.gender || "-"}</span>
+              <span className="patients-visit-cell">{formatPatientLastVisit(patient.lastVisit)}</span>
 
-                <span>
-                  {patient.phone || "-"}
-                </span>
-
-                {/* AGE */}
-
-                <span>
-                  {patient.age || "-"}
-                </span>
-
-                {/* GENDER */}
-
-                <span>
-                  {patient.gender || "-"}
-                </span>
-
-                {/* LAST VISIT */}
-
-                <span>
-
-                  {formatPatientLastVisit(patient.lastVisit)}
-
-                </span>
-
-                {/* ACTION */}
-
+              <div className="patients-actions-cell">
                 <button
                   type="button"
                   className="patients-view-btn"
                   onClick={() =>
-                    navigate(
-                      `/patients/${patient.id}`,
-                      {
-                        state: {
-                          patient,
-                        },
-                      }
-                    )
+                    navigate(`/patients/${patient.id}`, {
+                      state: { patient },
+                    })
                   }
                 >
-
                   <Eye size={16} />
-
-                  View
-
+                  <span>View</span>
                 </button>
-
               </div>
-            );
-          }
-        )}
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -359,3 +275,4 @@ function Patients() {
 }
 
 export default Patients;
+

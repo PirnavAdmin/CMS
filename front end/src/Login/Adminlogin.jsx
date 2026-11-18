@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { X } from 'lucide-react';
 import clinicBg from '../assests/clinic-bg.jpg';
 import './styles/Auth.css';
 import { apiUrl } from '../config/api';
@@ -7,6 +8,7 @@ import { recordAuditLog } from '../pages/SUPERADMIN/superAdminApi';
 import { useToast } from '../components/ToastProvider';
 import { validateGmail } from '../utils/validation';
 import { syncAdminRoleMatrixFromBackend } from '../utils/rolePermissions';
+import ThemePicker from '../components/ThemePicker';
 const EyeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
@@ -101,6 +103,7 @@ const getDisplayName = (authData, claims, email, role) => {
     authData.doctorName,
     authData.receptionistName,
     authData.labName,
+    authData.pharmacistName,
     getClaim(
       claims,
       'name',
@@ -120,45 +123,12 @@ const getDisplayName = (authData, claims, email, role) => {
   if (normalizedRole === 'receptionist') return 'Receptionist';
   if (normalizedRole === 'nurse') return 'Nurse';
   if (normalizedRole === 'labtechnician' || normalizedRole === 'lab') return 'Lab Technician';
+  if (normalizedRole === 'pharmacist') return 'Pharmacist';
   if (normalizedRole === 'superadmin') return 'Super Admin';
   return 'Admin';
 };
 
-const fetchPublicIp = async () => {
-  const providers = [
-    {
-      url: 'https://api.ipify.org?format=json',
-      read: (data) => getFirstText(data.ip),
-    },
-    {
-      url: 'https://api64.ipify.org?format=json',
-      read: (data) => getFirstText(data.ip),
-    },
-    {
-      url: 'https://ipapi.co/json/',
-      read: (data) => getFirstText(data.ip),
-    },
-    {
-      url: 'https://api.my-ip.io/v2/ip.json',
-      read: (data) => getFirstText(data.ip),
-    },
-  ];
-
-  for (const provider of providers) {
-    try {
-      const response = await fetch(provider.url);
-      if (!response.ok) continue;
-
-      const data = await response.json();
-      const ip = provider.read(data);
-      if (ip) return ip;
-    } catch {
-      // Try the next provider.
-    }
-  }
-
-  return '';
-};
+const fetchPublicIp = async () => localStorage.getItem('loginIpAddress') || '';
 
 const getLoginIp = async (authData, claims) => {
   const expectedIp = getFirstText(
@@ -239,12 +209,14 @@ const clearStoredSession = () => {
     'receptionistToken',
     'nurseToken',
     'labToken',
+    'pharmacistToken',
     'adminRole',
     'superAdminRole',
     'doctorRole',
     'receptionistRole',
     'nurseRole',
     'labRole',
+    'pharmacistRole',
     'userRole',
     'adminEmail',
     'adminName',
@@ -255,12 +227,15 @@ const clearStoredSession = () => {
     'receptionistEmail',
     'nurseEmail',
     'labEmail',
+    'pharmacistEmail',
     'receptionistName',
     'nurseName',
     'labName',
+    'pharmacistName',
     'doctorId',
     'nurseId',
     'labId',
+    'pharmacistId',
     'doctorName',
     'hospitalId',
     'hospitalName',
@@ -366,27 +341,28 @@ const AdminLogin = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(body),
+          signal: AbortSignal.timeout(15000),
         });
 
         data = await readJson(response);
 
-        if (response.ok) {
+        if (response.ok || response.status >= 500) {
           break;
         }
       }
 
       if (!response.ok) {
-        setErrors({
-          api:
-            data.message ||
-            data.error ||
-            'Invalid email or password. Please use the password set for this admin account.',
-        });
-        toast.error(
-          data.message ||
-            data.error ||
-            'Invalid email or password. Please use the password set for this admin account.'
-        );
+        const message = [502, 503, 504].includes(response.status)
+          ? 'Unable to reach server. Please try again.'
+          : response.status >= 500
+            ? 'Something went wrong on the server. Please try again.'
+            : data.message || data.error || (
+              response.status === 401
+                ? 'Invalid email or password. Please use the password set for this admin account.'
+                : 'Unable to sign in. Please try again.'
+            );
+        setErrors({ api: message });
+        toast.error(message);
         return;
       }
 
@@ -411,7 +387,7 @@ const AdminLogin = () => {
         );
       const normalizedRole = normalizeRole(role);
 
-      if (!['superadmin', 'admin', 'clinicadmin', 'doctor', 'receptionist', 'nurse', 'labtechnician', 'lab', 'patient'].includes(normalizedRole)) {
+      if (!['superadmin', 'admin', 'clinicadmin', 'doctor', 'receptionist', 'nurse', 'labtechnician', 'lab', 'pharmacist', 'patient'].includes(normalizedRole)) {
         setErrors({
           api: 'Access denied. This account does not have Super Admin, Admin, Doctor, or Receptionist role.',
         });
@@ -593,6 +569,17 @@ const AdminLogin = () => {
         return;
       }
 
+      if (normalizedRole === 'pharmacist') {
+        setSessionItem('pharmacistToken', token);
+        setSessionItem('pharmacistRole', role);
+        setSessionItem('pharmacistEmail', loginEmail);
+        setSessionItem('pharmacistName', displayName);
+        setSessionItem('pharmacistId', String(authData.pharmacistId || authData.PharmacistId || getClaim(claims, 'PharmacistId', 'pharmacistId', 'UserId', 'userId') || ''));
+        toast.success({ title: 'Login successful', description: 'Welcome to the pharmacy!' });
+        navigate('/pharmacy/dashboard', { replace: true });
+        return;
+      }
+
       if (normalizedRole === 'patient') {
         setSessionItem('patientToken', token);
         setSessionItem('patientRole', role);
@@ -644,7 +631,19 @@ const AdminLogin = () => {
       />
       <div className="auth-veil" aria-hidden="true" />
 
-      <div className="auth-card">
+      <div className="auth-card auth-card--login">
+        <div className="auth-login-controls">
+          <ThemePicker />
+          <button
+            type="button"
+            className="auth-login-close"
+            onClick={() => navigate('/')}
+            aria-label="Go to landing page"
+            title="Go to landing page"
+          >
+            <X size={20} />
+          </button>
+        </div>
         <div className="auth-logo" aria-hidden="true">
           <LogoIcon />
         </div>

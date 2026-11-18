@@ -1,0 +1,60 @@
+namespace AuthDemo.Models;
+
+public class OtpVerification
+{
+    public int Id { get; set; }
+
+    // =====================================================
+    // EMAIL
+    // =====================================================
+
+    public string Email
+    { get; set; }
+
+    // PasswordReset preserves the existing forgot-password flow.
+    // AdminRegistration is a separate, single-purpose OTP flow.
+    public string Purpose { get; set; } = "PasswordReset";
+
+    // =====================================================
+    // OTP
+    // =====================================================
+
+    public string Otp
+    { get; set; }
+
+    // =====================================================
+    // OTP EXPIRY
+    // =====================================================
+
+    public DateTime ExpiryTime
+    { get; set; }
+
+    // =====================================================
+    // OTP USED STATUS
+    // =====================================================
+
+    public bool IsUsed
+    { get; set; }
+
+    // =====================================================
+    // RESET TOKEN
+    // =====================================================
+
+    public string? ResetToken
+    { get; set; }
+
+    // =====================================================
+    // RESET TOKEN EXPIRY
+    // =====================================================
+
+    public DateTime? ResetTokenExpiry
+    { get; set; }
+
+    // =====================================================
+    // CREATED DATE
+    // =====================================================
+
+    public DateTime CreatedAt
+    { get; set; }
+        = DateTime.UtcNow;
+}

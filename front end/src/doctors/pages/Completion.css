@@ -24,7 +24,7 @@
   flex-direction: column;
   align-items: center;
   gap: 16px;
-  box-shadow: 0 4px 24px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 4px 24px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
 }
 
 /* ── Large green check circle ── */
@@ -46,15 +46,15 @@
 /* ── Heading ── */
 .comp-title {
   margin: 0;
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 800;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   text-align: center;
 }
 
 .comp-subtitle {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
   text-align: center;
 }
@@ -95,7 +95,7 @@
   margin: 0;
   font-size: 14px;
   font-weight: 700;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
 }
 
 .comp-item-desc {
@@ -142,23 +142,29 @@
 }
 
 .comp-btn--primary {
-  background: #2563eb;
+  background: var(--theme-primary);
   color: #ffffff;
 }
 
 .comp-btn--ghost {
-  background: #eef6ff;
-  color: #174b83;
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
 }
 
 .comp-btn--primary:hover {
-  background: #1d4ed8;
+  background: var(--theme-primary);
 }
 
 .comp-btn--ghost:hover {
-  background: #dbeafe;
+  background: var(--theme-primary-soft);
 }
 
 .comp-btn:active {
   transform: scale(0.97);
+}
+
+/* Compact page title without a separate header container. */
+@media screen {
+  html body .comp-title[data-page-title] { font-size: 22px !important; line-height: 1.2 !important; margin: 0 0 6px !important; white-space: normal; overflow-wrap: anywhere; }
+  html body .comp-subtitle[data-page-subtitle] { font-size: 12px !important; line-height: 1.35 !important; margin: 0 0 8px !important; overflow-wrap: anywhere; }
 }

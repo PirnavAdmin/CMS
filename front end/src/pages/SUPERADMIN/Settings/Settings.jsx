@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Header from "../../../components/superadmin/Header";
 import PasswordField from "../../../components/PasswordField";
+import PaymentAdministration from '../../../components/payments/PaymentAdministration';
 import {
   fetchSettings,
   updateEmailSettings,
@@ -253,7 +254,7 @@ function Settings() {
     <>
       <Header title="System Settings" subtitle="Configure global platform preferences." />
 
-      <form className="sa-panel" onSubmit={handleSave} noValidate>
+      <form className="sa-panel sa-settings-form" onSubmit={handleSave} noValidate>
         <div className="sa-tabs">
           {tabs.map((tab) => (
             <button
@@ -315,6 +316,7 @@ function Settings() {
           </button>
         </div>
       </form>
+      {activeSection === 'payment' && <PaymentAdministration scope="cms" canEdit />}
     </>
   );
 }

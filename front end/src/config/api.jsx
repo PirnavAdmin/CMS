@@ -1,15 +1,16 @@
-//const DEFAULT_API_BASE_URL = "https://theater-outreach-unable.ngrok-free.dev";
-const DEFAULT_API_BASE_URL = " https://irritant-kilobyte-until.ngrok-free.dev";
+const DEFAULT_API_BASE_URL = "https://countable-ligament-shorty.ngrok-free.dev";
 const DEFAULT_API_ASSET_BASE_URL = DEFAULT_API_BASE_URL;
 export const CMS_GLOBAL_SETTINGS_KEY = "cms_global_settings";
 
 export const API_BASE_URL = (
-  process.env.REACT_APP_API_BASE_URL || DEFAULT_API_BASE_URL
-).replace(/\/+$/, "");
+  process.env.REACT_APP_API_BASE_URL ||
+  (process.env.NODE_ENV === "development" ? "" : DEFAULT_API_BASE_URL)
+).trim().replace(/\/+$/, "");
 
 export const API_ASSET_BASE_URL = (
-  process.env.REACT_APP_API_ASSET_BASE_URL || DEFAULT_API_ASSET_BASE_URL
-).replace(/\/+$/, "");
+  process.env.REACT_APP_API_ASSET_BASE_URL ||
+  (process.env.NODE_ENV === "development" ? "" : API_BASE_URL || DEFAULT_API_ASSET_BASE_URL)
+).trim().replace(/\/+$/, "");
 
 export const apiUrl = (path) => {
   const cleanPath = String(path || "")
@@ -100,7 +101,7 @@ export const PATIENT_API = {
   appointmentToken: "patient-portal/appointments/{id}/token",
   cancelAppointment: "patient-portal/appointments/{id}/cancel",
   rescheduleAppointment: "patient-portal/appointments/{id}/reschedule",
-  medicalHistory: "patient-portal/medical-history",
+  medicalHistory: "MedicalHistory/{patientId}",
   prescriptions: "patient-portal/prescriptions",
   prescriptionById: "patient-portal/prescriptions/{id}",
   bills: "patient-portal/bills",
@@ -110,3 +111,229 @@ export const PATIENT_API = {
   notificationRead: "patient-portal/notifications/{id}/read",
   notificationDelete: "patient-portal/notifications/{id}",
 };
+
+
+export const API_ENDPOINTS = {
+  auth: {
+    login: "Auth/login",
+    logout: "Auth/logout",
+    me: "Auth/me",
+    forgotPassword: "Auth/forgot-password",
+    verifyOtp: "Auth/verify-otp",
+    resetPassword: "Auth/reset-password",
+    changePassword: "Auth/change-password",
+    registerDoctor: "Auth/register-doctor",
+    registerReceptionist: "Auth/register-receptionist",
+    registerNurse: "Auth/register-nurse",
+  },
+  superAdmin: {
+    dashboard: "SuperAdmin/dashboard",
+    pendingAdminCreations: "superadmin/pending-admin-creations",
+    pendingAdminCreation: "superadmin/pending-admin-creations/{id}",
+    createAdminFromPurchase: "superadmin/pending-admin-creations/{id}/create-admin",
+    summary: "SuperAdmin/summary",
+    reportSummary: "SuperAdminReports/summary",
+  },
+  subscriptions: {
+    plans: "subscriptions/plans",
+    planById: "subscriptions/plans/{id}",
+    publicPlans: "subscriptions/public/plans",
+    adminPlans: "subscriptions/admin/plans",
+    adminPlanById: "subscriptions/admin/plans/{id}",
+    adminPlanPrice: "subscriptions/admin/plans/{id}/price",
+    checkout: "subscriptions/checkout",
+    paymentMethods: "subscriptions/payment-methods",
+    adminDemoPurchases: "subscriptions/admin/demo-purchases",
+    initiatePayment: "subscriptions/payments/initiate",
+    confirmDemoPayment: "subscriptions/demo/payments/confirm",
+    pendingPayments: "subscriptions/payments/pending",
+    paymentStatus: "subscriptions/payments/{purchaseId}/status",
+    upgradeCheckout: "subscriptions/upgrades/checkout",
+    activateUpgrade: "subscriptions/upgrades/{purchaseId}/activate",
+    renewalCheckout: "subscriptions/renewals/checkout",
+    renewalHistory: "subscriptions/renewals/history",
+    activateRenewal: "subscriptions/renewals/{purchaseId}/activate",
+    requests: "subscription-requests",
+    requestById: "subscription-requests/{id}",
+    clinicByHospitalId: "clinic-subscriptions/{hospitalId}",
+    assign: "subscriptions/assign",
+    all: "subscriptions/all",
+    my: "subscriptions/my",
+  },
+  users: {
+    list: "users",
+    byId: "users/{id}",
+    status: "users/{id}/status",
+  },
+  admins: {
+    list: "admins",
+    byId: "admins/{id}",
+    status: "admins/{id}/status",
+  },
+  pharmacists: {
+    create: "pharmacists",
+    list: "pharmacists",
+  },
+  pharmacy: {
+    medicinesImport: "pharmacy/medicines/import",
+    medicines: "pharmacy/medicines",
+    medicineById: "pharmacy/medicines/{id}",
+    medicineActivate: "pharmacy/medicines/{id}/activate",
+    pendingPrescriptions: "pharmacy/prescriptions/pending",
+    prescriptionById: "pharmacy/prescriptions/{id}",
+    dispensePrescription: "pharmacy/prescriptions/{id}/dispense",
+    updateDispensingQuantities: "pharmacy/prescriptions/{id}/dispense/quantities",
+    appointmentDispensedMedicines: "Billing/appointments/{appointmentId}/dispensed-medicines",
+    createOtcSaleDraft: "pharmacy/otc-sales/draft",
+    otcSaleById: "pharmacy/otc-sales/{id}",
+    confirmOtcSale: "pharmacy/otc-sales/{id}/confirm",
+  },
+  roles: {
+    admins: "roles/admins",
+    list: "roles",
+    byId: "roles/{id}",
+    permissions: "roles/{id}/permissions",
+    roleNames: "roles/roles",
+  },
+  clinics: {
+    list: "clinics",
+    byId: "clinics/{id}",
+  },
+  location: {
+    pincode: "Location/pincode/{pincode}",
+  },
+  branches: {
+    list: "Branch",
+    byId: "Branch/{id}",
+  },
+  doctors: {
+    list: "Doctor",
+    byId: "Doctor/{id}",
+    status: "Doctor/{id}/status",
+    specializations: "Doctor/specializations",
+    qualifications: "Doctor/qualifications",
+    branches: "Doctor/{doctorId}/branches",
+    byBranch: "Doctor/branch/{branchId}",
+    dashboard: "Doctor/dashboard",
+    patients: "Doctor/patients",
+  },
+  staff: {
+    list: "Staff",
+    byId: "Staff/{id}",
+    labTechnicians: "Staff/lab-technicians",
+    toggleStatus: "Staff/{id}/toggle-status",
+  },
+  userPermissions: {
+    eligibleUsers: "user-permissions/eligible-users",
+    user: "user-permissions/users/{userId}",
+    me: "user-permissions/me",
+  },
+  schedule: {
+    list: "Schedule",
+    byId: "Schedule/{id}",
+    doctor: "Schedule/doctor/{doctorId}",
+    daySlots: "Schedule/day-slots",
+    overrides: "Schedule/overrides",
+    leave: "Schedule/overrides/leave",
+    leaveById: "Schedule/overrides/leave/{id}",
+    timeChange: "Schedule/overrides/time-change",
+    branchShift: "Schedule/overrides/branch-shift",
+    overrideById: "Schedule/overrides/{id}",
+  },
+  scheduleSettings: {
+    list: "ScheduleSettings",
+    byId: "ScheduleSettings/{id}",
+    holidays: "ScheduleSettings/holidays",
+  },
+  patients: {
+    list: "Patient",
+    byId: "Patient/{id}",
+    bloodGroups: "Patient/blood-groupsDropdown",
+  },
+  patientPortal: PATIENT_API,
+  appointments: {
+    list: "Appointment",
+    status: "Appointment/{id}/status",
+    byBranch: "Appointment/branch/{branchId}",
+    online: "Appointment/online",
+    offline: "Appointment/offline",
+    documents: "Appointment/{appointmentId}/documents",
+    chiefComplaints: "Appointment/chief-complaints",
+  },
+  nurse: {
+    dashboard: "Nurse/dashboard",
+    patients: "Nurse/patients",
+    patientById: "Nurse/patients/{patientId}",
+    vitals: "Nurse/appointments/{appointmentId}/vitals",
+    vitalsHistory: "Nurse/patients/{patientId}/vitals",
+  },
+  medicalHistory: {
+    list: "MedicalHistory/all/{patientId}",
+    latest: "MedicalHistory/{patientId}",
+    byId: "MedicalHistory/{id}",
+  },
+  consultation: {
+    list: "Consultation",
+    byAppointment: "Consultation/appointment/{appointmentId}",
+    vitals: "Consultation/appointment/{appointmentId}/vitals",
+    diagnosisDropdown: "Consultation/diagnosis-dropdown",
+    clinicalNoteTemplates: "Consultation/clinical-note-templates",
+  },
+  prescription: {
+    list: "Prescription",
+    byAppointment: "Prescription/appointment/{appointmentId}",
+    dosages: "Prescription/dosages",
+    frequencies: "Prescription/frequencies",
+    medicines: "Prescription/medicineDropdown",
+    instructions: "Prescription/Instructiondropdown",
+    medicineNotes: "Prescription/medicine-notes",
+  },
+  lab: {
+    dashboard: "Lab/dashboard",
+    master: "Lab/master",
+    masterById: "Lab/master/{id}",
+    importMaster: "Lab/master/import",
+    orders: "Lab/orders",
+    orderById: "Lab/orders/{id}",
+    sampleCollected: "Lab/orders/{id}/sample-collected",
+    start: "Lab/orders/{id}/start",
+    result: "Lab/orders/{id}/result",
+    report: "Lab/orders/{id}/report",
+    complete: "Lab/orders/{id}/complete",
+  },
+  billing: {
+    appointments: "Billing/appointments",
+    appointmentPrescription: "Billing/appointments/{appointmentId}/prescription",
+    op: "Billing/op",
+    lab: "Billing/lab",
+    pharmacy: "Billing/pharmacy",
+    list: "Billing",
+    byId: "Billing/{id}",
+    payment: "Billing/{billId}/payment",
+    paymentHistory: "Billing/{billId}/payments",
+  },
+  payment: {
+    create: "payment/create",
+    success: "payment/success",
+  },
+  dashboard: {
+    clinic: "Dashboard",
+    revenue: "Dashboard/revenue",
+    dailyAppointments: "Dashboard/reports/daily-appointments",
+    revenueReport: "Dashboard/reports/revenue",
+    doctors: "Dashboard/reports/doctors",
+  },
+  reports: {
+    dailyAppointments: "Report/daily-appointments",
+    revenue: "Report/revenue",
+    gstSummary: "Report/gst-summary",
+    doctorWise: "Report/doctor-wise",
+  },
+  auditLogs: {
+    list: "AuditLogs",
+    loginHistory: "AuditLogs/login-history",
+    loginHistoryByDate: "login-history",
+  },
+};
+
+export const endpointUrl = (path, params = {}) => apiUrl(replacePathParams(path, params));

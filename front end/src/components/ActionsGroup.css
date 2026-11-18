@@ -1,0 +1,394 @@
+/* ==========================================================================
+   ACTIONS GROUP - MEDICAL INSTRUMENT BUTTONS & PHYSICAL TACTILE CLICK EFFECTS
+   Position, layout & order strictly preserved. Functionality 100% intact.
+   ========================================================================== */
+
+.actions-header-cell {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--theme-primary-dark);
+  padding: 10px 16px;
+  border-bottom: 1px solid #e2e8f0;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.actions-group {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px;
+  padding: 4px 6px;
+  width: 100% !important;
+  margin: 0 auto !important;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+/* ==========================================================================
+   CHASSIS: SURGICAL-GRADE MEDICAL INSTRUMENT BUTTON CONTAINER
+   ========================================================================== */
+.action-btn.medical-instrument-btn,
+.action-btn {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  min-height: 42px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border: 1.5px solid #cbd5e1;
+  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+  cursor: pointer;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  box-shadow:
+    0 2px 5px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px color-mix(in srgb, var(--theme-primary-dark) 3%, transparent);
+  transition:
+    transform 0.18s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn:focus-visible {
+  outline: 2px solid var(--theme-primary);
+  outline-offset: 2px;
+}
+
+.action-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* PHYSICAL TACTILE SPRING PRESS ON MOUSE DOWN / CLICK */
+.action-btn:active,
+.action-btn.is-effecting {
+  transform: translateY(2px) scale(0.94);
+  box-shadow:
+    inset 0 2px 4px color-mix(in srgb, var(--theme-primary-dark) 14%, transparent),
+    0 1px 2px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent);
+}
+
+/* ==========================================================================
+   MICRO MEDICAL LED INDICATOR DOT (UPPER RIGHT CORNER)
+   ========================================================================== */
+.instrument-led,
+.instrument-ripple {
+  display: none !important;
+}
+
+.led-blue {
+  background: var(--theme-primary);
+  box-shadow: 0 0 4px var(--theme-primary);
+}
+
+.led-purple {
+  background: var(--theme-primary);
+  box-shadow: 0 0 4px var(--theme-primary);
+}
+
+.led-green {
+  background: #16a34a;
+  box-shadow: 0 0 5px #16a34a;
+  animation: ledPulse 2s ease-in-out infinite;
+}
+
+.led-red {
+  background: #ef4444;
+  box-shadow: 0 0 4px #ef4444;
+}
+
+@keyframes ledPulse {
+  0%, 100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.3);
+  }
+}
+
+/* RIPPLE BURST ELEMENT ON CLICK */
+.instrument-ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 12px;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.4);
+}
+
+.action-btn.is-effecting .instrument-ripple {
+  animation: instrumentRipple 0.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+
+@keyframes instrumentRipple {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.2);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2);
+  }
+}
+
+/* ICON BASE STYLING */
+.instrument-icon {
+  display: block;
+  flex-shrink: 0;
+  transform-origin: center center;
+  transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.action-btn:hover .instrument-icon {
+  transform: scale(1.08);
+}
+
+/* ==========================================================================
+   1. VIEW BUTTON - DIAGNOSTIC OPTICAL EYE SCANNER MODEL
+   ========================================================================== */
+.action-btn.view-instrument-btn,
+.action-btn.view-btn {
+  border-color: var(--theme-primary-soft);
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--theme-primary) 12%, transparent);
+}
+
+.action-btn.view-instrument-btn:hover,
+.action-btn.view-btn:hover {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  border-color: var(--theme-primary);
+  color: #ffffff;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 35%, transparent);
+}
+
+.action-btn.view-instrument-btn.effect-eye .instrument-ripple {
+  background: radial-gradient(circle, color-mix(in srgb, var(--theme-primary) 40%, transparent) 0%, transparent 70%);
+}
+
+.action-btn.view-instrument-btn.effect-eye .icon-eye,
+.action-btn.view-instrument-btn:active .icon-eye {
+  animation: eyeDiagnosticScan 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes eyeDiagnosticScan {
+  0% {
+    transform: scale(1);
+  }
+  20% {
+    transform: scale(0.82) rotate(-6deg);
+  }
+  45% {
+    transform: scale(1.32) rotate(4deg);
+    filter: drop-shadow(0 0 6px var(--theme-primary));
+  }
+  70% {
+    transform: scale(0.95) rotate(-2deg);
+  }
+  85% {
+    transform: scale(1.06) rotate(1deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+/* ==========================================================================
+   2. EDIT BUTTON - PRECISION PEN / SYRINGE INSTRUMENT MODEL
+   ========================================================================== */
+.action-btn.edit-instrument-btn,
+.action-btn.edit-btn {
+  border-color: var(--theme-primary-soft);
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--theme-primary) 12%, transparent);
+}
+
+.action-btn.edit-instrument-btn:hover,
+.action-btn.edit-btn:hover {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary) 100%);
+  border-color: var(--theme-primary);
+  color: #ffffff;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 35%, transparent);
+}
+
+.action-btn.edit-instrument-btn.effect-syringe .instrument-ripple,
+.action-btn.edit-instrument-btn.effect-edit .instrument-ripple {
+  background: radial-gradient(circle, color-mix(in srgb, var(--theme-primary) 35%, transparent) 0%, transparent 70%);
+}
+
+.action-btn.edit-instrument-btn.effect-syringe .icon-syringe,
+.action-btn.edit-instrument-btn.effect-edit .icon-pencil,
+.action-btn.edit-instrument-btn.effect-edit .icon-edit,
+.action-btn.edit-instrument-btn:active .icon-pencil,
+.action-btn.edit-instrument-btn:active .icon-edit,
+.action-btn.edit-instrument-btn:active .icon-syringe {
+  animation: syringeInjection 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes syringeInjection {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.18) rotate(-28deg) translateY(-2px);
+    filter: drop-shadow(0 0 5px var(--theme-primary));
+  }
+  50% {
+    transform: scale(0.88) rotate(-28deg) translateY(5px);
+  }
+  75% {
+    transform: scale(1.08) rotate(-10deg) translateY(-1px);
+  }
+  100% {
+    transform: scale(1) rotate(0deg) translateY(0);
+  }
+}
+
+/* ==========================================================================
+   3. STATUS BUTTON - VITAL SIGNS ECG HEARTPULSE INSTRUMENT MODEL
+   ========================================================================== */
+.action-btn.status-instrument-btn,
+.action-btn.status-btn {
+  border-color: #cbd5e1;
+}
+
+.action-btn.status-instrument-btn.status-enabled,
+.action-btn.status-btn.status-enabled {
+  color: #15803d;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-color: #86efac;
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.12);
+}
+
+.action-btn.status-instrument-btn.status-enabled:hover:not(:disabled),
+.action-btn.status-btn.status-enabled:hover:not(:disabled) {
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+  border-color: #16a34a;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.35);
+}
+
+.action-btn.status-instrument-btn.status-disabled,
+.action-btn.status-btn.status-disabled {
+  color: #dc2626;
+  background: linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%);
+  border-color: #fecdd3;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12);
+}
+
+.action-btn.status-instrument-btn.status-disabled:hover:not(:disabled),
+.action-btn.status-btn.status-disabled:hover:not(:disabled) {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.action-btn.status-instrument-btn.status-enabled.effect-heartpulse .instrument-ripple {
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.4) 0%, transparent 70%);
+}
+
+.action-btn.status-instrument-btn.status-disabled.effect-heartpulse .instrument-ripple {
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.4) 0%, transparent 70%);
+}
+
+.action-btn.status-instrument-btn.effect-heartpulse .icon-heartpulse,
+.action-btn.status-instrument-btn:active .icon-heartpulse {
+  animation: ecgHeartbeat 0.65s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+@keyframes ecgHeartbeat {
+  0% {
+    transform: scale(1);
+  }
+  18% {
+    transform: scale(1.38);
+    filter: drop-shadow(0 0 6px currentColor);
+  }
+  36% {
+    transform: scale(0.92);
+  }
+  54% {
+    transform: scale(1.24);
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  72% {
+    transform: scale(0.97);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* ==========================================================================
+   4. DELETE BUTTON - SURGICAL SCISSORS / EXCISION INSTRUMENT MODEL
+   ========================================================================== */
+.action-btn.delete-instrument-btn,
+.action-btn.delete-btn {
+  border-color: #fca5a5;
+  background: linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%);
+  color: #dc2626;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.12);
+}
+
+.action-btn.delete-instrument-btn:hover,
+.action-btn.delete-btn:hover {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #ef4444;
+  color: #ffffff;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.35);
+}
+
+.action-btn.delete-instrument-btn.effect-scissors .instrument-ripple,
+.action-btn.delete-instrument-btn.effect-delete .instrument-ripple {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.35) 0%, transparent 70%);
+}
+
+.action-btn.delete-instrument-btn.effect-scissors .icon-scissors,
+.action-btn.delete-instrument-btn.effect-delete .icon-delete,
+.action-btn.delete-instrument-btn.effect-delete .icon-trash,
+.action-btn.delete-instrument-btn:active .icon-delete,
+.action-btn.delete-instrument-btn:active .icon-trash,
+.action-btn.delete-instrument-btn:active .icon-scissors {
+  animation: surgicalSnip 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@keyframes surgicalSnip {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.25) rotate(-35deg);
+    filter: drop-shadow(0 0 5px #ef4444);
+  }
+  50% {
+    transform: scale(0.88) rotate(20deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(-10deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}

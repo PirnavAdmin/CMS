@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Camera, CheckCircle, Pencil, Plus, RefreshCw, Search, ShieldPlus, Trash2, ToggleLeft, ToggleRight, X } from "lucide-react";
-import "../RECEPTIONISTS/Receptionists.css";
+import { Camera, CheckCircle, Eye, Pencil, Plus, RefreshCw, Search, ShieldPlus, Trash2, ToggleLeft, ToggleRight, X, HeartPulse, Syringe, Activity, Stethoscope, Mail, Phone, MapPin, LayoutGrid, List } from "lucide-react";
+import { ActionsGroup } from "../../components/ActionsGroup";
+import "./Nurses.css";
 import { apiUrl } from "../../config/api";
 import { useToast } from "../../components/ToastProvider";
 import { getNurses as fetchStaffNurses } from "../../Nurse/nurseApi";
@@ -12,6 +13,7 @@ import {
   recordBelongsToClinicScope,
 } from "../../utils/branchApi";
 import { getClinicDisplayName } from "../../utils/clinicDisplay";
+import { formatTitleCase } from "../../utils/format";
 import { useAdminModulePermissions } from "../../utils/rolePermissions";
 import {
   onlyAlpha,
@@ -139,18 +141,23 @@ function Nurses() {
     clinicName: localStorage.getItem("clinicName"),
   }, "Clinic");
   const [nurses, setNurses] = useState([]);
+  const [activeActionState, setActiveActionState] = useState(null);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingBranches, setLoadingBranches] = useState(true);
   const [saving, setSaving] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewingNurse, setViewingNurse] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [search, setSearch] = useState("");
   const [form, setForm] = useState(emptyForm);
   const [fieldErrors, setFieldErrors] = useState({});
   const [message, setMessage] = useState("");
   const [deletingId, setDeletingId] = useState(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState(null);
   const [editingNurse, setEditingNurse] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [viewMode, setViewMode] = useState("grid");
   const imageInputRef = useRef(null);
 
   const branchNameById = useMemo(
@@ -202,7 +209,11 @@ function Nurses() {
   }, [branchNameById, nurses, search, hospitalId, clinicName, scopedBranchIds]);
 
   const updateField = (field, value) => {
-    const nextValue = field === "name" ? onlyAlpha(value) : field === "phone" ? onlyIndianMobileValue(value) : value;
+    const nextValue = field === "name"
+      ? formatTitleCase(onlyAlpha(value))
+      : field === "phone"
+        ? onlyIndianMobileValue(value)
+        : value;
     setForm((current) => ({ ...current, [field]: nextValue }));
     setFieldErrors((current) => ({ ...current, [field]: "", form: "" }));
     setMessage("");
@@ -235,6 +246,7 @@ function Nurses() {
     setFieldErrors({});
     setMessage("");
     setModalOpen(true);
+    setShowPassword(false);
   };
 
   const openEditModal = (nurse) => {
@@ -244,7 +256,7 @@ function Nurses() {
     }
     setEditingNurse(nurse);
     setForm({
-      name: getNurseName(nurse) || "",
+      name: formatTitleCase(onlyAlpha(getNurseName(nurse) || "")),
       email: getNurseEmail(nurse) || "",
       phone: getNursePhone(nurse) || "",
       password: "",
@@ -273,12 +285,12 @@ function Nurses() {
     setSaving(true);
     try {
       const payload = {
-        name: form.name.trim(),
-        Name: form.name.trim(),
-        nurseName: form.name.trim(),
-        NurseName: form.name.trim(),
-        fullName: form.name.trim(),
-        FullName: form.name.trim(),
+        name: formatTitleCase(form.name.trim()),
+        Name: formatTitleCase(form.name.trim()),
+        nurseName: formatTitleCase(form.name.trim()),
+        NurseName: formatTitleCase(form.name.trim()),
+        fullName: formatTitleCase(form.name.trim()),
+        FullName: formatTitleCase(form.name.trim()),
         email: form.email.trim(),
         Email: form.email.trim(),
         emailAddress: form.email.trim(),
@@ -371,9 +383,8 @@ function Nurses() {
       return;
     }
     const nurseId = getNurseId(nurse);
-    if (!nurseId || deletingId) return;
-    setDeletingId(nurseId);
-    setMessage("");
+    if (!nurseId || deletingId || statusUpdatingId) return;
+    setStatusUpdatingId(nurseId);
     try {
       const response = await fetch(STAFF_TOGGLE_STATUS(nurseId), {
         method: "PATCH",
@@ -397,11 +408,10 @@ function Nurses() {
       );
       const nextStatus = updated?.isActive ? "Active" : updated?.isActive === false ? "Inactive" : getNurseStatus(nurse).toLowerCase().includes("inactive") ? "Active" : "Inactive";
       toast.success(`Nurse status updated to ${nextStatus}.`);
-      setMessage(`Nurse status updated to ${nextStatus}.`);
     } catch (error) {
       toast.error(error.message || "Unable to update nurse status.");
     } finally {
-      setDeletingId(null);
+      setStatusUpdatingId(null);
     }
   };
 
@@ -411,7 +421,7 @@ function Nurses() {
       return;
     }
     const nurseId = getNurseId(nurse);
-    if (!nurseId || deletingId) return;
+    if (!nurseId || deletingId || statusUpdatingId) return;
     const name = getNurseName(nurse);
     const confirmed = window.confirm(`Delete nurse ${name || "this nurse"}?`);
     if (!confirmed) return;
@@ -438,127 +448,132 @@ function Nurses() {
   };
 
   return (
-    <div className="receptionists-page">
-      <div className="receptionists-header">
+    <div className="nurses-page">
+      <div className="nurses-header" data-page-header>
         <div>
           <h2>Nurses</h2>
           <p>{loading ? "Loading nurses..." : `${filteredNurses.length} nurses registered for ${clinicName}`}</p>
         </div>
-        <div className="receptionists-header-actions">
-          <button type="button" className="receptionists-icon-button" onClick={loadNurses} disabled={loading} title="Refresh nurses">
+        <label className="admin-heading-search nurses-search">
+            <Search size={18} />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search nurses..."
+            />
+          </label>
+
+        <div className="nurses-header-actions">
+          <button type="button" className="nurses-icon-button" onClick={loadNurses} disabled={loading} title="Refresh nurses">
             <RefreshCw size={16} />
           </button>
-          <button type="button" className="receptionists-primary-button" onClick={openModal} disabled={!canCreate}>
+          <button type="button" className="nurses-primary-button" onClick={openModal} disabled={!canCreate}>
             <Plus size={16} /> Add Nurse
           </button>
         </div>
       </div>
 
-      <div className="receptionists-toolbar">
-        <label className="receptionists-search">
-          <Search size={17} />
-          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search nurses..." />
-        </label>
-      </div>
+      {message ? <div className="nurses-success">{message}</div> : null}
 
-      {message ? <div className="receptionists-success">{message}</div> : null}
+      <div className="nurses-table-card">
+        
 
-      <div className="receptionists-table">
-        <div className="receptionists-thead">
-          <span>Nurse</span>
-          <span>Branch</span>
-          <span>Email</span>
-          <span>Phone</span>
-          <span>Status</span>
-          <span>Created</span>
+        <div className="nurses-table">
+          <div className="nurses-thead">
+            <span>S.NO.</span>
+            <span>NAME</span>
+            <span>BRANCH</span>
+            <span>EMAIL</span>
+            <span>PHONE</span>
+            <span className="nurses-status-head">STATUS</span>
+            <span className="nurses-actions-head">ACTIONS</span>
+          </div>
+
+          {!loading && filteredNurses.length === 0 ? (
+            <div className="nurses-empty">No nurses found.</div>
+          ) : null}
+
+          {filteredNurses.map((nurse, index) => {
+            const name = getNurseName(nurse);
+            const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "N";
+            const status = getNurseStatus(nurse);
+            const isActive = !status.toLowerCase().includes("inactive");
+
+            return (
+              <div className="nurses-row" key={getNurseId(nurse) || `${name}-${index}`}>
+                <span className="nurses-sno">{index + 1}</span>
+
+                <div className="nurses-name-cell">
+                  <span className="nurses-avatar"><span>{initials}</span></span>
+                  <span className="nurses-name-highlight">
+                    <b>{name}</b>
+                  </span>
+                </div>
+
+                <span className="nurses-cell nurses-branch-cell">{getNurseBranchName(nurse, branchNameById)}</span>
+                <span className="nurses-cell nurses-email-cell">{getNurseEmail(nurse)}</span>
+                <span className="nurses-cell nurses-phone-cell">{getNursePhone(nurse)}</span>
+
+                <span className="nurses-cell nurses-status-cell">
+                  <span className={`nurses-status ${isActive ? "nurses-status-active" : "nurses-status-inactive"}`}>
+                    {status}
+                  </span>
+                </span>
+
+                <div className="nurses-actions">
+                  <ActionsGroup
+                    rowId={getNurseId(nurse)}
+                    activeActionState={activeActionState}
+                    setActiveActionState={setActiveActionState}
+                    canView={true}
+                    canEdit={canEdit}
+                    canStatus={canEdit}
+                    canDelete={canDelete}
+                    statusChecked={isActive}
+                    statusDisabled={
+                      deletingId === String(getNurseId(nurse)) ||
+                      String(statusUpdatingId) === String(getNurseId(nurse))
+                    }
+                    statusTitle={isActive ? "Deactivate nurse" : "Activate nurse"}
+                    onView={() => setViewingNurse(nurse)}
+                    onEdit={() => openEditModal(nurse)}
+                    onStatus={() => toggleNurseStatus(nurse)}
+                    onDelete={() => handleDeleteNurse(nurse)}
+                  />
+                </div>
+              </div>
+            );
+          })}
         </div>
-        {!loading && filteredNurses.length === 0 ? (
-          <div className="receptionists-empty">No nurses found.</div>
-        ) : null}
-        {filteredNurses.map((nurse, index) => {
-          const name = getNurseName(nurse);
-          const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "N";
-          const status = getNurseStatus(nurse);
-          return (
-            <div className="receptionists-row" key={getNurseId(nurse) || `${name}-${index}`}>
-              <span style={{ display: "none" }} />
-              <div className="receptionists-name-cell">
-                <span className="receptionists-avatar"><span>{initials}</span></span>
-                <span>
-                  <b>{name}</b>
-                  <span>{clinicName}</span>
-                </span>
-              </div>
-              <span className="receptionists-cell">{getNurseBranchName(nurse, branchNameById)}</span>
-              <span className="receptionists-cell receptionists-email">{getNurseEmail(nurse)}</span>
-              <span className="receptionists-cell">{getNursePhone(nurse)}</span>
-              <span className="receptionists-cell receptionists-status-cell">
-                <span className={`receptionists-status ${status.toLowerCase().includes("inactive") ? "receptionists-status-inactive" : "receptionists-status-active"}`}>
-                  {status}
-                </span>
-              </span>
-              <span className="receptionists-cell">{formatDate(readFirst(nurse, ["createdAt", "CreatedAt", "createdOn", "CreatedOn", "created", "Created", "createdDate", "CreatedDate"]))}</span>
-              <div className="receptionists-actions">
-                <button
-                  type="button"
-                  className="receptionists-action-button"
-                  onClick={() => openEditModal(nurse)}
-                  title="Edit nurse"
-                  disabled={deletingId === String(getNurseId(nurse)) || !canEdit}
-                >
-                  <Pencil size={16} />
-                </button>
-                <button
-                  type="button"
-                  className="receptionists-action-button"
-                  onClick={() => toggleNurseStatus(nurse)}
-                  title={status.toLowerCase().includes("inactive") ? "Activate nurse" : "Deactivate nurse"}
-                  disabled={deletingId === String(getNurseId(nurse)) || !canEdit}
-                >
-                  {status.toLowerCase().includes("inactive") ? <ToggleLeft size={16} /> : <ToggleRight size={16} />}
-                </button>
-                <button
-                  type="button"
-                  className="receptionists-action-button receptionists-action-danger"
-                  onClick={() => handleDeleteNurse(nurse)}
-                  title="Delete nurse"
-                  disabled={deletingId === String(getNurseId(nurse)) || !canDelete}
-                >
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            </div>
-          );
-        })}
       </div>
 
       {modalOpen ? (
-        <div className="receptionists-modal-overlay" onClick={closeModal}>
-          <div className="receptionists-modal" onClick={(event) => event.stopPropagation()}>
-            <div className="receptionists-modal-header">
-              <div className="receptionists-modal-title">
-                <div className="receptionists-modal-icon"><ShieldPlus size={20} /></div>
+        <div className="nurses-modal-overlay" onClick={closeModal}>
+          <div className="nurses-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="nurses-modal-header">
+              <div className="nurses-modal-title">
+                <div className="nurses-modal-icon"><ShieldPlus size={20} /></div>
                 <div>
                   <h3>{editingNurse ? "Edit Nurse" : "Add Nurse"}</h3>
                   <p>{clinicName}</p>
                 </div>
               </div>
-              <button type="button" className="receptionists-modal-close" onClick={closeModal} disabled={saving} aria-label="Close nurse form">
+              <button type="button" className="nurses-modal-close" onClick={closeModal} disabled={saving} aria-label="Close nurse form">
                 <X size={20} />
               </button>
             </div>
 
-            <form className="receptionists-form" onSubmit={handleSubmit} noValidate>
-              <div className="receptionists-image-upload">
+            <form className="nurses-form" onSubmit={handleSubmit} noValidate>
+              <div className="nurses-image-upload">
                 <button
                   type="button"
-                  className="receptionists-image-circle"
+                  className="nurses-image-circle"
                   onClick={() => imageInputRef.current?.click()}
                   disabled={saving}
                   title="Upload nurse image"
                 >
                   <span>{(form.name || "N").slice(0, 1).toUpperCase()}</span>
-                  <Camera size={18} className="receptionists-image-button" />
+                  <Camera size={18} className="nurses-image-button" />
                 </button>
                 <input
                   ref={imageInputRef}
@@ -568,38 +583,70 @@ function Nurses() {
                   onChange={(event) => setImageFile(event.target.files?.[0] || null)}
                   disabled={saving}
                 />
-                {imageFile ? <span className="receptionists-image-filename">{imageFile.name}</span> : null}
+                {imageFile ? <span className="nurses-image-filename">{imageFile.name}</span> : null}
               </div>
 
-              <div className="receptionists-field">
+              <div className="nurses-field">
                 <label htmlFor="nurse-name">Name</label>
                 <input id="nurse-name" value={form.name} onChange={(event) => updateField("name", event.target.value)} className={fieldErrors.name ? "is-invalid" : ""} disabled={saving} autoFocus />
-                {fieldErrors.name ? <span className="receptionists-field-error">{fieldErrors.name}</span> : null}
+                {fieldErrors.name ? <span className="nurses-field-error">{fieldErrors.name}</span> : null}
               </div>
-              <div className="receptionists-field">
+              <div className="nurses-field">
                 <label htmlFor="nurse-email">Email</label>
                 <input id="nurse-email" type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} className={fieldErrors.email ? "is-invalid" : ""} disabled={saving} />
-                {fieldErrors.email ? <span className="receptionists-field-error">{fieldErrors.email}</span> : null}
+                {fieldErrors.email ? <span className="nurses-field-error">{fieldErrors.email}</span> : null}
               </div>
-              <div className="receptionists-field">
+              <div className="nurses-field">
                 <label htmlFor="nurse-phone">Phone</label>
                 <input id="nurse-phone" value={form.phone} onChange={(event) => updateField("phone", event.target.value)} inputMode="numeric" maxLength={10} className={fieldErrors.phone ? "is-invalid" : ""} disabled={saving} />
-                {fieldErrors.phone ? <span className="receptionists-field-error">{fieldErrors.phone}</span> : null}
+                {fieldErrors.phone ? <span className="nurses-field-error">{fieldErrors.phone}</span> : null}
               </div>
-              <div className="receptionists-field">
+              {/* <div className="nurses-field">
                 <label htmlFor="nurse-password">Password</label>
                 <input id="nurse-password" type="password" value={form.password} onChange={(event) => updateField("password", event.target.value)} className={fieldErrors.password ? "is-invalid" : ""} disabled={saving} />
-                {fieldErrors.password ? <span className="receptionists-field-error">{fieldErrors.password}</span> : null}
-              </div>
-              <div className="receptionists-field">
+                {fieldErrors.password ? <span className="nurses-field-error">{fieldErrors.password}</span> : null}
+              </div> */}
+              <div className="nurses-field">
+  <label htmlFor="nurse-password">Password</label>
+
+  <div className="nurse-password-wrapper">
+    <input
+      id="nurse-password"
+      type={showPassword ? "text" : "password"}
+      value={form.password}
+      onChange={(event) => updateField("password", event.target.value)}
+      className={fieldErrors.password ? "is-invalid" : ""}
+      disabled={saving}
+    />
+
+    <button
+      type="button"
+      className="nurse-password-toggle"
+      onClick={() => setShowPassword((prev) => !prev)}
+      disabled={saving}
+      aria-label={showPassword ? "Hide password" : "Show password"}
+    >
+      <Eye size={21} strokeWidth={2.2} />
+    </button>
+  </div>
+
+  {fieldErrors.password ? (
+    <span className="nurses-field-error">
+      {fieldErrors.password}
+    </span>
+  ) : null}
+</div>
+
+
+              <div className="nurses-field">
                 <label htmlFor="nurse-branch">Branch</label>
                 <select id="nurse-branch" value={form.branchId} onChange={(event) => updateField("branchId", event.target.value)} className={fieldErrors.branchId ? "is-invalid" : ""} disabled={loadingBranches || saving}>
                   <option value="">{loadingBranches ? "Loading branches..." : "Select branch"}</option>
                   {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
                 </select>
-                {fieldErrors.branchId ? <span className="receptionists-field-error">{fieldErrors.branchId}</span> : null}
+                {fieldErrors.branchId ? <span className="nurses-field-error">{fieldErrors.branchId}</span> : null}
               </div>
-              <div className="receptionists-field">
+              <div className="nurses-field">
                 <label htmlFor="nurse-is-active">Is Active</label>
                 <select
                   id="nurse-is-active"
@@ -612,17 +659,57 @@ function Nurses() {
                 </select>
               </div>
 
-              {fieldErrors.form ? <div className="receptionists-error receptionists-form-message">{fieldErrors.form}</div> : null}
+              {fieldErrors.form ? <div className="nurses-error nurses-form-message">{fieldErrors.form}</div> : null}
 
-              <div className="receptionists-modal-actions">
-                <button type="button" className="receptionists-secondary-button" onClick={closeModal} disabled={saving}>Cancel</button>
-                <button type="submit" className="receptionists-save-button" disabled={saving || (editingNurse ? !canEdit : !canCreate)}>
+              <div className="nurses-modal-actions">
+                <button type="button" className="nurses-secondary-button" onClick={closeModal} disabled={saving}>Cancel</button>
+                <button type="submit" className="nurses-save-button" disabled={saving || (editingNurse ? !canEdit : !canCreate)}>
                   <CheckCircle size={16} />
                   {saving ? "Saving..." : editingNurse ? "Update Nurse" : "Create Nurse"}
                 </button>
               </div>
             </form>
           </div>
+        </div>
+      ) : null}
+
+      {viewingNurse ? (
+        <div className="nurses-modal-overlay" onClick={() => setViewingNurse(null)}>
+          <section
+            className="nurses-modal nurses-view-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="nurse-details-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="nurses-modal-header">
+              <div className="nurses-modal-title">
+                <div className="nurses-modal-icon">
+                  <ShieldPlus size={20} />
+                </div>
+                <div>
+                  <h3 id="nurse-details-title">Nurse Details</h3>
+                  <p>{clinicName}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="nurses-modal-close"
+                onClick={() => setViewingNurse(null)}
+                aria-label="Close nurse details"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="nurses-view-grid">
+              <div><span>Name</span><strong>{getNurseName(viewingNurse) || "-"}</strong></div>
+              <div><span>Branch</span><strong>{getNurseBranchName(viewingNurse, branchNameById) || "-"}</strong></div>
+              <div><span>Email</span><strong>{getNurseEmail(viewingNurse) || "-"}</strong></div>
+              <div><span>Phone</span><strong>{getNursePhone(viewingNurse) || "-"}</strong></div>
+              <div><span>Status</span><strong>{getNurseStatus(viewingNurse) || "-"}</strong></div>
+            </div>
+          </section>
         </div>
       ) : null}
     </div>

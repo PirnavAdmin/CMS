@@ -1,0 +1,147 @@
+.pharmacy-count-dashboard { gap: 24px; }
+.pharmacy-dashboard-heading { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 8px 0; }
+.pharmacy-dashboard-heading .pharmacy-eyebrow { color: var(--theme-primary-dark); }
+.pharmacy-dashboard-heading h2 { margin: 0; font-size: 22px; font-weight: 650; color: var(--theme-primary-dark); letter-spacing: -.5px; }
+.pharmacy-dashboard-heading p { margin: 0; font-size: 12px; color: #64748b; line-height: 1.35; }
+.pharmacy-dashboard-refresh { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 42px; padding: 0 16px; border: 1px solid var(--theme-primary-soft); border-radius: 12px; background: var(--theme-primary-soft); color: var(--theme-primary); font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; flex-shrink: 0; transition: background .2s, box-shadow .2s; }
+.pharmacy-dashboard-refresh:hover:not(:disabled) { background: var(--theme-primary-soft); box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary) 9.41%, transparent); }
+.pharmacy-dashboard-refresh:disabled { opacity: .6; cursor: wait; }
+.pharmacy-count-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 250px)); justify-content: center; gap: 20px; }
+.pharmacy-count-card { --count-color: var(--theme-primary-dark); --count-bg: var(--theme-primary-soft); --count-border: var(--theme-primary-glow); --count-icon: var(--theme-primary-soft); position: relative; display: flex; flex-direction: column; min-width: 0; padding: 24px; border-radius: 20px; border: 1px solid var(--count-border); background: linear-gradient(135deg, var(--count-bg), #fff); box-shadow: 0 6px 20px color-mix(in srgb, var(--theme-primary-dark) 2.35%, transparent), inset 0 1px 0 #fff; color: var(--theme-primary-dark); text-decoration: none; overflow: hidden; transition: transform .25s ease, box-shadow .25s ease; }
+.pharmacy-count-card--purple { --count-color: var(--theme-primary); --count-bg: var(--theme-primary-soft); --count-border: var(--theme-primary-soft); --count-icon: var(--theme-primary-soft); }
+.pharmacy-count-card--blue { --count-color: var(--theme-primary); --count-bg: var(--theme-primary-soft); --count-border: var(--theme-primary-glow); --count-icon: var(--theme-primary-soft); }
+.pharmacy-count-card--orange { --count-color: #c2410c; --count-bg: #fff5eb; --count-border: #f8d2ae; --count-icon: #ffedd5; }
+.pharmacy-count-card:hover { transform: translateY(-5px); box-shadow: 0 14px 28px color-mix(in srgb, var(--theme-primary-dark) 7.06%, transparent), inset 0 1px 0 #fff; }
+.pharmacy-count-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.pharmacy-count-icon { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 15px; background: var(--count-icon); color: var(--count-color); box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 2.35%, transparent); }
+.pharmacy-count-arrow { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; background: #ffffffa6; color: var(--count-color); transition: transform .2s ease; }
+.pharmacy-count-card:hover .pharmacy-count-arrow { transform: translateX(3px); }
+.pharmacy-count-title { font-size: 14px; font-weight: 750; color: #475569; }
+.pharmacy-count-value { display: block; margin: 8px 0; color: var(--count-color); font-size: clamp(22px, 2.5vw, 36px); line-height: 1.2; font-weight: 800; overflow-wrap: anywhere; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
+.pharmacy-count-description { font-size: 12px; color: #64748b; line-height: 1.6; flex: 1; }
+.pharmacy-count-link { display: flex; gap: 8px; align-items: center; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--count-border); color: var(--count-color); font-size: 12px; font-weight: 750; }
+.pharmacy-dashboard-updated { margin: 0; font-size: 12px; color: #64748b; }
+.pharmacy-inventory-charts { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 12px; min-height: 0; align-items: stretch; }
+.pharmacy-inventory-chart-card { display: grid; grid-template-rows: auto minmax(0, 1fr); min-width: 0; min-height: 220px; height: 240px; padding: 14px 16px; border: 1px solid #b9d8d6; border-radius: 14px; background: #fff; box-shadow: 0 3px 12px rgba(15, 23, 42, 0.06); }
+.pharmacy-inventory-chart-card h2 { margin: 0 0 8px; color: var(--theme-primary-dark); font-size: 14px; font-weight: 750; }
+.pharmacy-chart-empty { align-self: center; margin: 0; color: #64748b; font-size: 12px; text-align: center; }
+.pharmacy-top-medicines { display: flex; flex-direction: column; justify-content: space-evenly; gap: 7px; min-height: 0; margin: 0; padding: 0; list-style: none; }
+.pharmacy-top-medicine { display: grid; gap: 5px; min-width: 0; }
+.pharmacy-top-medicine-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; color: #475569; font-size: 11px; }
+.pharmacy-top-medicine-heading > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pharmacy-top-medicine-heading > strong { flex: 0 0 auto; color: var(--theme-primary-dark); font-size: 11px; font-variant-numeric: tabular-nums; }
+.pharmacy-top-medicine-track { position: relative; height: 7px; border-radius: 999px; background: #e8f1f1; }
+.pharmacy-top-medicine-track > span:first-child { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #0f8b8d, #39b6ae); }
+.pharmacy-top-medicine.is-low-stock .pharmacy-top-medicine-track > span:first-child { background: linear-gradient(90deg, #087f82, #19a6a0); }
+.pharmacy-top-medicine.is-out-of-stock .pharmacy-top-medicine-track > span:first-child { background: #ef4444; }
+.pharmacy-top-medicine-threshold { position: absolute; top: -2px; width: 2px; height: 11px; border-radius: 2px; background: #334155; box-shadow: 0 0 0 1px #fff; transform: translateX(-50%); }
+.pharmacy-stock-overview { display: grid; grid-template-columns: minmax(0, 1fr) 128px; align-items: center; gap: 18px; min-width: 0; }
+.pharmacy-stock-counts { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; }
+.pharmacy-stock-count { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-width: 0; padding: 7px 10px; border: 1px solid #e2e8f0; border-left: 3px solid var(--stock-status-color); border-radius: 9px; background: #f8fafc; }
+.pharmacy-stock-count span { color: #64748b; font-size: 11px; line-height: 1.25; }
+.pharmacy-stock-count strong { color: var(--stock-status-color); font-size: clamp(18px, 2vw, 24px); line-height: 1; font-variant-numeric: tabular-nums; }
+.pharmacy-stock-pie { display: grid; place-items: center; width: 128px; aspect-ratio: 1; border: 1px solid #e2e8f0; border-radius: 50%; box-shadow: inset 0 0 0 1px #fff; color: var(--theme-primary-dark); font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.pharmacy-stock-pie span { display: grid; place-items: center; width: 48px; height: 48px; border-radius: 50%; background: #fff; box-shadow: 0 1px 5px rgba(15, 23, 42, .12); }
+html body .role-single-screen > .pharmacy-inventory-charts { flex: 0 0 auto; min-height: 0; }
+@media (max-width: 1200px) { .pharmacy-count-grid { grid-template-columns: repeat(2, minmax(0, 250px)); justify-content: center; } }
+@media (max-width: 620px) { .pharmacy-dashboard-heading { align-items: flex-start; flex-direction: column; } .pharmacy-dashboard-heading h2 { font-size: 22px; } .pharmacy-count-grid { gap: 12px; } .pharmacy-count-card { padding: 18px; border-radius: 16px; } }
+@media (max-width: 700px) { .pharmacy-inventory-charts { grid-template-columns: minmax(0, 1fr); } .pharmacy-inventory-chart-card { height: 230px; } }
+@media (max-width: 420px) { .pharmacy-stock-overview { grid-template-columns: minmax(0, 1fr) 100px; gap: 10px; } .pharmacy-stock-pie { width: 100px; } .pharmacy-stock-count { padding: 6px 7px; } }
+@media (max-width: 400px) { .pharmacy-count-grid { grid-template-columns: minmax(0, 250px); justify-content: center; } }
+@media (prefers-reduced-motion: reduce) { .pharmacy-count-card, .pharmacy-count-arrow, .pharmacy-dashboard-refresh { transition: none; } .pharmacy-count-card:hover, .pharmacy-count-card:hover .pharmacy-count-arrow { transform: none; } }
+
+.pharmacy-count-card {
+  --count-color: var(--theme-primary-dark);
+  --count-bg: var(--theme-primary-soft);
+  --count-border: var(--theme-primary-glow);
+  --count-icon: var(--theme-primary-soft);
+  height: 240px !important;
+  min-height: 240px !important;
+  padding: 18px 20px;
+  box-sizing: border-box;
+  background: var(--theme-primary-soft);
+  border-color: var(--theme-primary-glow);
+}
+
+.pharmacy-count-card-top {
+  margin-bottom: 12px;
+}
+
+.pharmacy-count-value {
+  margin: 4px 0;
+}
+
+.pharmacy-count-description {
+  line-height: 1.5;
+}
+
+.pharmacy-count-link {
+  flex: 0 0 42px;
+  box-sizing: border-box;
+  margin: auto -20px -18px;
+  padding: 0 20px;
+  background: var(--theme-primary-soft);
+  border-top: 1px solid var(--theme-primary-glow);
+  border-bottom: 4px solid var(--theme-primary);
+}
+
+.pharmacy-count-icon {
+  background: var(--theme-primary-dark);
+  color: #ffffff;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 16%, transparent);
+}
+
+.pharmacy-count-title {
+  color: var(--theme-primary-dark);
+}
+
+.pharmacy-count-value,
+.pharmacy-count-arrow,
+.pharmacy-count-link {
+  color: var(--theme-primary-dark);
+}
+
+.pharmacy-count-link {
+  border-top-color: var(--theme-primary-glow);
+}
+
+@media (max-width: 620px) {
+  .pharmacy-count-card {
+    height: auto;
+    min-height: 240px !important;
+    padding: 18px;
+  }
+
+  .pharmacy-count-link {
+    margin-right: -18px;
+    margin-bottom: -18px;
+    margin-left: -18px;
+    padding-right: 18px;
+    padding-left: 18px;
+  }
+}
+
+
+/* Compact page heading; the JSX marker excludes modals and navigation. */
+@media screen {
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .pharmacy-dashboard-heading[data-page-header] {
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  gap: 6px 10px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .pharmacy-dashboard-heading[data-page-header] > * { min-width: 0; max-width: 100%; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .pharmacy-dashboard-heading[data-page-header] :is(h1, h2) { font-size: var(--app-page-heading-size, 18px) !important; line-height: 1.2 !important; margin: 0 !important; letter-spacing: 0 !important; white-space: normal !important; overflow-wrap: anywhere; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .pharmacy-dashboard-heading[data-page-header] p { font-size: 12px !important; line-height: 1.35 !important; margin: 3px 0 0 !important; white-space: normal !important; overflow-wrap: anywhere; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .pharmacy-dashboard-heading[data-page-header] [class*="actions"] { min-width: 0; max-width: 100%; height: auto !important; flex-wrap: wrap !important; gap: 6px !important; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .pharmacy-dashboard-heading[data-page-header] button { max-width: 100%; min-height: 34px !important; height: auto !important; padding: 7px 10px !important; font-size: 12px !important; line-height: 1.3; white-space: normal; }
+}
+
+/* Wrapped dashboard content uses natural height on smaller screens. */
+@media screen and (max-width: 900px) {
+  html body .pharmacy-dashboard.role-single-screen { height: auto !important; max-height: none !important; overflow: visible !important; }
+  html body .pharmacy-dashboard.role-single-screen .pharmacy-count-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; height: auto !important; }
+}

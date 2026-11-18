@@ -4,18 +4,30 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import DatePickerField from "../../components/DatePickerField";
 
+import { ActionsGroup } from "../../components/ActionsGroup";
 import "./Appointments.css";
 
 import {
   Eye,
   Search,
   X,
+  Calendar,
+  Clock,
+  CalendarCheck2,
+  Stethoscope,
 } from "lucide-react";
 
 import AppointmentModal from "./AppointmentModal";
 import { apiUrl } from "../../config/api";
 import { formatDateMMDDYYYY } from "../../utils/dateFormat";
+import {
+  buildBranchOptions,
+  fetchBranchesForHospital,
+  getRecordBranchIds,
+  getStoredHospitalId,
+} from "../../utils/branchApi";
 
 // ================= API =================
 
@@ -71,6 +83,37 @@ const formatTime = (value) => {
   const minuteValue = String(minuteValueRaw).replace(/[^0-9]/g, "");
 
   return `${String(displayHour).padStart(2, "0")}:${minuteValue.padStart(2, "0")} ${suffix}`;
+};
+
+const getAppointmentBranchIds = (appointment = {}) => [
+  ...getRecordBranchIds(appointment),
+  ...getRecordBranchIds(appointment.patient || {}),
+  ...getRecordBranchIds(appointment.doctor || {}),
+]
+  .map((value) => String(value ?? "").trim())
+  .filter(Boolean);
+
+const getAppointmentBranchName = (appointment = {}, branchNameById = {}) => {
+  const directName =
+    appointment.branchName ||
+    appointment.BranchName ||
+    appointment.clinicBranchName ||
+    appointment.ClinicBranchName ||
+    appointment.branch?.name ||
+    appointment.branch?.branchName ||
+    appointment.Branch?.name ||
+    appointment.patient?.branchName ||
+    appointment.patient?.BranchName ||
+    appointment.patient?.branch?.name ||
+    appointment.doctor?.branchName ||
+    appointment.doctor?.BranchName ||
+    appointment.doctor?.branch?.name ||
+    "";
+
+  if (directName) return directName;
+
+  const branchId = getAppointmentBranchIds(appointment)[0];
+  return branchId ? branchNameById[String(branchId)] || "-" : "-";
 };
 
 const getInitials = (name) => {
@@ -215,10 +258,12 @@ function Appointments() {
 
   const [selected, setSelected] =
     useState(null);
+  const [activeActionState, setActiveActionState] = useState(null);
 
   const [appointments, setAppointments] =
     useState([]);
   const [clinics, setClinics] = useState([]);
+  const [branches, setBranches] = useState([]);
 
   const [loading, setLoading] =
     useState(true);
@@ -230,6 +275,8 @@ function Appointments() {
     useState("");
 
   const [doctorFilter, setDoctorFilter] =
+    useState("all");
+  const [branchFilter, setBranchFilter] =
     useState("all");
 
   const [search, setSearch] =
@@ -313,6 +360,24 @@ function Appointments() {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+
+    const loadBranches = async () => {
+      try {
+        const list = await fetchBranchesForHospital(getStoredHospitalId());
+        if (!cancelled) setBranches(buildBranchOptions(list));
+      } catch (error) {
+        console.error("Unable to load branches for appointment filter.", error);
+      }
+    };
+
+    loadBranches();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
 
@@ -337,10 +402,17 @@ function Appointments() {
 
     }, [appointments]);
 
+  const branchNameById = useMemo(
+    () => Object.fromEntries(branches.map((branch) => [String(branch.id), branch.name])),
+    [branches]
+  );
+
   // ================= FILTER =================
 
   const filteredAppointments =
   useMemo(() => {
+    const selectedBranch = branches.find((branch) => String(branch.id) === String(branchFilter));
+    const selectedBranchName = selectedBranch?.name?.trim().toLowerCase() || "";
 
     return appointments.filter(
       (item) => {
@@ -357,6 +429,7 @@ function Appointments() {
           item.doctor?.name,
           item.chiefComplaints,
           item.status,
+          getAppointmentBranchName(item, branchNameById),
         ]
           .filter(Boolean)
           .join(" ")
@@ -371,6 +444,14 @@ function Appointments() {
           item.doctor?.name ===
           doctorFilter;
 
+        const branchIds = getAppointmentBranchIds(item);
+        const branchName = getAppointmentBranchName(item, branchNameById).trim().toLowerCase();
+
+        const matchesBranch =
+          branchFilter === "all" ||
+          branchIds.some((id) => String(id) === String(branchFilter)) ||
+          (selectedBranchName && branchName === selectedBranchName);
+
         const matchesSearch =
           !query ||
           searchableText.includes(query);
@@ -378,6 +459,7 @@ function Appointments() {
         return (
           matchesDate &&
           matchesDoctor &&
+          matchesBranch &&
           matchesSearch
         );
       }
@@ -385,6 +467,9 @@ function Appointments() {
 
   }, [
     appointments,
+    branchNameById,
+    branches,
+    branchFilter,
     dateFilter,
     doctorFilter,
     search,
@@ -410,14 +495,30 @@ function Appointments() {
   const hasFilters =
     Boolean(dateFilter) ||
     doctorFilter !== "all" ||
+    branchFilter !== "all" ||
     Boolean(search.trim());
 
   return (
     <div className="appointments-page">
+      <div className="appointments-bg-overlay" />
+
+      {/* 3D Floating Appointment Scheduling & Consultation Particles */}
+      <div className="appointments-particle appt-part-1" title="Calendar Scheduling">
+        <Calendar size={28} />
+      </div>
+      <div className="appointments-particle appt-part-2" title="Time Slot Queue">
+        <Clock size={26} />
+      </div>
+      <div className="appointments-particle appt-part-3" title="Doctor Consultation">
+        <Stethoscope size={26} />
+      </div>
+      <div className="appointments-particle appt-part-4" title="Appointment Status">
+        <CalendarCheck2 size={26} />
+      </div>
 
       {/* HEADER */}
 
-      <div className="appointments-header">
+      <div className="appointments-header" data-page-header>
 
         <div>
 
@@ -434,27 +535,7 @@ function Appointments() {
           </p>
 
         </div>
-      </div>
-
-      {/* ERROR */}
-
-      {error ? (
-        <div className="appointments-empty">
-          {error}
-        </div>
-      ) : null}
-
-      {/* TABLE CARD */}
-
-      <div className="appointments-table-card">
-
-        {/* FILTERS */}
-
-        <div className="appointments-filters">
-
-          {/* SEARCH */}
-
-          <div className="appointments-filter-group appointments-search-group">
+        <div className="admin-heading-search appointments-filter-group appointments-search-group">
 
             <label>Search</label>
 
@@ -477,20 +558,37 @@ function Appointments() {
 
           </div>
 
+      </div>
+
+      {/* ERROR */}
+
+      {error ? (
+        <div className="appointments-empty">
+          {error}
+        </div>
+      ) : null}
+
+      {/* TABLE CARD */}
+
+      <div className="appointments-table-card">
+
+        {/* FILTERS */}
+
+        <div className="appointments-filters">
+
+          {/* SEARCH */}
+
+          
+
           {/* DATE */}
 
           <div className="appointments-filter-group">
 
             <label>Date</label>
 
-            <input
-              type="date"
+            <DatePickerField
               value={dateFilter}
-              onChange={(e) =>
-                setDateFilter(
-                  e.target.value
-                )
-              }
+              onChange={setDateFilter}
             />
 
           </div>
@@ -530,6 +628,41 @@ function Appointments() {
 
           </div>
 
+          {/* BRANCH */}
+
+          <div className="appointments-filter-group">
+
+            <label>Branch</label>
+
+            <select
+              value={branchFilter}
+              onChange={(e) =>
+                setBranchFilter(
+                  e.target.value
+                )
+              }
+            >
+
+              <option value="all">
+                All branches
+              </option>
+
+              {branches.map(
+                (branch) => (
+
+                  <option
+                    value={branch.id}
+                    key={branch.id}
+                  >
+                    {branch.name}
+                  </option>
+                )
+              )}
+
+            </select>
+
+          </div>
+
           {/* CLEAR */}
 
           <button
@@ -540,6 +673,7 @@ function Appointments() {
               setSearch("");
               setDateFilter("");
               setDoctorFilter("all");
+              setBranchFilter("all");
             }}
           >
 
@@ -557,19 +691,21 @@ function Appointments() {
 
           <div className="appointments-thead">
 
-            <span>S.No.</span>
+            <span className="appointments-sno-head">S.No.</span>
 
-            <span>Patient</span>
+            <span className="appointments-patient-head">Patient</span>
 
-            <span>Doctor</span>
+            <span className="appointments-doctor-head">Doctor</span>
 
-            <span>Schedule</span>
+            <span className="appointments-schedule-head">Schedule</span>
 
-            <span>Complaint</span>
+            <span className="appointments-branch-head">Branch</span>
 
-            <span>Status</span>
+            <span className="appointments-complaint-head">Complaint</span>
 
-            <span>Actions</span>
+            <span className="appointments-status-head">Status</span>
+
+            <span className="appointments-actions-head">Actions</span>
 
           </div>
 
@@ -593,7 +729,7 @@ function Appointments() {
                 className="appointments-row"
                 key={item.appointmentId}
               >
-                <span>{index + 1}</span>
+                <span className="appointments-sno-cell">{index + 1}</span>
 
                 {/* PATIENT */}
 
@@ -626,7 +762,7 @@ function Appointments() {
 
                 {/* DOCTOR */}
 
-                <div className="appointments-cell-stack">
+                <div className="appointments-doctor-cell appointments-cell-stack">
 
                   <b>
                     Dr. {item.doctor?.name}
@@ -640,7 +776,7 @@ function Appointments() {
 
                 {/* SCHEDULE */}
 
-                <div className="appointments-cell-stack">
+                <div className="appointments-schedule-cell appointments-cell-stack">
 
                   <b>
                     {item.displayDate}
@@ -652,41 +788,41 @@ function Appointments() {
 
                 </div>
 
+                <span className="appointments-branch-cell">
+                  {getAppointmentBranchName(item, branchNameById)}
+                </span>
+
                 {/* COMPLAINT */}
 
-                <span className="appointments-complaint">
-                  {item.chiefComplaints}
+                <span className="appointments-complaint-cell appointments-complaint">
+                  {item.chiefComplaints || "-"}
                 </span>
 
                 {/* STATUS */}
 
-                <span
-                  className={`appointments-status-badge ${getStatusClass(
-                    item.status
-                  )}`}
-                >
+                <div className="appointments-status-cell">
+                  <span
+                    className={`appointments-status-badge ${getStatusClass(
+                      item.status
+                    )}`}
+                  >
+                    <span className="appointments-status-dot"></span>
+                    {item.status}
+                  </span>
+                </div>
 
-                  <span className="appointments-status-dot"></span>
-
-                  {item.status}
-
-                </span>
-
-                {/* ACTION */}
-
-                <button
-                  type="button"
-                  className="appointments-view-btn"
-                  onClick={() =>
-                    setSelected(item)
-                  }
-                >
-
-                  <Eye size={16} />
-
-                  <span>View</span>
-
-                </button>
+                <div className="appointments-actions-cell appointments-actions">
+                  <ActionsGroup
+                    rowId={item.appointmentId}
+                    activeActionState={activeActionState}
+                    setActiveActionState={setActiveActionState}
+                    canView={true}
+                    canEdit={false}
+                    canStatus={false}
+                    canDelete={false}
+                    onView={() => setSelected(item)}
+                  />
+                </div>
 
               </div>
             )
@@ -711,3 +847,6 @@ function Appointments() {
 }
 
 export default Appointments;
+
+
+

@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import DatePickerField from "../../components/DatePickerField";
 import "./NewAppointment.css";
 import { CalendarPlus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -108,8 +109,8 @@ function NewAppointment() {
 
   return (
     <div className="new-appointment-page">
-      <h2 className="new-appointment-title">New Appointment</h2>
-      <p className="new-appointment-subtitle">Create a new appointment</p>
+      <h2 className="new-appointment-title" data-page-title>New Appointment</h2>
+      <p className="new-appointment-subtitle" data-page-subtitle>Create a new appointment</p>
 
       <form className="new-appointment-form-card" onSubmit={handleSubmit} noValidate>
         <div className="new-appointment-grid">
@@ -155,12 +156,11 @@ function NewAppointment() {
 
           <div className="new-appointment-field">
             <label>Date</label>
-            <input
+            <DatePickerField
               name="date"
-              type="date"
               value={form.date}
-              onChange={handleChange}
-              className={fieldErrors.date ? "is-invalid" : ""}
+              onChange={(nextValue) => handleChange({ target: { name: "date", value: nextValue } })}
+              inputClassName={fieldErrors.date ? "is-invalid" : ""}
             />
             {fieldErrors.date ? (
               <span className="new-appointment-field-error">{fieldErrors.date}</span>
@@ -212,3 +212,5 @@ function NewAppointment() {
 }
 
 export default NewAppointment;
+
+

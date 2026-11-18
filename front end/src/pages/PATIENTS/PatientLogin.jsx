@@ -5,7 +5,7 @@ import { validateGmail } from "../../utils/validation";
 import { formatTitleCase } from "../../utils/format";
 import {
   Heart, Eye, EyeOff, Stethoscope, Plus, Pill, Activity,
-  Building2, Thermometer,
+  Building2, Thermometer, X,
 } from "lucide-react";
 import { apiUrl } from "../../config/api";
 import clinicBg from '../../assests/clinic-bg.jpg';
@@ -74,17 +74,17 @@ const StarsBackground = () => {
 /* ─── Hospital symbol orbit system ─── */
 const INNER_RING = [
   { Icon: Heart,        color: "#f43f5e", label: "Heart" },
-  { Icon: Stethoscope,  color: "#2dd4bf", label: "Stethoscope" },
+  { Icon: Stethoscope,  color: "var(--theme-primary)", label: "Stethoscope" },
   { Icon: Plus,         color: "#34d399", label: "Cross" },
-  { Icon: Building2,    color: "#60a5fa", label: "Hospital" },
+  { Icon: Building2,    color: "var(--theme-primary)", label: "Hospital" },
 ];
 
 const OUTER_RING = [
-  { Icon: Pill,         color: "#a78bfa", label: "Pill" },
+  { Icon: Pill,         color: "var(--theme-primary-glow)", label: "Pill" },
   { Icon: Activity,     color: "#fbbf24", label: "Activity" },
   { Icon: Thermometer,  color: "#fb923c", label: "Thermometer" },
   { Icon: Heart,        color: "#f43f5e", label: "Heart2" },
-  { Icon: Stethoscope,  color: "#2dd4bf", label: "Stethoscope2" },
+  { Icon: Stethoscope,  color: "var(--theme-primary)", label: "Stethoscope2" },
   { Icon: Plus,         color: "#34d399", label: "Cross2" },
 ];
 
@@ -146,6 +146,13 @@ function PatientLogin() {
     if (location.state?.message) setSuccessMessage(location.state.message);
     if (location.state?.email)   setEmail(location.state.email);
   }, [location.state]);
+
+  useEffect(() => {
+    if (!successMessage) return undefined;
+
+    const timeoutId = window.setTimeout(() => setSuccessMessage(""), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [successMessage]);
 
   const validate = () => {
     const newErrors = {};
@@ -248,6 +255,15 @@ function PatientLogin() {
       <div className="auth-veil" aria-hidden="true" />
 
       <div className="auth-card auth-card--login-compact">
+        <button
+          type="button"
+          className="auth-login-close"
+          onClick={() => navigate('/')}
+          aria-label="Go to landing page"
+          title="Go to landing page"
+        >
+          <X size={20} />
+        </button>
         <div className="auth-logo" aria-hidden="true">
           <Heart size={20} />
         </div>

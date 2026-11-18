@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Camera,
   CheckCircle,
+  Eye,
   Pencil,
   Plus,
   RefreshCw,
@@ -11,7 +12,12 @@ import {
   ToggleRight,
   UserCheck,
   X,
+  Calendar,
+  PhoneCall,
+  ClipboardCheck,
+  Clock,
 } from "lucide-react";
+import { ActionsGroup } from "../../components/ActionsGroup";
 import "./Receptionists.css";
 import AuthImage, { resolveApiImageUrl } from "../../utils/AuthImage";
 import { apiUrl } from "../../config/api";
@@ -263,13 +269,16 @@ function Receptionists() {
   const { canCreate, canEdit, canDelete } = useAdminModulePermissions("Receptionists");
   const imageInputRef = useRef(null);
   const [receptionists, setReceptionists] = useState([]);
+  const [activeActionState, setActiveActionState] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [statusUpdatingId, setStatusUpdatingId] = useState(null);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewingReceptionist, setViewingReceptionist] = useState(null);
   const [editingReceptionist, setEditingReceptionist] = useState(null);
   const [form, setForm] = useState(getEmptyForm());
   const [fieldErrors, setFieldErrors] = useState({});
@@ -614,12 +623,10 @@ function Receptionists() {
       toast.error("You do not have permission to edit receptionists.");
       return;
     }
-    if (!receptionist?.id || deletingId) return;
+    if (!receptionist?.id || deletingId || statusUpdatingId) return;
 
     const nextStatus = receptionist.isActive ? "Inactive" : "Active";
-    setDeletingId(receptionist.id);
-    setError("");
-    setSuccess("");
+    setStatusUpdatingId(receptionist.id);
 
     try {
       const response = await fetch(`${RECEPTIONIST_API}/${receptionist.id}`, {
@@ -644,14 +651,9 @@ function Receptionists() {
       setReceptionists((previous) =>
         previous.map((item) =>
           String(item.id) === String(receptionist.id)
-            ? { ...item, isActive: nextStatus === "Active" }
+            ? { ...item, isActive: nextStatus === "Active", status: nextStatus }
             : item
         )
-      );
-      setSuccess(
-        nextStatus === "Active"
-          ? "Receptionist activated successfully"
-          : "Receptionist deactivated successfully"
       );
       toast.success(
         nextStatus === "Active"
@@ -661,10 +663,9 @@ function Receptionists() {
     } catch (toggleError) {
       const message =
         toggleError.message || "Unable to update receptionist status.";
-      setError(message);
       toast.error(message);
     } finally {
-      setDeletingId(null);
+      setStatusUpdatingId(null);
     }
   };
 
@@ -673,7 +674,7 @@ function Receptionists() {
       toast.error("You do not have permission to delete receptionists.");
       return;
     }
-    if (!receptionist?.id || deletingId) return;
+    if (!receptionist?.id || deletingId || statusUpdatingId) return;
 
     const shouldDelete = window.confirm(
       `Delete receptionist ${receptionist.name || ""}?`
@@ -715,7 +716,21 @@ function Receptionists() {
 
   return (
     <div className="receptionists-page">
-      <div className="receptionists-header">
+      {/* 3D Receptionist Desk Theme Background Animated Overlays */}
+      <div className="receptionists-bg-overlay" />
+      <div className="receptionists-reception-particle particle-rec-1" title="Calendar & Scheduling">
+        <Calendar size={26} />
+      </div>
+      <div className="receptionists-reception-particle particle-rec-2" title="Patient Calls & Desk Phone">
+        <PhoneCall size={28} />
+      </div>
+      <div className="receptionists-reception-particle particle-rec-3" title="Patient Check-in & Records">
+        <ClipboardCheck size={26} />
+      </div>
+      <div className="receptionists-reception-particle particle-rec-4" title="Appointment Timings">
+        <Clock size={24} />
+      </div>
+      <div className="receptionists-header" data-page-header>
         <div>
           <h2>Receptionists</h2>
           <p>
@@ -724,6 +739,15 @@ function Receptionists() {
               : `${filteredReceptionists.length} receptionist records`}
           </p>
         </div>
+        <div className="admin-heading-search receptionists-search">
+          <Search size={16} />
+          <input
+            value={searchText}
+            onChange={(event) => setSearchText(event.target.value)}
+            placeholder="Search name, email, phone..."
+          />
+        </div>
+
 
         <div className="receptionists-header-actions">
           <button
@@ -749,16 +773,7 @@ function Receptionists() {
         </div>
       </div>
 
-      <div className="receptionists-toolbar">
-        <div className="receptionists-search">
-          <Search size={16} />
-          <input
-            value={searchText}
-            onChange={(event) => setSearchText(event.target.value)}
-            placeholder="Search name, email, phone..."
-          />
-        </div>
-      </div>
+      
 
       {success ? (
         <div className="receptionists-success" role="status">
@@ -782,9 +797,8 @@ function Receptionists() {
           <span>Branch</span>
           <span>Email</span>
           <span>Phone</span>
-          <span>Status</span>
-          <span>Created</span>
-          <span>Actions</span>
+          <span className="receptionists-status-head">Status</span>
+          <span className="receptionists-actions-head">Actions</span>
         </div>
 
         {!loading && filteredReceptionists.length === 0 ? (
@@ -801,11 +815,8 @@ function Receptionists() {
               .slice(0, 2)
               .toUpperCase() || "R";
           const isDeleting = deletingId === receptionist.id;
+          const isStatusUpdating = statusUpdatingId === receptionist.id;
           const isActive = receptionist.isActive !== false;
-          const receptionistClinicName = getClinicDisplayName(
-            { ...receptionist, hospitalId: receptionist.hospitalId || hospitalId },
-            clinicDisplayName
-          );
 
           return (
             <div className="receptionists-row" key={receptionist.id}>
@@ -825,10 +836,9 @@ function Receptionists() {
                     }}
                   />
                 </div>
-                <div>
+                <span className="receptionists-name-highlight">
                   <b>{receptionist.name || "-"}</b>
-                  <span>{receptionistClinicName}</span>
-                </div>
+                </span>
               </div>
 
               <span className="receptionists-cell">{getReceptionistBranchName(receptionist, branchNameById) || "-"}</span>
@@ -846,40 +856,23 @@ function Receptionists() {
                 </span>
               </span>
 
-              <span className="receptionists-cell">
-                {formatDate(receptionist.createdAt)}
-              </span>
-
               <div className="receptionists-actions">
-                <button
-                  type="button"
-                  className="receptionists-action-button"
-                  onClick={() => openEditModal(receptionist)}
-                  disabled={isDeleting || !canEdit}
-                  title="Edit receptionist"
-                >
-                  <Pencil size={14} />
-                </button>
-
-                <button
-                  type="button"
-                  className="receptionists-action-button"
-                  onClick={() => toggleReceptionistStatus(receptionist)}
-                  disabled={isDeleting || !canEdit}
-                  title={isActive ? "Deactivate receptionist" : "Activate receptionist"}
-                >
-                  {isActive ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
-                </button>
-
-                <button
-                  type="button"
-                  className="receptionists-action-button receptionists-action-danger"
-                  onClick={() => handleDelete(receptionist)}
-                  disabled={isDeleting || !canDelete}
-                  title="Delete receptionist"
-                >
-                  <Trash2 size={14} />
-                </button>
+                <ActionsGroup
+                  rowId={receptionist.id}
+                  activeActionState={activeActionState}
+                  setActiveActionState={setActiveActionState}
+                  canView={true}
+                  canEdit={canEdit}
+                  canStatus={canEdit}
+                  canDelete={canDelete}
+                  statusChecked={isActive}
+                  statusDisabled={isDeleting || isStatusUpdating}
+                  statusTitle={isActive ? "Deactivate receptionist" : "Activate receptionist"}
+                  onView={() => setViewingReceptionist(receptionist)}
+                  onEdit={() => openEditModal(receptionist)}
+                  onStatus={() => toggleReceptionistStatus(receptionist)}
+                  onDelete={() => handleDelete(receptionist)}
+                />
               </div>
             </div>
           );
@@ -918,7 +911,11 @@ function Receptionists() {
 
             <form className="receptionists-form" onSubmit={handleSubmit} noValidate>
               <div className="receptionists-image-upload">
-                <div className="receptionists-image-circle">
+                <div
+                  className="receptionists-image-circle"
+                  onClick={() => imageInputRef.current?.click()}
+                  title="Upload profile picture"
+                >
                   {imagePreview ? (
                     <AuthImage
                       src={imagePreview}
@@ -939,35 +936,42 @@ function Receptionists() {
                   <button
                     type="button"
                     className="receptionists-image-button"
-                    onClick={() => imageInputRef.current?.click()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      imageInputRef.current?.click();
+                    }}
                     title="Upload profile picture"
                     aria-label="Upload profile picture"
                     disabled={saving}
                   >
-                    <Camera size={17} />
+                    <Camera size={16} />
                   </button>
                   {imagePreview ? (
                     <button
                       type="button"
                       className="receptionists-image-remove"
-                      onClick={handleRemoveImage}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveImage();
+                      }}
                       title="Remove profile picture"
                       aria-label="Remove profile picture"
                       disabled={saving}
                     >
-                      <X size={15} />
+                      <X size={14} />
                     </button>
                   ) : null}
                   <input
                     ref={imageInputRef}
                     type="file"
                     className="receptionists-image-input"
+                    style={{ display: "none" }}
                     accept="image/*"
                     onChange={handleImageChange}
                   />
                 </div>
                 {fieldErrors.image ? (
-                  <span className="receptionists-field-error">{fieldErrors.image}</span>
+                  <span className="receptionists-field-error" style={{ marginTop: "6px" }}>{fieldErrors.image}</span>
                 ) : null}
               </div>
 
@@ -1082,6 +1086,46 @@ function Receptionists() {
               </div>
             </form>
           </div>
+        </div>
+      ) : null}
+
+      {viewingReceptionist ? (
+        <div className="receptionists-modal-overlay" onClick={() => setViewingReceptionist(null)}>
+          <section
+            className="receptionists-modal receptionists-view-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="receptionist-details-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="receptionists-modal-header">
+              <div className="receptionists-modal-title">
+                <div className="receptionists-modal-icon">
+                  <UserCheck size={20} />
+                </div>
+                <div>
+                  <h3 id="receptionist-details-title">Receptionist Details</h3>
+                  <p>{clinicDisplayName}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="receptionists-modal-close"
+                onClick={() => setViewingReceptionist(null)}
+                aria-label="Close receptionist details"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="receptionists-view-grid">
+              <div><span>Name</span><strong>{viewingReceptionist.name || "-"}</strong></div>
+              <div><span>Branch</span><strong>{getReceptionistBranchName(viewingReceptionist, branchNameById) || "-"}</strong></div>
+              <div><span>Email</span><strong>{viewingReceptionist.email || "-"}</strong></div>
+              <div><span>Phone</span><strong>{viewingReceptionist.phone || "-"}</strong></div>
+              <div><span>Status</span><strong>{viewingReceptionist.isActive !== false ? "Active" : "Inactive"}</strong></div>
+            </div>
+          </section>
         </div>
       ) : null}
     </div>

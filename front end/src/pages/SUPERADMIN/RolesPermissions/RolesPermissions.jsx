@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Check, Pencil, Plus, Save, ShieldCheck, Trash2, UsersRound, X } from "lucide-react";
+import { Check, Pencil, Save, ShieldCheck, Trash2, UsersRound, X } from "lucide-react";
 import {
   deleteRole,
   fetchAdmins,
@@ -17,6 +17,7 @@ const ADMIN_MODULES = [
   "Doctors",
   "Receptionists",
   "Nurses",
+  "Pharmacists",
   "Lab Technicians",
   "Lab Files",
   "Patients",
@@ -192,6 +193,13 @@ function RolesPermissions() {
   const [savedModulePermissionOverrides, setSavedModulePermissionOverrides] = useState({});
   const [admins, setAdmins] = useState([]);
 
+  useEffect(() => {
+    if (success !== "Module permissions saved successfully.") return undefined;
+
+    const timeoutId = window.setTimeout(() => setSuccess(""), 3000);
+    return () => window.clearTimeout(timeoutId);
+  }, [success]);
+
   const activeRoles = useMemo(
     () =>
       roles.filter(
@@ -216,7 +224,7 @@ function RolesPermissions() {
       const nextAdmins = await fetchAdmins().catch(() => []);
       setRoles(nextRoles);
       setAdmins(nextAdmins);
-      setSelectedAdminId((previous) => previous || getAdminId(nextAdmins[0]) || "");
+      setSelectedAdminId((previous) => previous || "");
     } catch (loadError) {
       setError(loadError.message || "Unable to load roles and permissions.");
       setRoles([]);
@@ -228,13 +236,6 @@ function RolesPermissions() {
   useEffect(() => {
     loadRoles();
   }, []);
-
-  const openAdd = () => {
-    setForm(emptyForm);
-    setError("");
-    setSuccess("");
-    setShowForm(true);
-  };
 
   const closeForm = () => {
     if (saving) return;
@@ -307,7 +308,7 @@ function RolesPermissions() {
   };
 
   const selectedAdmin = useMemo(
-    () => activeAdmins.find((admin) => getAdminId(admin) === String(selectedAdminId)) || activeAdmins[0] || null,
+    () => activeAdmins.find((admin) => getAdminId(admin) === String(selectedAdminId)) || null,
     [activeAdmins, selectedAdminId]
   );
 
@@ -371,6 +372,54 @@ function RolesPermissions() {
             : [...currentPermissions, permission]
         ),
       };
+    });
+    setError("");
+    setSuccess("");
+  };
+
+  const areAllPermissionsSelected = useMemo(() => {
+    const map = normalizeModulePermissions(modulePermissions);
+    return ADMIN_MODULES.every((module) => {
+      const list = normalizeOptionalPermissionList(map[module] || []);
+      return PERMISSIONS.every((p) => list.includes(p));
+    });
+  }, [modulePermissions]);
+
+  const isColumnAllSelected = (permission) => {
+    const map = normalizeModulePermissions(modulePermissions);
+    return ADMIN_MODULES.every((module) => {
+      const list = normalizeOptionalPermissionList(map[module] || []);
+      return list.includes(permission);
+    });
+  };
+
+  const toggleSelectAllModulePermissions = () => {
+    setModulePermissions(() => {
+      const nextMap = {};
+      const shouldSelectAll = !areAllPermissionsSelected;
+      ADMIN_MODULES.forEach((module) => {
+        nextMap[module] = shouldSelectAll ? [...PERMISSIONS] : [];
+      });
+      return nextMap;
+    });
+    setError("");
+    setSuccess("");
+  };
+
+  const toggleColumnModulePermission = (permission) => {
+    setModulePermissions((previous) => {
+      const currentMap = normalizeModulePermissions(previous);
+      const shouldSelectColumn = !isColumnAllSelected(permission);
+      const nextMap = {};
+      ADMIN_MODULES.forEach((module) => {
+        const currentList = normalizeOptionalPermissionList(currentMap[module] || []);
+        if (shouldSelectColumn) {
+          nextMap[module] = Array.from(new Set([...currentList, permission]));
+        } else {
+          nextMap[module] = currentList.filter((p) => p !== permission);
+        }
+      });
+      return nextMap;
     });
     setError("");
     setSuccess("");
@@ -460,16 +509,11 @@ function RolesPermissions() {
   };
 
   return (
-    <div>
-      <div className="sa-page-header">
+    <div className="sa-roles-permissions-page">
+      <div className="sa-page-header" data-page-header>
         <div>
           <h1>Roles & Permissions</h1>
           <p>Create roles and assign View, Create, Edit, and Delete permissions.</p>
-        </div>
-        <div className="sa-page-actions">
-          <button className="sa-btn sa-btn-primary" type="button" onClick={openAdd}>
-            <Plus size={16} /> Create Role
-          </button>
         </div>
       </div>
 
@@ -550,14 +594,12 @@ function RolesPermissions() {
       <div className="sa-table sa-table--roles">
         <div
           className="sa-table-head"
-          style={{ gridTemplateColumns: "44px minmax(130px,.7fr) minmax(120px,.65fr) minmax(170px,.9fr) minmax(230px,1fr) 88px" }}
+          style={{ gridTemplateColumns: "55px minmax(130px,.8fr) minmax(110px,.7fr) minmax(180px,1fr) minmax(200px,1.4fr)" }}
         >
           <span>S.No.</span>
           <span>Role</span>
           <span>Module</span>
           <span>Assigned Users</span>
-          <span>Permissions</span>
-          <span>Actions</span>
         </div>
 
         {loading ? <div className="sa-state">Loading roles...</div> : null}
@@ -569,7 +611,7 @@ function RolesPermissions() {
           <div
             className="sa-table-row"
             key={role.key || role.id || `${role.roleName}-${index}`}
-            style={{ gridTemplateColumns: "44px minmax(130px,.7fr) minmax(120px,.65fr) minmax(170px,.9fr) minmax(230px,1fr) 88px" }}
+            style={{ gridTemplateColumns: "55px minmax(130px,.8fr) minmax(110px,.7fr) minmax(180px,1fr) minmax(200px,1.4fr)" }}
           >
             <span className="sa-table-cell">{index + 1}</span>
             <span className="sa-table-cell">
@@ -603,20 +645,18 @@ function RolesPermissions() {
             <span className="sa-table-cell">
               <span className="sa-role-permissions">
                 {getModulePermissionSummary(role).map(({ module, permissions }) => (
-                  <span key={module} title={`${module}: ${permissions.join(", ") || "No permissions"}`}>
-                    <Check size={11} />
-                    {module}: {permissions.length ? permissions.join(", ") : "None"}
+                  <span
+                    className="sa-role-permission-chip"
+                    key={module}
+                    title={`${module}: ${permissions.join(", ") || "No permissions"}`}
+                  >
+                    <b>{module}</b>
+                    <span className="sa-role-permission-count">
+                      {permissions.length ? `${permissions.length}/${PERMISSIONS.length}` : "None"}
+                    </span>
                   </span>
                 ))}
               </span>
-            </span>
-            <span className="sa-actions">
-              <button className="sa-icon-btn" type="button" onClick={() => setSelectedAdminId(getAdminId(role.admin))} title="Edit role">
-                <Pencil size={15} />
-              </button>
-              <button className="sa-icon-btn sa-icon-btn--danger" type="button" onClick={() => handleDelete(role)} title="Delete role">
-                <Trash2 size={15} />
-              </button>
             </span>
           </div>
         ))}
@@ -624,7 +664,6 @@ function RolesPermissions() {
 
       <div className="sa-form-card sa-permission-card">
         <h3>Assign Permissions</h3>
-        <p className="sa-form-subtitle">Admin sidebar module permissions for the selected Admin role.</p>
         <div className="sa-form-grid">
           <div className="sa-form-field">
             <label>Admin Role / Admin ID</label>
@@ -633,6 +672,7 @@ function RolesPermissions() {
               onChange={(event) => setSelectedAdminId(event.target.value)}
               disabled={loading || saving || !admins.length}
             >
+              <option value="">Select Admin</option>
               {activeAdmins.map((admin, index) => (
                 <option value={getAdminId(admin)} key={getAdminId(admin) || admin.email || index}>
                   {getAdminDisplayName(admin)} {getAdminId(admin) ? `- ID ${getAdminId(admin)}` : ""}
@@ -643,10 +683,35 @@ function RolesPermissions() {
         </div>
         <div className="sa-permission-matrix">
           <div className="sa-permission-head">
-            <span>Module</span>
-            {PERMISSIONS.map((permission) => (
-              <span key={permission}>{permission}</span>
-            ))}
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+              <span>Module</span>
+              <button
+                type="button"
+                className="sa-btn sa-btn-primary"
+                style={{ padding: "3px 10px", fontSize: "11px", height: "26px", fontWeight: 700 }}
+                onClick={toggleSelectAllModulePermissions}
+                disabled={saving || !selectedAdmin}
+                title={areAllPermissionsSelected ? "Uncheck all module permissions" : "Check all module permissions"}
+              >
+                <Check size={13} />
+                {areAllPermissionsSelected ? "Deselect All" : "Select All"}
+              </button>
+            </div>
+            {PERMISSIONS.map((permission) => {
+              const checked = isColumnAllSelected(permission);
+              return (
+                <label key={permission} style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", fontWeight: 700 }}>
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={saving || !selectedAdmin}
+                    onChange={() => toggleColumnModulePermission(permission)}
+                    title={`Check/Uncheck ${permission} for all modules`}
+                  />
+                  <span>{permission}</span>
+                </label>
+              );
+            })}
           </div>
           {ADMIN_MODULES.map((module) => (
             <div className="sa-permission-row" key={module}>

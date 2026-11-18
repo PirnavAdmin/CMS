@@ -3,6 +3,11 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
+import { createApiReadCoordinator } from "./utils/apiReadCoordinator.mjs";
+import { applySavedTheme, startThemeSync } from "./theme/theme";
+
+applySavedTheme();
+startThemeSync();
 // Register service worker for PWA in production builds
 if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -18,10 +23,12 @@ if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
 }
 
 const originalFetch = window.fetch.bind(window);
+const coordinatedFetch = createApiReadCoordinator(originalFetch, window.location.origin);
 const INVALID_STATIC_TOKENS = new Set(["static-superadmin-token"]);
 const API_MUTATION_TIMEOUT_MS = 20000;
 const API_GET_CACHE_TTL_MS = 60 * 1000;
 const apiResponseCache = new Map();
+let apiCacheGeneration = 0;
 
 const clearInvalidStoredTokens = () => {
   [
@@ -85,16 +92,8 @@ const getApiCacheKey = (input, init = {}) => {
   const url = getRequestUrl(input);
   if (!url) return "";
 
-  const tokenScope =
-    localStorage.getItem("token") ||
-    localStorage.getItem("adminToken") ||
-    localStorage.getItem("doctorToken") ||
-    localStorage.getItem("receptionistToken") ||
-    localStorage.getItem("nurseToken") ||
-    localStorage.getItem("labToken") ||
-    "";
-
-  return `${getRequestMethod(input, init)}:${url}:${tokenScope.slice(-16)}`;
+  const headers = new Headers(init.headers || (input instanceof Request ? input.headers : {}));
+  return JSON.stringify([getRequestMethod(input, init), url, Array.from(headers.entries()).sort(), init.credentials || "same-origin"]);
 };
 
 const getCachedApiResponse = (cacheKey) => {
@@ -117,6 +116,7 @@ const cacheApiResponse = (cacheKey, response) => {
 };
 
 const clearApiResponseCache = () => {
+  apiCacheGeneration += 1;
   apiResponseCache.clear();
 };
 
@@ -162,7 +162,7 @@ window.fetch = (input, init = {}) => {
   const method = getRequestMethod(input, init);
   const shouldLimitApiRequest = isApiRequest(input);
   const shouldCacheApiGet = shouldLimitApiRequest && method === "GET";
-  const cacheKey = shouldCacheApiGet ? getApiCacheKey(input, init) : "";
+  const cacheKey = shouldCacheApiGet ? getApiCacheKey(input, { ...init, headers }) : "";
 
   if (shouldLimitApiRequest && method !== "GET" && method !== "HEAD") {
     clearApiResponseCache();
@@ -188,7 +188,8 @@ window.fetch = (input, init = {}) => {
     }
   }
 
-  const fetchPromise = originalFetch(input, {
+  const requestCacheGeneration = apiCacheGeneration;
+  const fetchPromise = coordinatedFetch(input, {
     ...init,
     headers,
     ...(controller ? { signal: controller.signal } : {}),
@@ -196,7 +197,8 @@ window.fetch = (input, init = {}) => {
 
   return fetchPromise
     .then((response) => {
-      if (shouldCacheApiGet) cacheApiResponse(cacheKey, response);
+      if (shouldCacheApiGet && requestCacheGeneration === apiCacheGeneration) cacheApiResponse(cacheKey, response);
+      if (shouldLimitApiRequest && method !== "GET" && method !== "HEAD") clearApiResponseCache();
       return response;
     })
     .catch((error) => {

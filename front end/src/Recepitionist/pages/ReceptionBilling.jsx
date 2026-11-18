@@ -1,7 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, CalendarDays, CheckCircle, Edit3, Eye, FileText, History, Minus, Printer, Trash2 } from "lucide-react";
+import DatePickerField from "../../components/DatePickerField";
+import { Activity, ArrowLeft, CalendarDays, CheckCircle, CreditCard, Edit3, Eye, FileText, FlaskConical, History, Minus, Pill, Plus, Printer, Receipt, RefreshCw, ShieldCheck, Sparkles, Stethoscope, Thermometer, Trash2 } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { PaymentStatusBadge, PaidStamp, formatPaidDateTime } from "../../components/PaymentStatus";
+import { ActionsGroup } from "../../components/ActionsGroup";
+import {
+  OpBillingHeader,
+  PatientDoctorBanner,
+  BookedAppointmentField,
+  MiddleToolbarRow,
+  PaymentModeDiscountRow,
+  ChargesBreakdownTable,
+  ThreeButtonActionBar,
+} from "../../components/OpBillingUi";
 import { parseList, requestJson } from "../receptionApi";
+import { unwrapBillingResponse, billingPaymentStatus } from "../../utils/billingPayment.mjs";
+import { createHospitalPaymentOrder, fetchHospitalPaymentOrder, verifyHospitalPayment } from '../../utils/paymentApi';
+import { readCheckoutOrder, runVerifiedCheckout } from '../../utils/razorpayCheckout.mjs';
 import { getReceptionistProfile } from "../receptionSession";
 import { getNurseProfile } from "../../Nurse/nurseSession";
 import { canUseModulePermission, useRolePermissionsSync } from "../../utils/rolePermissions";
@@ -22,7 +37,7 @@ import { getClinicInvoiceBranding } from "../../utils/clinicBranding";
 import { getCachedLabMasterTests, normalizeLabTests } from "../../utils/labMaster";
 import { clearPendingDiagnosticRequest, getPendingDiagnosticRequest } from "../../utils/diagnosticRequests";
 import { RECEPTION_RECENT_SERVICE_BILLS_KEY as RECENT_SERVICE_BILLS_STORAGE_KEY } from "../../utils/billingRevenue";
-import { BILLING_API_PATHS, getBillingApiPath } from "../../config/api";
+import { API_ENDPOINTS, BILLING_API_PATHS, getBillingApiPath } from "../../config/api";
 
 const escapeHtml = (value) =>
   String(value ?? "")
@@ -330,29 +345,55 @@ const collectServiceItems = (source, seen = new Set()) => {
   return [...directRows, ...nestedRows];
 };
 
-const getServiceLineItemName = (row = {}, billType = "diagnostic") =>
-  firstValue(
-    row.item,
-    row.Item,
-    row.label,
-    row.Label,
-    row.testName,
-    row.TestName,
-    row.test,
-    row.Test,
-    row.name,
-    row.Name,
-    row.serviceName,
-    row.ServiceName,
+const isGenericServiceChargeName = (value, billType = "diagnostic") => {
+  const normalized = String(value || "").trim().toLowerCase();
+  return billType === "pharmacy"
+    ? normalized === "pharmacy charges"
+    : normalized === "diagnostic charges" || normalized === "diagnostics charges" || normalized === "lab charges";
+};
+
+const firstSpecificName = (values = [], billType = "diagnostic") =>
+  values
+    .map((value) => String(value || "").trim())
+    .find((value) => value && !isGenericServiceChargeName(value, billType));
+
+const getServiceLineItemName = (row = {}, billType = "diagnostic") => {
+  if (billType === "diagnostic") {
+    return firstSpecificName([
+      row.testName,
+      row.TestName,
+      row.test,
+      row.Test,
+      row.name,
+      row.Name,
+      row.serviceName,
+      row.ServiceName,
+      row.label,
+      row.Label,
+      row.item,
+      row.Item,
+      row.description,
+      row.Description,
+    ], billType) || "Diagnostic Charges";
+  }
+
+  return firstSpecificName([
     row.medicineName,
     row.MedicineName,
     row.productName,
     row.ProductName,
+    row.name,
+    row.Name,
+    row.serviceName,
+    row.ServiceName,
+    row.label,
+    row.Label,
+    row.item,
+    row.Item,
     row.description,
     row.Description,
-    billType === "pharmacy" ? "Pharmacy Charges" : "Diagnostic Charges"
-  );
-
+  ], billType) || "Pharmacy Charges";
+};
 const normalizeServiceBillRows = (bill = {}, billType = "diagnostic") =>
   collectServiceItems(bill)
     .map((row, index) => {
@@ -467,6 +508,68 @@ const readDiscountPercent = (bill = {}, baseAmount = 0) => {
   return amount > 0 ? normalizeDiscountPercent((discountAmount / amount) * 100) : 0;
 };
 
+
+const buildServiceLineItems = (rows = [], type = "diagnostic") =>
+  rows.map((row, index) => {
+    const itemName = getServiceLineItemName(row, type);
+    const quantity = type === "pharmacy" ? Math.max(1, Number(row.quantity) || 1) : 1;
+    const unitPrice = Number(row.unitPrice ?? row.price ?? row.Price ?? 0) || 0;
+    const amount = unitPrice * quantity;
+    return {
+      id: firstValue(row.id, row.Id, row.testId, row.TestId, row.labTestId, row.LabTestId, row.itemId, row.ItemId, `${type}-${index}`),
+      item: itemName,
+      Item: itemName,
+      label: itemName,
+      Label: itemName,
+      name: itemName,
+      Name: itemName,
+      serviceName: itemName,
+      ServiceName: itemName,
+      testName: type === "diagnostic" ? itemName : undefined,
+      TestName: type === "diagnostic" ? itemName : undefined,
+      medicineName: type === "pharmacy" ? itemName : undefined,
+      MedicineName: type === "pharmacy" ? itemName : undefined,
+      diagnosis: row.diagnosis || row.Diagnosis || (type === "pharmacy" ? "Pharmacy" : "Lab"),
+      Diagnosis: row.diagnosis || row.Diagnosis || (type === "pharmacy" ? "Pharmacy" : "Lab"),
+      quantity,
+      Quantity: quantity,
+      unitPrice,
+      UnitPrice: unitPrice,
+      price: unitPrice,
+      Price: unitPrice,
+      amount,
+      Amount: amount,
+      total: amount,
+      Total: amount,
+      totalAmount: amount,
+      TotalAmount: amount,
+    };
+  });
+
+const readServiceBillTestNames = (bill = {}, billType = "diagnostic") => {
+  const direct = firstValue(
+    bill.testName,
+    bill.TestName,
+    bill.testNames,
+    bill.TestNames,
+    bill.diagnosticTests,
+    bill.DiagnosticTests,
+    bill.labTests,
+    bill.LabTests,
+    bill.tests,
+    bill.Tests,
+    bill.item,
+    bill.Item,
+    bill.serviceName,
+    bill.ServiceName
+  );
+  const directNames = Array.isArray(direct) ? direct : splitDiagnosticTests(direct);
+  const itemNames = collectServiceItems(bill)
+    .map((row) => String(firstValue(row.item, row.Item, row.testName, row.TestName, row.name, row.Name, row.serviceName, row.ServiceName, "") || "").trim())
+    .filter(Boolean)
+    .filter((name) => !/^(diagnostic|pharmacy) charges$/i.test(name));
+  return Array.from(new Set([...directNames, ...itemNames])).filter(Boolean);
+};
 const getBillingTotals = (rows = [], discountPercent = 0) => {
   const subtotal = rows.reduce(
     (sum, row) => sum + (Number(row.unitPrice) || 0) * (Number(row.quantity) || 0),
@@ -504,6 +607,7 @@ const printServiceInvoice = ({
   createdAt,
   doctorName,
   paymentMode,
+  paymentStatus = "Draft",
   clinicName,
   clinicId,
   clinicPhone,
@@ -529,6 +633,8 @@ const printServiceInvoice = ({
     minute: "2-digit",
     hour12: true,
   });
+  const invoicePaymentStatus = String(paymentStatus || "Draft").trim();
+  const isInvoicePaid = invoicePaymentStatus.toLowerCase() === "paid";
   const title = type === "pharmacy" ? "Pharmacy GST Invoice" : "Diagnostic Test GST Invoice";
   const itemHeader = type === "pharmacy" ? "Product / Medicine" : "Diagnostic Test";
   const branding = getClinicInvoiceBranding({ clinicId, clinicName });
@@ -542,6 +648,9 @@ const printServiceInvoice = ({
   const brandingGstNumber = branding.gstNumber || "";
   const brandingRegistrationNumber = branding.registrationNumber || "";
   const accentColor = branding.accentColor || "#0f9d9d";
+  const billingTemplate = branding.billingTemplate || branding.opTemplate || branding.diagnosticTemplate || null;
+  const billingTemplateUrl = billingTemplate?.dataUrl || "";
+  const billingTemplateIsImage = /^data:image\//i.test(billingTemplateUrl);
   const printWindow = window.open("", "_blank", "width=980,height=720");
   if (!printWindow) return false;
 
@@ -554,7 +663,11 @@ const printServiceInvoice = ({
           @page { size: A4; margin: 14mm; }
           body { margin: 0; color: #111827; font-family: Arial, Helvetica, sans-serif; background: #f3f8fb; }
           .invoice { max-width: 940px; min-height: 100vh; margin: 0 auto; background: #fff; padding: 28px; border-top: 8px solid ${escapeHtml(accentColor)}; box-sizing: border-box; position: relative; overflow: hidden; }
-          .invoice > *:not(.watermark) { position: relative; z-index: 1; }
+          .invoice > *:not(.watermark):not(.template-bg) { position: relative; z-index: 1; }
+          .template-bg { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .16; }
+          .template-bg img, .template-bg iframe { width: 100%; height: 100%; border: 0; object-fit: cover; background: transparent; }
+          .invoice.has-template { border-top-width: 0; }
+          .invoice.has-template .head, .invoice.has-template .meta div, .invoice.has-template .panel, .invoice.has-template th, .invoice.has-template td { background-color: rgba(255,255,255,.9); }
           .watermark { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; z-index: 0; }
           .watermark img { width: 410px; height: 410px; object-fit: contain; opacity: .18; filter: saturate(1.35) contrast(1.08); }
           .head { display: grid; grid-template-columns: 1fr auto; gap: 20px; border-bottom: 2px solid #0f172a; padding-bottom: 14px; }
@@ -590,7 +703,8 @@ const printServiceInvoice = ({
         </style>
       </head>
       <body>
-        <main class="invoice">
+        <main class="invoice${billingTemplateUrl ? " has-template" : ""}">
+          ${billingTemplateUrl ? `<div class="template-bg">${billingTemplateIsImage ? `<img src="${escapeHtml(billingTemplateUrl)}" alt="" />` : `<iframe src="${escapeHtml(billingTemplateUrl)}" title="Billing template"></iframe>`}</div>` : ""}
           <div class="watermark"><img src="${escapeHtml(logoUrl)}" alt="" /></div>
           <section class="head">
             <div>
@@ -687,6 +801,7 @@ const printServiceInvoice = ({
               </tr>
             </tfoot>
           </table>
+          ${isInvoicePaid ? `<div style="display: inline-block; margin: 16px 0; break-inside: avoid; border: 3px double #10b981; border-radius: 6px; padding: 4px 14px; color: #059669; font-size: 20px; font-weight: 900; letter-spacing: 2.5px; transform: rotate(-6deg); background: rgba(16,185,129,0.08); text-transform: uppercase; z-index: 10; pointer-events: none;">PAID</div>` : `<div style="display: inline-block; margin: 16px 0; break-inside: avoid; border: 3px double #f59e0b; border-radius: 6px; padding: 4px 14px; color: #b45309; font-size: 18px; font-weight: 900; letter-spacing: 2px; transform: rotate(-6deg); background: rgba(245,158,11,0.08); text-transform: uppercase; z-index: 10; pointer-events: none;">${escapeHtml(invoicePaymentStatus)}</div>`}
           <section class="foot">
             <p>${escapeHtml(footerNote)}<br />Print on: ${escapeHtml(invoiceDate)}</p>
             <div class="sign">Authorized Signature</div>
@@ -755,6 +870,73 @@ const deleteBillingBill = async (bill) => {
   return true;
 };
 
+const getBillingPaymentBillId = (bill) =>
+  firstValue(
+    bill?.billId,
+    bill?.BillId,
+    bill?.billingId,
+    bill?.BillingId,
+    bill?.invoiceId,
+    bill?.InvoiceId,
+    bill?.id,
+    bill?.Id
+  ) || "";
+
+const getBillingPaymentStatus = async (bill) => {
+  const billId = getBillingPaymentBillId(bill);
+  if (!billId) throw new Error("Bill id is not available for payment status.");
+  return requestJson(API_ENDPOINTS.billing.byId.replace("{id}", encodeURIComponent(String(billId))));
+};
+
+const hospitalPaymentAttempts = new Map();
+const hospitalPaymentsInFlight = new Map();
+
+const startBillingPayment = async (bill, paymentMode) => {
+  const billId = getBillingPaymentBillId(bill);
+  if (!billId) throw new Error("Bill id is not available for payment.");
+
+  if (String(paymentMode || 'Cash').trim().toLowerCase() !== 'cash') {
+    if (hospitalPaymentsInFlight.has(String(billId))) return hospitalPaymentsInFlight.get(String(billId));
+    const payment = (async () => {
+      let attempt = hospitalPaymentAttempts.get(String(billId));
+      if (!attempt) {
+        attempt = { idempotencyKey: crypto.randomUUID() };
+        hospitalPaymentAttempts.set(String(billId), attempt);
+      }
+      if (attempt.localOrderId) {
+        // Recheck an existing order instead of allocating another invoice balance.
+        await fetchHospitalPaymentOrder(attempt.localOrderId);
+        const saved = await getBillingPaymentStatus(bill);
+        if (billingPaymentStatus(saved).toLowerCase() === 'paid') {
+          hospitalPaymentAttempts.delete(String(billId));
+          return saved;
+        }
+      }
+      if (!attempt.order) {
+        attempt.order = await createHospitalPaymentOrder({ billingId: Number(billId), idempotencyKey: attempt.idempotencyKey });
+      }
+      const { localOrderId } = readCheckoutOrder(attempt.order);
+      if (!localOrderId) throw new Error('The payment response is missing its local order ID. Check payment status before retrying.');
+      attempt.localOrderId = localOrderId;
+      const result = await runVerifiedCheckout({ response: attempt.order, verify: body => verifyHospitalPayment({ localOrderId, ...body }) });
+      hospitalPaymentAttempts.delete(String(billId));
+      return result;
+    })();
+    hospitalPaymentsInFlight.set(String(billId), payment);
+    try { return await payment; } finally { hospitalPaymentsInFlight.delete(String(billId)); }
+  }
+
+  return requestJson(API_ENDPOINTS.billing.payment.replace("{billId}", encodeURIComponent(String(billId))), {
+    method: "PATCH",
+    body: JSON.stringify({ paymentMode: String(paymentMode || "Cash").trim() }),
+  });
+};
+
+const fetchBillingPaymentHistory = async (bill) => {
+  const billId = getBillingPaymentBillId(bill);
+  if (!billId) throw new Error("Bill id is not available for payment history.");
+  return requestJson(API_ENDPOINTS.billing.paymentHistory.replace("{billId}", encodeURIComponent(String(billId))));
+};
 const getInvoiceStatus = (invoice) =>
   firstValue(invoice?.paymentStatus, invoice?.invoiceStatus, invoice?.billingStatus, invoice?.status) ||
   "Paid";
@@ -897,6 +1079,8 @@ const getAppointmentPatientGender = (appointment = {}) => {
 
 const getAppointmentTokenNumber = (appointment = {}) =>
   firstValue(
+    appointment?.appointmentTokenNumber,
+    appointment?.AppointmentTokenNumber,
     appointment?.tokenNo,
     appointment?.TokenNo,
     appointment?.tokenNumber,
@@ -1173,6 +1357,9 @@ const readRecentServiceBills = () => {
   }
 };
 
+const readScopedRecentServiceBills = (scope = getReceptionistScope()) =>
+  scopeReceptionistRecords(readRecentServiceBills(), scope);
+
 const storeRecentServiceBill = (bill) => {
   if (!bill || typeof bill !== "object") return [];
 
@@ -1344,18 +1531,50 @@ const getServiceBillMergeKey = (bill = {}) => {
   return `${type}:draft:${bill.createdAt || bill.patientId || Math.random()}`;
 };
 
+const buildServiceLineItemAliases = (rows = [], billType = "diagnostic") => {
+  const lineItems = buildServiceLineItems(rows, billType);
+  const itemNames = lineItems.map((item) => item.item).filter(Boolean).join(", ");
+
+  if (!lineItems.length) return {};
+
+  return {
+    rows: lineItems,
+    Rows: lineItems,
+    lineItems,
+    LineItems: lineItems,
+    serviceItems: lineItems,
+    ServiceItems: lineItems,
+    billingItems: lineItems,
+    BillingItems: lineItems,
+    items: lineItems,
+    Items: lineItems,
+    diagnosticTests: billType === "diagnostic" ? lineItems : [],
+    DiagnosticTests: billType === "diagnostic" ? lineItems : [],
+    labTests: billType === "diagnostic" ? lineItems : [],
+    LabTests: billType === "diagnostic" ? lineItems : [],
+    medicines: billType === "pharmacy" ? lineItems : [],
+    Medicines: billType === "pharmacy" ? lineItems : [],
+    testName: billType === "diagnostic" ? itemNames : "",
+    TestName: billType === "diagnostic" ? itemNames : "",
+    testNames: billType === "diagnostic" ? itemNames : "",
+    TestNames: billType === "diagnostic" ? itemNames : "",
+  };
+};
+
 const mergeServiceBillPair = (existing = {}, incoming = {}) => {
   const incomingFromBackend = isBackendApiBill(incoming);
   const existingFromBackend = isBackendApiBill(existing);
-  const existingRows = Array.isArray(existing.rows) ? existing.rows : [];
-  const incomingRows = Array.isArray(incoming.rows) ? incoming.rows : [];
+  const billType = getServiceBillType(incoming) === "pharmacy" || getServiceBillType(existing) === "pharmacy" ? "pharmacy" : "diagnostic";
+  const existingRows = normalizeServiceBillRows(existing, billType);
+  const incomingRows = normalizeServiceBillRows(incoming, billType);
   const merged = incomingFromBackend
     ? { ...existing, ...incoming }
     : { ...incoming, ...existing };
+  const rows = incomingRows.length ? incomingRows : existingRows;
 
   return {
     ...merged,
-    rows: incomingRows.length ? incomingRows : existingRows,
+    ...buildServiceLineItemAliases(rows, billType),
     totals: incomingFromBackend
       ? incoming.totals || existing.totals
       : existingFromBackend
@@ -1363,7 +1582,6 @@ const mergeServiceBillPair = (existing = {}, incoming = {}) => {
         : incoming.totals || existing.totals,
   };
 };
-
 const mergeRecentServiceBills = (...billGroups) => {
   const byInvoice = new Map();
 
@@ -1413,10 +1631,10 @@ const getLabTestsFromBillingRecords = (records = []) => {
   );
 };
 
-const syncRecentServiceBillsToBackend = async () => {
+const syncRecentServiceBillsToBackend = async (scope = getReceptionistScope()) => {
   // Do not automatically POST cached/local bills to the backend.
   // Cached rows may not contain a valid AppointmentId and caused repeated 400 responses.
-  return readRecentServiceBills();
+  return readScopedRecentServiceBills(scope);
 };
 
 function ReceptionBilling() {
@@ -1430,6 +1648,7 @@ function ReceptionBilling() {
   const canEditBill = canUseModulePermission(receptionistProfile, "Billing", "Edit");
   const canDeleteBill = canUseModulePermission(receptionistProfile, "Billing", "Delete");
   const receptionistScope = useMemo(() => getReceptionistScope(), []);
+  const [activeActionState, setActiveActionState] = useState(null);
   const clinicName = getClinicDisplayName(receptionistProfile, "CMS Clinic");
   const clinicId = receptionistProfile.hospitalId || localStorage.getItem("hospitalId") || "";
   const clinicEmail =
@@ -1444,6 +1663,23 @@ function ReceptionBilling() {
     "";
   const amountFormatTimers = useRef({});
   const messageTimer = useRef(null);
+  const topNotificationTimer = useRef(null);
+  const [topBarNotification, setTopBarNotification] = useState(null);
+
+  const showTopNotification = ({ message, patientName, invoiceNo, amount }) => {
+    if (topNotificationTimer.current) clearTimeout(topNotificationTimer.current);
+    setTopBarNotification({ message, patientName, invoiceNo, amount });
+    topNotificationTimer.current = setTimeout(() => {
+      setTopBarNotification(null);
+    }, 3000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (topNotificationTimer.current) clearTimeout(topNotificationTimer.current);
+    };
+  }, []);
+
   const [appointments, setAppointments] = useState([]);
   const [message, setMessage] = useState("");
   const [messageType, setMessageType] = useState("");
@@ -1467,11 +1703,19 @@ function ReceptionBilling() {
   const [labMasterLoading, setLabMasterLoading] = useState(false);
   const [pharmacyRows, setPharmacyRows] = useState([]);
   const [pharmacyPrescriptionLoading, setPharmacyPrescriptionLoading] = useState(false);
-  const [recentServiceBills, setRecentServiceBills] = useState(() => readRecentServiceBills());
+  const [recentServiceBills, setRecentServiceBills] = useState(() => readScopedRecentServiceBills(receptionistScope));
+  const paymentInFlight = useRef(false);
+  const [recordingPaymentId, setRecordingPaymentId] = useState("");
+  const [paymentHistoryByBill, setPaymentHistoryByBill] = useState({});
+  const [paymentHistoryLoadingId, setPaymentHistoryLoadingId] = useState("");
+  const [paymentHistoryErrorByBill, setPaymentHistoryErrorByBill] = useState({});
   const [editingBill, setEditingBill] = useState(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [serviceSearch, setServiceSearch] = useState("");
   const [appointmentListView, setAppointmentListView] = useState("today");
   const [appointmentDateFilter, setAppointmentDateFilter] = useState("");
+  const [billDateFilter, setBillDateFilter] = useState("");
+  const [billPatientSearch, setBillPatientSearch] = useState("");
   const [form, setForm] = useState({
     appointmentId: "",
     paymentMode: "UPI",
@@ -1489,11 +1733,12 @@ function ReceptionBilling() {
 
     const loadBillingData = async () => {
       try {
-        const [appointmentsResult, invoicesResult] = await Promise.allSettled([
+        const [appointmentsResult, invoicesResult, patientsResult] = await Promise.allSettled([
           fetchBillingAppointments(),
           Promise.allSettled(BILLING_API_PATHS.map((path) => requestJson(path))),
+          requestJson("Patient"),
         ]);
-        const patientsData = await requestJson("Patient").catch(() => []);
+        const patientsData = patientsResult.status === "fulfilled" ? patientsResult.value : [];
 
         const appointmentsResultData =
           appointmentsResult.status === "fulfilled" ? appointmentsResult.value : [];
@@ -1550,8 +1795,8 @@ function ReceptionBilling() {
           appointmentId: prev.appointmentId || "",
         }));
         setInvoice(latestInvoice);
-        const syncedRecentBills = await syncRecentServiceBillsToBackend();
-        setRecentServiceBills(mergeRecentServiceBills(invoiceList, syncedRecentBills));
+        const syncedRecentBills = await syncRecentServiceBillsToBackend(receptionistScope);
+        setRecentServiceBills(mergeRecentServiceBills(syncedRecentBills, scopedInvoices));
       } catch (error) {
         setMessage(error.message);
         setMessageType("error");
@@ -1681,7 +1926,7 @@ function ReceptionBilling() {
   }, [billingMode, recentServiceBills]);
 
   const billingAppointmentOptions = useMemo(() => {
-    const appointmentHasDiagnosticRequest = (appointment = {}) => {
+    const hasDoctorRequest = (appointment = {}) => {
       const pendingRequest = getPendingDiagnosticRequest({
         appointmentId: getAppointmentId(appointment),
         patientId: getAppointmentPatientId(appointment),
@@ -1693,10 +1938,20 @@ function ReceptionBilling() {
         splitDiagnosticTests(readAppointmentDiagnosticTests(appointment)).length
       );
     };
-    return billingMode === "diagnostic"
-      ? appointments.filter(appointmentHasDiagnosticRequest)
-      : appointments;
-  }, [appointments, billingMode]);
+
+    return [...appointments].sort((a, b) => {
+      const aHas = hasDoctorRequest(a) ? 1 : 0;
+      const bHas = hasDoctorRequest(b) ? 1 : 0;
+      return bHas - aHas;
+    });
+  }, [appointments]);
+
+  useEffect(() => {
+    const stateAptId = location?.state?.appointmentId || location?.state?.id;
+    if (stateAptId && !form.appointmentId) {
+      setForm((prev) => ({ ...prev, appointmentId: String(stateAptId) }));
+    }
+  }, [location, form.appointmentId]);
 
   const filteredBillingAppointments = useMemo(() => {
     const todayKey = getTodayKey();
@@ -1813,10 +2068,7 @@ function ReceptionBilling() {
     };
   }, [billingMode, labMasterPriceList, selectedAppointment]);
 
-  // Load medicines from the doctor's saved prescription.
-  // The backend PrescriptionItem model does not currently store selling price,
-  // so the receptionist enters the unit price only for medicines that were
-  // actually prescribed by the doctor.
+  // Pharmacy quantities and prices come from backend dispensing records.
   useEffect(() => {
     if (billingMode !== "pharmacy") {
       setPharmacyPrescriptionLoading(false);
@@ -1852,9 +2104,9 @@ function ReceptionBilling() {
               frequency: medicine.frequency ?? medicine.Frequency ?? "",
               duration: medicine.duration ?? medicine.Duration ?? "",
               notes: medicine.notes ?? medicine.Notes ?? "",
-              quantity: 1,
-              unitPrice: 0,
-              price: 0,
+              quantity: Math.max(1, Number(medicine.dispensedQuantity ?? medicine.DispensedQuantity ?? medicine.quantity ?? medicine.Quantity ?? medicine.prescribedQuantity ?? medicine.PrescribedQuantity ?? medicine.qty ?? medicine.Qty ?? 1) || 1),
+              unitPrice: Number(medicine.sellingPrice ?? medicine.SellingPrice ?? medicine.unitPrice ?? medicine.UnitPrice ?? 0),
+              price: Number(medicine.sellingPrice ?? medicine.SellingPrice ?? medicine.unitPrice ?? medicine.UnitPrice ?? 0),
               source: "Prescription"
             }))
         );
@@ -1887,23 +2139,31 @@ function ReceptionBilling() {
   const serviceDisplayTotals = getBillingTotals(serviceDisplayRows, form.discount);
   const visibleRecentServiceBills = useMemo(
     () => {
+      const patientQuery = billPatientSearch.trim().toLowerCase();
+      const dateFilteredBills = scopeReceptionistRecords(recentServiceBills, receptionistScope)
+        .filter((bill) => !billDateFilter || normalizeDateKey(
+          bill.createdAt || bill.CreatedAt || bill.invoiceDate || bill.billDate
+        ) === billDateFilter)
+        .filter((bill) => !patientQuery || String(
+          bill.patientName || bill.PatientName || bill.patient?.name || bill.Patient?.Name || "Walk-in Patient"
+        ).toLowerCase().includes(patientQuery));
       if (billingMode === "consultation") {
         // Show only OP bills that really exist in the backend Billings table.
         // Paid appointments are no longer manufactured into fake OP invoices.
-        return recentServiceBills
+        return dateFilteredBills
           .filter((bill) =>
             billBelongsToMode(bill, "consultation") &&
             hasBackendBillingId(bill)
           )
           .sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
-          .slice(0, 30);
+          .slice(0, billDateFilter || patientQuery ? undefined : 30);
       }
 
-      return recentServiceBills.filter(
+      return dateFilteredBills.filter(
         (bill) => billBelongsToMode(bill, billingMode)
       );
     },
-    [appointments, billingMode, recentServiceBills]
+    [billingMode, recentServiceBills, receptionistScope, billDateFilter, billPatientSearch]
   );
   const getValidServiceRows = () =>
     activeServiceRows
@@ -1959,6 +2219,161 @@ function ReceptionBilling() {
     };
   };
 
+  const mergePaymentResponse = (bill, response, fallbackMode) => {
+    const responseData = response && typeof response === "object" ? response : {};
+    const data = responseData.data && typeof responseData.data === "object" ? responseData.data : {};
+    const result = responseData.result && typeof responseData.result === "object" ? responseData.result : {};
+    const payment = firstValue(responseData.payment, data.payment, result.payment, responseData.Payment, data.Payment, result.Payment) || {};
+    const billData = unwrapBillingResponse(response);
+    const paymentMode = firstValue(billData.paymentMethod, billData.PaymentMethod, billData.paymentMode, billData.PaymentMode, payment.paymentMethod, payment.PaymentMethod, payment.paymentMode, payment.PaymentMode, payment.method, payment.Method, fallbackMode, bill.paymentMode, bill.PaymentMode);
+    const rawStatus = billingPaymentStatus(response) || billingPaymentStatus(bill) || "Pending";
+    const normalizedStatus = String(rawStatus || "Pending").trim();
+    const isPaid = normalizedStatus.toLowerCase() === "paid";
+    const paidDate = firstValue(payment.paidDate, payment.PaidDate, payment.completedAt, billData.paidDate, billData.PaidDate, isPaid ? new Date().toISOString() : "");
+    const billType = getServiceBillType(bill) === "pharmacy" || getServiceBillType(billData) === "pharmacy" ? "pharmacy" : "diagnostic";
+    const responseRows = normalizeServiceBillRows(billData, billType);
+    const originalRows = normalizeServiceBillRows(bill, billType);
+    const serviceLineItemAliases = buildServiceLineItemAliases(responseRows.length ? responseRows : originalRows, billType);
+
+    return {
+      ...bill,
+      ...billData,
+      ...serviceLineItemAliases,
+      payment,
+      paymentMode,
+      PaymentMode: paymentMode,
+      paymentMethod: firstValue(payment.paymentMethod, payment.PaymentMethod, payment.method, payment.Method, paymentMode),
+      paymentStatus: normalizedStatus,
+      PaymentStatus: normalizedStatus,
+      status: normalizedStatus,
+      Status: normalizedStatus,
+      paidDate,
+      PaidDate: paidDate,
+      transactionId: firstValue(payment.transactionId, payment.TransactionId, payment.providerReference, billData.transactionId, billData.TransactionId, bill.transactionId),
+      latestPaymentStatusCheckedAt: new Date().toISOString(),
+    };
+  };
+
+  const applyBillPayment = async (bill, paymentMode) => {
+    try {
+      const paymentResponse = await startBillingPayment(bill, paymentMode);
+      // Cash is recorded directly; online payments require gateway verification.
+      const confirmedResponse = await getBillingPaymentStatus(bill);
+      const nextBill = mergePaymentResponse(
+        mergePaymentResponse(bill, paymentResponse, paymentMode), confirmedResponse, paymentMode
+      );
+      if (!["paid", "partiallypaid", "partially paid"].includes(billingPaymentStatus(confirmedResponse).toLowerCase())) {
+        throw new Error("Bill saved, but the API has not confirmed Paid status. Refresh the saved bill before retrying payment.");
+      }
+      const nextStoredBills = storeRecentServiceBill(nextBill);
+      setRecentServiceBills((prev) => mergeRecentServiceBills(prev, nextStoredBills, [nextBill]));
+      return nextBill;
+    } catch (error) {
+      const fallbackStatus = "Pending";
+      const fallbackBill = {
+        ...bill,
+        paymentStatus: bill.paymentStatus || fallbackStatus,
+        PaymentStatus: bill.PaymentStatus || fallbackStatus,
+        status: bill.status || fallbackStatus,
+        Status: bill.Status || fallbackStatus,
+      };
+      const nextStoredBills = storeRecentServiceBill(fallbackBill);
+      setRecentServiceBills((prev) => mergeRecentServiceBills(prev, nextStoredBills, [fallbackBill]));
+      setForm((prev) => ({ ...prev, appointmentId: "" }));
+      setEditingBill(null);
+      setInvoice(fallbackBill);
+      storeLatestInvoice(fallbackBill);
+      showMessage(error.message || "Bill saved, but payment could not be confirmed. Refresh the saved bill before retrying.", "error");
+      toast.error(error.message || "Bill saved, but payment confirmation could not be started.");
+      return null;
+    }
+  };
+
+  const recordExistingBillPayment = async (bill) => {
+    if (paymentInFlight.current || !canCreateBill) return;
+    const billId = getBillingPaymentBillId(bill);
+    if (!billId) return;
+    const mode = bill.paymentMode || bill.PaymentMode || bill.paymentMethod || "Cash";
+    if (!window.confirm(`Confirm you have received ${formatCurrency(getSavedBillAmount(bill, 0))} via ${mode} for ${bill.billNumber || bill.invoiceNo || billId}?`)) return;
+    paymentInFlight.current = true;
+    setRecordingPaymentId(String(billId));
+    try {
+      const response = await getBillingPaymentStatus(bill);
+      const freshBill = mergePaymentResponse(bill, response, mode);
+      const paidBill = billingPaymentStatus(response).toLowerCase() === "paid"
+        ? freshBill : await applyBillPayment(freshBill, mode);
+      if (!paidBill) return;
+      const storedBills = storeRecentServiceBill(paidBill);
+      setRecentServiceBills((prev) => mergeRecentServiceBills(prev, storedBills, [paidBill]));
+      setInvoice(paidBill);
+      storeLatestInvoice(paidBill);
+      setPaymentHistoryByBill((current) => {
+        const next = { ...current };
+        delete next[String(billId)];
+        return next;
+      });
+      showMessage("Payment recorded. The bill is Paid.", "success", { autoHide: true });
+      toast.success("Payment recorded. The bill is Paid.");
+    } catch (error) {
+      showMessage(error.message || "Unable to record payment.", "error");
+      toast.error(error.message || "Unable to record payment.");
+    } finally {
+      paymentInFlight.current = false;
+      setRecordingPaymentId("");
+    }
+  };
+
+  const refreshBillPaymentStatus = async (bill) => {
+    try {
+      const response = await getBillingPaymentStatus(bill);
+      const nextBill = mergePaymentResponse(bill, response, bill.paymentMode || bill.PaymentMode);
+      const nextStoredBills = storeRecentServiceBill(nextBill);
+      setRecentServiceBills((prev) => mergeRecentServiceBills(prev, nextStoredBills, [nextBill]));
+      if (String(getInvoiceId(invoice)) === String(getInvoiceId(nextBill))) {
+        setInvoice(nextBill);
+        storeLatestInvoice(nextBill);
+      }
+      showMessage(`Payment status: ${nextBill.paymentStatus || nextBill.status || "Pending"}`, "success", { autoHide: true });
+      toast.success(`Payment status: ${nextBill.paymentStatus || nextBill.status || "Pending"}`);
+      return nextBill;
+    } catch (error) {
+      showMessage(error.message || "Unable to check payment status.", "error");
+      toast.error(error.message || "Unable to check payment status.");
+      return null;
+    }
+  };
+
+  const loadBillPaymentHistory = async (bill) => {
+    const billId = getBillingPaymentBillId(bill);
+    if (!billId) {
+      showMessage("Bill id is not available for payment history.", "error");
+      return;
+    }
+    const key = String(billId);
+    if (paymentHistoryByBill[key] !== undefined) {
+      setPaymentHistoryByBill((current) => {
+        const next = { ...current };
+        delete next[key];
+        return next;
+      });
+      return;
+    }
+
+    setPaymentHistoryLoadingId(key);
+    setPaymentHistoryErrorByBill((current) => ({ ...current, [key]: "" }));
+    try {
+      const response = await fetchBillingPaymentHistory(bill);
+      setPaymentHistoryByBill((current) => ({ ...current, [key]: parseList(response) }));
+    } catch (error) {
+      setPaymentHistoryErrorByBill((current) => ({
+        ...current,
+        [key]: error.message || "Unable to load payment history.",
+      }));
+    } finally {
+      setPaymentHistoryLoadingId("");
+    }
+  };
+
   const buildServiceBillingPayload = (details) => {
     const isPharmacy = details.type === "pharmacy";
     const subtotal = Number(details.totals.subtotal || 0);
@@ -1968,8 +2383,14 @@ function ReceptionBilling() {
     const patientId = Number(details.patientId || selectedAppointment?.patientId || selectedAppointment?.PatientId || 0);
     const branchId = Number(details.branchId || receptionistScope.branchId || 0);
     const totalAmount = Number(details.totals.total || 0);
+    const paymentMode = String(details.paymentMode || "Cash");
+    const initialPaymentStatus = "Pending";
     const labCharge = isPharmacy ? 0 : subtotal;
     const medicineCharge = isPharmacy ? subtotal : 0;
+    const lineItems = buildServiceLineItems(details.rows, details.type);
+    const testNames = lineItems.map((item) => item.item).filter(Boolean).join(", ");
+
+    if (isPharmacy) return { appointmentId, patientId, branchId, discount, paymentMethod: paymentMode };
 
     return {
       appointmentId,
@@ -1986,6 +2407,26 @@ function ReceptionBilling() {
       LabCharge: labCharge,
       medicineCharge,
       MedicineCharge: medicineCharge,
+      lineItems,
+      LineItems: lineItems,
+      serviceItems: lineItems,
+      ServiceItems: lineItems,
+      billingItems: lineItems,
+      BillingItems: lineItems,
+      items: lineItems,
+      Items: lineItems,
+      rows: lineItems,
+      Rows: lineItems,
+      diagnosticTests: isPharmacy ? [] : lineItems,
+      DiagnosticTests: isPharmacy ? [] : lineItems,
+      labTests: isPharmacy ? [] : lineItems,
+      LabTests: isPharmacy ? [] : lineItems,
+      medicines: isPharmacy ? lineItems : [],
+      Medicines: isPharmacy ? lineItems : [],
+      testName: isPharmacy ? "" : testNames,
+      TestName: isPharmacy ? "" : testNames,
+      testNames: isPharmacy ? "" : testNames,
+      TestNames: isPharmacy ? "" : testNames,
       discount,
       Discount: discount,
       discountPercentage,
@@ -1994,10 +2435,16 @@ function ReceptionBilling() {
       GstPercentage: 18,
       totalAmount,
       TotalAmount: totalAmount,
-      paymentMode: String(details.paymentMode || "Cash"),
-      PaymentMode: String(details.paymentMode || "Cash"),
-      status: "Paid",
-      Status: "Paid",
+      paymentMode,
+      PaymentMode: paymentMode,
+      paymentStatus: initialPaymentStatus,
+      PaymentStatus: initialPaymentStatus,
+      paidDate: initialPaymentStatus === "Paid" ? new Date().toISOString() : "",
+      PaidDate: initialPaymentStatus === "Paid" ? new Date().toISOString() : "",
+      paymentMethod: paymentMode,
+      transactionId: details.transactionId || `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
+      status: initialPaymentStatus,
+      Status: initialPaymentStatus,
     };
   };
 
@@ -2026,12 +2473,6 @@ function ReceptionBilling() {
       return false;
     }
 
-    if (details.type === "pharmacy" && Number(details.totals.subtotal || 0) <= 0) {
-      const text = "Enter a valid unit price for at least one prescribed medicine.";
-      showMessage(text, "error");
-      toast.error(text);
-      return false;
-    }
 
     const discount = Number(form.discount || 0);
     if (discount < 0 || discount > 100) {
@@ -2060,7 +2501,19 @@ function ReceptionBilling() {
       const response = canUpdate
         ? await updateBillingBill(editingBill, payload)
         : await createServiceBill(details, payload);
-      savedInvoice = Array.isArray(response) ? response[0] || {} : response || {};
+      savedInvoice = unwrapBillingResponse(Array.isArray(response) ? response[0] : response);
+      if (details.type === "pharmacy") {
+        const backendRows = normalizeServiceBillRows(savedInvoice, "pharmacy");
+        if (backendRows.length) details.rows = backendRows;
+        const backendTotal = readAmount(savedInvoice, AMOUNT_KEYS.total, NaN);
+        if (!Number.isFinite(backendTotal)) throw new Error("The pharmacy bill was saved, but the response did not include its total. Refresh the bill list to view it before recording payment.");
+        details.totals = {
+          ...details.totals,
+          subtotal: readAmount(savedInvoice, ["subtotal", "Subtotal", "medicineCharge", "MedicineCharge"], backendTotal),
+          total: backendTotal,
+          grossTotal: readAmount(savedInvoice, ["grossTotal", "GrossTotal"], backendTotal),
+        };
+      }
 
       const invoiceShape = {
         ...payload,
@@ -2071,7 +2524,24 @@ function ReceptionBilling() {
         billNumber: savedInvoice.billNumber || savedInvoice.invoiceNumber || editingBill?.billNumber || editingBill?.invoiceNumber || editingBill?.invoiceNo || details.invoiceNo,
         createdAt: savedInvoice.createdAt || savedInvoice.billDate || details.createdAt,
         type: details.type,
-        rows: details.rows,
+        rows: buildServiceLineItems(details.rows, details.type),
+        Rows: buildServiceLineItems(details.rows, details.type),
+        lineItems: buildServiceLineItems(details.rows, details.type),
+        LineItems: buildServiceLineItems(details.rows, details.type),
+        serviceItems: buildServiceLineItems(details.rows, details.type),
+        ServiceItems: buildServiceLineItems(details.rows, details.type),
+        billingItems: buildServiceLineItems(details.rows, details.type),
+        BillingItems: buildServiceLineItems(details.rows, details.type),
+        items: buildServiceLineItems(details.rows, details.type),
+        Items: buildServiceLineItems(details.rows, details.type),
+        diagnosticTests: details.type === "diagnostic" ? buildServiceLineItems(details.rows, details.type) : [],
+        DiagnosticTests: details.type === "diagnostic" ? buildServiceLineItems(details.rows, details.type) : [],
+        labTests: details.type === "diagnostic" ? buildServiceLineItems(details.rows, details.type) : [],
+        LabTests: details.type === "diagnostic" ? buildServiceLineItems(details.rows, details.type) : [],
+        medicines: details.type === "pharmacy" ? buildServiceLineItems(details.rows, details.type) : [],
+        Medicines: details.type === "pharmacy" ? buildServiceLineItems(details.rows, details.type) : [],
+        testName: details.type === "diagnostic" ? buildServiceLineItems(details.rows, details.type).map((item) => item.item).join(", ") : "",
+        TestName: details.type === "diagnostic" ? buildServiceLineItems(details.rows, details.type).map((item) => item.item).join(", ") : "",
         totals: details.totals,
         patientName: details.patientName,
         patientId: details.patientId,
@@ -2089,13 +2559,17 @@ function ReceptionBilling() {
         grossTotal: details.totals.grossTotal,
         totalAmount: details.totals.total,
         paidAmount: details.totals.total,
+        paymentStatus: payload.paymentStatus,
+        PaymentStatus: payload.PaymentStatus,
+        paidDate: payload.paidDate,
+        paymentMethod: details.paymentMode || "Cash",
+        transactionId: savedInvoice.transactionId || savedInvoice.TransactionId || editingBill?.transactionId || `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
         backendSynced: true,
       };
-      setInvoice(invoiceShape);
-      storeLatestInvoice(invoiceShape);
-      setRecentServiceBills((prev) =>
-        mergeRecentServiceBills([invoiceShape], storeRecentServiceBill(invoiceShape), prev)
-      );
+      const paymentInvoiceShape = await applyBillPayment(invoiceShape, details.paymentMode);
+      if (!paymentInvoiceShape) return false;
+      setInvoice(paymentInvoiceShape);
+      storeLatestInvoice(paymentInvoiceShape);
       if (details.type === "diagnostic") {
         clearPendingDiagnosticRequest({
           appointmentId: details.appointmentId,
@@ -2105,7 +2579,25 @@ function ReceptionBilling() {
       }
       setEditingBill(null);
       showMessage(`${billingMode === "pharmacy" ? "Pharmacy" : "Diagnostic test"} bill ${canUpdate ? "updated" : "generated"} successfully`, "success", { autoHide: true });
-      printServiceInvoice({ ...details, invoiceNo: invoiceShape.invoiceNo, autoPrint });
+      showTopNotification({
+        message: `${billingMode === "pharmacy" ? "Pharmacy" : "Diagnostic"} bill of ${formatCurrency(details.totals.total)} is ${paymentInvoiceShape.paymentStatus || "Pending"} for ${details.patientName}.`,
+        patientName: details.patientName,
+        invoiceNo: paymentInvoiceShape.invoiceNo,
+        amount: details.totals.total,
+      });
+
+      // Clear / reset form for next bill
+      setForm((prev) => ({
+        ...prev,
+        appointmentId: "",
+        medicineCharges: "",
+        labCharges: "",
+        discount: "0",
+      }));
+      setDiagnosticRows([]);
+      setPharmacyRows([]);
+
+      printServiceInvoice({ ...details, invoiceNo: paymentInvoiceShape.invoiceNo, paymentStatus: paymentInvoiceShape.paymentStatus || paymentInvoiceShape.status, autoPrint });
       return true;
     }
 
@@ -2223,6 +2715,8 @@ function ReceptionBilling() {
         0
       )
     ) || 0;
+    const paymentMode = String(form.paymentMode || "Cash");
+    const initialPaymentStatus = "Pending";
 
     const body = {
       appointmentId,
@@ -2247,10 +2741,16 @@ function ReceptionBilling() {
       GstPercentage: 0,
       totalAmount,
       TotalAmount: totalAmount,
-      paymentMode: String(form.paymentMode || "Cash"),
-      PaymentMode: String(form.paymentMode || "Cash"),
-      status: "Paid",
-      Status: "Paid",
+      paymentMode,
+      PaymentMode: paymentMode,
+      paymentStatus: initialPaymentStatus,
+      PaymentStatus: initialPaymentStatus,
+      paidDate: initialPaymentStatus === "Paid" ? new Date().toISOString() : "",
+      PaidDate: initialPaymentStatus === "Paid" ? new Date().toISOString() : "",
+      paymentMethod: paymentMode,
+      transactionId: `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
+      status: initialPaymentStatus,
+      Status: initialPaymentStatus,
     };
 
     try {
@@ -2262,7 +2762,7 @@ function ReceptionBilling() {
             body: JSON.stringify(body),
           });
 
-      const invoiceData = Array.isArray(data) ? data[0] : data;
+      const invoiceData = unwrapBillingResponse(Array.isArray(data) ? data[0] : data);
       const fallbackOpInvoiceNo = createInvoiceNo("OP");
       const opInvoiceNo =
         invoiceData?.invoiceNo ||
@@ -2313,17 +2813,40 @@ function ReceptionBilling() {
         doctorName:
           invoiceData?.doctorName ||
           getAppointmentDoctorName(selectedAppointment),
+        paymentStatus: body.paymentStatus,
+        PaymentStatus: body.PaymentStatus,
+        paidDate: body.paidDate,
+        paymentMethod: paymentMode,
+        transactionId: invoiceData?.transactionId || invoiceData?.TransactionId || editingBill?.transactionId || `TXN-${Math.floor(100000 + Math.random() * 900000)}`,
         backendSynced: true,
       };
-      setInvoice(nextInvoice);
-      storeLatestInvoice(nextInvoice);
-      setRecentServiceBills((prev) =>
-        mergeRecentServiceBills([nextInvoice], storeRecentServiceBill(nextInvoice), prev)
-      );
+      const paidNextInvoice = await applyBillPayment(nextInvoice, paymentMode);
+      if (!paidNextInvoice) {
+        if (invoiceWindow) invoiceWindow.close();
+        return;
+      }
+      setInvoice(paidNextInvoice);
+      storeLatestInvoice(paidNextInvoice);
       setEditingBill(null);
       const text = invoiceData?.message || `Bill ${canUpdate ? "updated" : "generated"} successfully`;
       showMessage(text, "success", { autoHide: true });
-      downloadInvoicePdf(nextInvoice, invoiceWindow);
+      showTopNotification({
+        message: `OP Bill of ${formatCurrency(paidNextInvoice.totalAmount)} is ${paidNextInvoice.paymentStatus || "Pending"} for ${paidNextInvoice.patientName}.`,
+        patientName: paidNextInvoice.patientName,
+        invoiceNo: paidNextInvoice.invoiceNo,
+        amount: paidNextInvoice.totalAmount,
+      });
+
+      // Clear / reset form for next bill
+      setForm((prev) => ({
+        ...prev,
+        appointmentId: "",
+        medicineCharges: "",
+        labCharges: "",
+        discount: "0",
+      }));
+
+      downloadInvoicePdf(paidNextInvoice, invoiceWindow);
     } catch (error) {
       if (invoiceWindow) invoiceWindow.close();
       showMessage(error.message, "error");
@@ -2374,7 +2897,74 @@ function ReceptionBilling() {
     );
   };
 
-  const viewRecentServiceBill = (bill) => {
+  const recoverDiagnosticRowsForBill = (bill, rows = []) => {
+    if (getServiceBillType(bill) !== "diagnostic") return rows;
+    const appointmentId = getBillAppointmentId(bill);
+    const billAppointment = appointments.find((appointment) => String(getAppointmentId(appointment)) === String(appointmentId));
+    const requestedNames = splitDiagnosticTests(readAppointmentDiagnosticTests(billAppointment || {}));
+    const appointmentCandidates = requestedNames
+      .map((testName) => {
+        const matched = labMasterPriceList.find(
+          (test) => getPriceListItemName(test).toLowerCase() === String(testName).trim().toLowerCase()
+        );
+        return matched ? createBillingRow([{ ...matched, diagnosis: matched.diagnosis || readAppointmentDiagnosis(billAppointment) || "Lab" }]) : null;
+      })
+      .filter(Boolean);
+    const candidateRows = [...diagnosticRows, ...appointmentCandidates, ...labMasterPriceList.map((item) => createBillingRow([item]))];
+    const usedIndexes = new Set();
+
+    return rows.map((row) => {
+      if (!isGenericServiceChargeName(row.item, "diagnostic")) return row;
+      const amount = Number(row.unitPrice ?? row.price ?? 0) || 0;
+      const matchIndex = candidateRows.findIndex((candidate, index) => {
+        if (usedIndexes.has(index)) return false;
+        const candidateAmount = Number(candidate.unitPrice ?? candidate.price ?? 0) || 0;
+        return amount > 0 && Math.abs(candidateAmount - amount) < 0.01;
+      });
+      if (matchIndex < 0) return row;
+
+      usedIndexes.add(matchIndex);
+      const match = candidateRows[matchIndex];
+      const itemName = getServiceLineItemName(match, "diagnostic");
+      return {
+        ...row,
+        ...match,
+        id: row.id || match.id,
+        item: itemName,
+        Item: itemName,
+        name: itemName,
+        Name: itemName,
+        label: itemName,
+        Label: itemName,
+        serviceName: itemName,
+        ServiceName: itemName,
+        testName: itemName,
+        TestName: itemName,
+        unitPrice: amount,
+        price: amount,
+        quantity: 1,
+        diagnosis: match.diagnosis || row.diagnosis || "Lab",
+      };
+    });
+  };
+
+  const viewRecentServiceBill = async (sourceBill) => {
+    let bill = sourceBill;
+    const billId = getInvoiceId(sourceBill);
+    if (billId) {
+      try {
+        const response = await requestJson(
+          API_ENDPOINTS.billing.byId.replace("{id}", encodeURIComponent(String(billId)))
+        );
+        const details = response?.data?.bill || response?.data || response?.bill || response?.result || response;
+        bill = { ...sourceBill, ...(details && typeof details === "object" ? details : {}) };
+      } catch (error) {
+        showMessage(error.message || "Unable to load bill details.", "error");
+        toast.error(error.message || "Unable to load bill details.");
+        return;
+      }
+    }
+
     const billType = getServiceBillType(bill);
     const savedBillAmount = getSavedBillAmount(bill, readAmount(bill, AMOUNT_KEYS.total, 0));
     if (billType === "consultation") {
@@ -2394,12 +2984,13 @@ function ReceptionBilling() {
         normalizedRows = [{
           id: `${billType}-fallback-${getInvoiceId(bill) || Date.now()}`,
           diagnosis: billType === "pharmacy" ? "Pharmacy" : "Lab",
-          item: billType === "pharmacy" ? "Pharmacy Charges" : "Diagnostic Charges",
+          item: billType === "pharmacy" ? "Pharmacy Charges" : (readServiceBillTestNames(bill, billType)[0] || "Diagnostic Charges"),
           unitPrice: getTaxableFromGstTotal(fallbackAmount),
           quantity: 1,
         }];
       }
     }
+    normalizedRows = recoverDiagnosticRowsForBill(bill, normalizedRows);
     const rowTotals = getBillingTotals(
       normalizedRows.map((row) => ({
         ...row,
@@ -2429,10 +3020,11 @@ function ReceptionBilling() {
       patientAge: bill.patientAge || bill.PatientAge || bill.age || bill.Age || bill.patient?.age,
       patientGender: bill.patientGender || bill.PatientGender || bill.gender || bill.Gender || bill.patient?.gender,
       appointmentId: bill.appointmentId || bill.AppointmentId,
-      tokenNumber: bill.tokenNo || bill.TokenNo || bill.tokenNumber || bill.TokenNumber || bill.opNo || bill.OpNo,
+      tokenNumber: getAppointmentTokenNumber(bill),
       createdAt: bill.createdAt || bill.invoiceDate || bill.billDate,
       doctorName: bill.doctorName || bill.DoctorName || bill.doctor?.name,
       paymentMode: bill.paymentMode || bill.PaymentMode,
+      paymentStatus: bill.paymentStatus || bill.PaymentStatus || bill.status || bill.Status,
       clinicName: bill.clinicName || clinicName,
       clinicId,
       clinicPhone,
@@ -2491,6 +3083,7 @@ function ReceptionBilling() {
         { emptyValue: "0" }
       ),
     }));
+    setShowCreateForm(true);
     showMessage("Bill loaded for editing. Submit again to generate the updated invoice.", "success", { autoHide: true });
   };
 
@@ -2597,9 +3190,17 @@ function ReceptionBilling() {
       getAppointmentPatientGender(selectedAppointment);
     const doctorName = activeInvoice.doctorName || getAppointmentDoctorName(selectedAppointment);
     const status = getInvoiceStatus(activeInvoice);
+    const normalizedPrintStatus = String(status || "Pending").trim();
+    const isPrintPaid = normalizedPrintStatus.toLowerCase() === "paid";
+    const stampStyle = isPrintPaid
+      ? "border: 3px double #10b981; color: #059669; background: rgba(16,185,129,0.08); font-size: 20px; letter-spacing: 2.5px;"
+      : "border: 3px double #f59e0b; color: #b45309; background: rgba(245,158,11,0.08); font-size: 18px; letter-spacing: 2px;";
+    const paymentLineText = isPrintPaid ? "Payment received via" : "Payment initiated via";
     const paymentMode = activeInvoice.paymentMode || form.paymentMode || "-";
     const appointmentId = activeInvoice.appointmentId || form.appointmentId || "-";
     const tokenNumber =
+      activeInvoice.appointmentTokenNumber ||
+      activeInvoice.AppointmentTokenNumber ||
       activeInvoice.tokenNo ||
       activeInvoice.TokenNo ||
       activeInvoice.tokenNumber ||
@@ -2951,10 +3552,9 @@ function ReceptionBilling() {
               <div class="panel">
                 <h2>Billing Details</h2>
                 <div class="info-grid">
-                  <div class="info"><span>Consultant</span><strong>${escapeHtml(doctorName)}</strong></div>
+                  <div class="info"><span>Doctor</span><strong>${escapeHtml(doctorName)}</strong></div>
                   <div class="info"><span>Department</span><strong>${escapeHtml(department)}</strong></div>
                   <div class="info"><span>Visit Type</span><strong>${escapeHtml(visitType)}</strong></div>
-                  <div class="info"><span>Status</span><strong>${escapeHtml(status)}</strong></div>
                   <div class="info"><span>Payment Mode</span><strong>${escapeHtml(paymentMode)}</strong></div>
                   <div class="info"><span>Generated By</span><strong>${escapeHtml(receptionistProfile.name || "Reception")}</strong></div>
                   <div class="info"><span>Created Date</span><strong>${escapeHtml(invoiceDate)}</strong></div>
@@ -2981,10 +3581,11 @@ function ReceptionBilling() {
             <div class="total"><span>Total</span><span>${escapeHtml(formatCurrency(opTotal))}</span></div>
 
             <div class="payment">
-              <span>Payment received via <strong>${escapeHtml(paymentMode)}</strong></span>
+              <span>${escapeHtml(paymentLineText)} <strong>${escapeHtml(paymentMode)}</strong></span>
               <span>Status: <strong>${escapeHtml(status)}</strong></span>
             </div>
 
+            <div style="display: inline-block; margin: 16px 0; break-inside: avoid; border-radius: 6px; padding: 4px 14px; font-weight: 900; transform: rotate(-6deg); text-transform: uppercase; z-index: 10; pointer-events: none; ${stampStyle}">${escapeHtml(normalizedPrintStatus)}</div>
             <section class="footer">
               <p class="foot-note">${escapeHtml(footerNote)}</p>
               <div class="signature">Authorized Signature</div>
@@ -3002,393 +3603,760 @@ function ReceptionBilling() {
     printWindow.document.close();
   };
 
+  const activeBill = editingBill || invoice;
+  const activePaymentStatus = activeBill
+    ? firstValue(activeBill.paymentStatus, activeBill.PaymentStatus, activeBill.status, activeBill.Status) || "Paid"
+    : null;
+
+  const showPaidStamp = Boolean(
+    editingBill &&
+    (firstValue(editingBill.paymentStatus, editingBill.PaymentStatus, editingBill.status, editingBill.Status) || "").toLowerCase() === "paid"
+  );
+
+  const activePaidDate = activeBill
+    ? firstValue(activeBill.paidDate, activeBill.PaidDate, activeBill.createdAt, activeBill.billDate, activeBill.invoiceDate) || new Date().toISOString()
+    : new Date().toISOString();
+
+  const activePaymentMethod = activeBill
+    ? firstValue(activeBill.paymentMethod, activeBill.PaymentMethod, activeBill.paymentMode, activeBill.PaymentMode, form.paymentMode) || "Cash"
+    : form.paymentMode || "Cash";
+
+  const activeTransactionId = activeBill
+    ? firstValue(activeBill.transactionId, activeBill.TransactionId) || ""
+    : "";
+
+  const opConsultationCharge = useMemo(() => {
+    if (editingBill) {
+      return readAmount(editingBill, AMOUNT_KEYS.consultation, 0) || readAmount(editingBill, AMOUNT_KEYS.total, 500);
+    }
+    if (invoice && billingMode === "consultation") {
+      return readAmount(invoice, AMOUNT_KEYS.consultation, 0) || readAmount(invoice, AMOUNT_KEYS.total, 500);
+    }
+    const fromApt = Number(
+      firstValue(
+        selectedAppointment?.consultationFee,
+        selectedAppointment?.ConsultationFee,
+        selectedAppointment?.doctorFee,
+        selectedAppointment?.DoctorFee,
+        getAppointmentPaidAmount(selectedAppointment),
+        500
+      )
+    );
+    return Number.isFinite(fromApt) && fromApt > 0 ? fromApt : 500;
+  }, [editingBill, invoice, billingMode, selectedAppointment]);
+
+  const opMedicineCharge = Number(form.medicineCharges || 0);
+  const opLabCharge = Number(form.labCharges || 0);
+  const opServiceCharges = opMedicineCharge + opLabCharge;
+
+  const opSubtotal = opConsultationCharge + opServiceCharges;
+  const opDiscountPercent = normalizeDiscountPercent(form.discount);
+  const opDiscountAmount = getDiscountAmount(opSubtotal, opDiscountPercent);
+  const opTaxableAmount = Math.max(0, opSubtotal - opDiscountAmount);
+  const opTaxAmount = 0;
+  const opTotalAmount = opTaxableAmount;
+
+  const billingStats = useMemo(() => {
+    const scopedBills = scopeReceptionistRecords(recentServiceBills, receptionistScope);
+    const opBills = scopedBills.filter((b) => billBelongsToMode(b, "consultation") && hasBackendBillingId(b));
+    const diagBills = scopedBills.filter((b) => billBelongsToMode(b, "diagnostic"));
+    const rxBills = scopedBills.filter((b) => billBelongsToMode(b, "pharmacy"));
+
+    const totalRevenue = scopedBills.reduce((acc, b) => acc + getSavedBillAmount(b, 0), 0);
+    const opRevenue = opBills.reduce((acc, b) => acc + getSavedBillAmount(b, 0), 0);
+    const diagRevenue = diagBills.reduce((acc, b) => acc + getSavedBillAmount(b, 0), 0);
+    const rxRevenue = rxBills.reduce((acc, b) => acc + getSavedBillAmount(b, 0), 0);
+
+    return {
+      totalBillsCount: scopedBills.length,
+      totalRevenue,
+      opBillsCount: opBills.length,
+      opRevenue,
+      diagBillsCount: diagBills.length,
+      diagRevenue,
+      rxBillsCount: rxBills.length,
+      rxRevenue,
+    };
+  }, [recentServiceBills, receptionistScope]);
+
   return (
-    <section className="rc-page">
-      <div className="rc-page-head">
-        <div>
-          <h2>Billing</h2>
-          <p>View OP invoices and create diagnostic/pharmacy invoices from persisted backend billing records.</p>
+    <section className="rc-page rc-billing-page">
+      <div className="billing-bg-overlay" />
+      <div className="billing-heartrate-wave compact-wave">
+        <div className="billing-heartrate-telemetry-badge compact">
+          <Activity size={14} className="billing-pulse-icon" />
+          <span className="billing-live-indicator">● LIVE CLINICAL BILLING TELEMETRY</span>
+          <span className="billing-telemetry-divider">|</span>
+          <span className="billing-telemetry-text">Medical Instruments & Cashier Ledger</span>
         </div>
-        <button className="rc-btn" onClick={() => navigate("/reception/dashboard")}>
-          <ArrowLeft size={16} /> Dashboard
+        <svg className="billing-ecg-svg compact" viewBox="0 0 1200 22" preserveAspectRatio="none">
+          <path
+            d="M0,11 L150,11 L160,11 L170,2 L180,20 L190,5 L200,15 L210,11 L380,11 L390,11 L400,2 L410,20 L420,4 L430,16 L440,11 L620,11 L630,11 L640,3 L650,19 L660,6 L670,14 L680,11 L860,11 L870,11 L880,2 L890,20 L900,5 L910,15 L920,11 L1100,11 L1110,11 L1120,3 L1130,19 L1140,6 L1150,15 L1160,11 L1200,11"
+            fill="none"
+            stroke="color-mix(in srgb, var(--theme-primary) 45%, transparent)"
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
+
+      {topBarNotification && (
+        <div className="rc-topbar-notification">
+          <div className="rc-topbar-notification-content">
+            <div className="rc-topbar-notification-icon">
+              <CheckCircle size={20} />
+            </div>
+            <div className="rc-topbar-notification-text">
+              <strong>Bill Paid Successfully!</strong>
+              <span>
+                Payment of <b>{formatCurrency(topBarNotification.amount)}</b> recorded for{" "}
+                <b>{topBarNotification.patientName}</b> (Inv: {topBarNotification.invoiceNo})
+              </span>
+            </div>
+            <span className="rc-topbar-notification-badge">3s</span>
+          </div>
+        </div>
+      )}
+
+      <div className="rc-page-head rc-billing-header-compact" data-page-header>
+        <div>
+          <h2>Medical Billing & Cashier Ledger</h2>
+          <p>Instrument-calibrated OP invoices, diagnostic telemetry billing, and clinical pharmacy dispensary records.</p>
+        </div>
+        <button className="rc-btn rc-billing-back-btn" onClick={() => navigate("/reception/dashboard")}>
+          <ArrowLeft size={15} /> Dashboard
         </button>
       </div>
 
       {message ? <div className={`rc-alert ${messageType}`}>{message}</div> : null}
 
-      <div className="rc-billing-tabs" role="tablist" aria-label="Billing module">
+      {/* Clinical Telemetry KPI Metrics Strip */}
+      <div className="billing-telemetry-kpi-grid compact-strip">
+        <div className="billing-kpi-card op-card">
+          <div className="billing-kpi-icon-wrap op-icon">
+            <Stethoscope size={20} />
+          </div>
+          <div className="billing-kpi-details">
+            <span className="billing-kpi-label">OP Consultations</span>
+            <strong className="billing-kpi-value">{billingStats.opBillsCount} Invoices</strong>
+            <small className="billing-kpi-sub">{formatCurrency(billingStats.opRevenue)}</small>
+          </div>
+        </div>
+
+        <div className="billing-kpi-card diag-card">
+          <div className="billing-kpi-icon-wrap diag-icon">
+            <FlaskConical size={20} />
+          </div>
+          <div className="billing-kpi-details">
+            <span className="billing-kpi-label">Diagnostic Telemetry</span>
+            <strong className="billing-kpi-value">{billingStats.diagBillsCount} Lab Bills</strong>
+            <small className="billing-kpi-sub">{formatCurrency(billingStats.diagRevenue)}</small>
+          </div>
+        </div>
+
+        <div className="billing-kpi-card rx-card">
+          <div className="billing-kpi-icon-wrap rx-icon">
+            <Pill size={20} />
+          </div>
+          <div className="billing-kpi-details">
+            <span className="billing-kpi-label">Pharmacy Dispensary</span>
+            <strong className="billing-kpi-value">{billingStats.rxBillsCount} Rx Invoices</strong>
+            <small className="billing-kpi-sub">{formatCurrency(billingStats.rxRevenue)}</small>
+          </div>
+        </div>
+
+        <div className="billing-kpi-card total-card">
+          <div className="billing-kpi-icon-wrap total-icon">
+            <Receipt size={20} />
+          </div>
+          <div className="billing-kpi-details">
+            <span className="billing-kpi-label">Total Cashier Revenue</span>
+            <strong className="billing-kpi-value">{formatCurrency(billingStats.totalRevenue)}</strong>
+            <small className="billing-kpi-sub">{billingStats.totalBillsCount} Invoices Processed</small>
+          </div>
+        </div>
+      </div>
+
+      <div className="rc-billing-tabs compact-tabs" role="tablist" aria-label="Billing module">
         {[
-          ["consultation", "OP Billing"],
-          ["diagnostic", "Diagnosis Test Billing"],
-          ["pharmacy", "Pharmacy Billing"],
-        ].map(([mode, label]) => (
+          ["consultation", "OP Billing", Stethoscope, "Clinical Consultation", billingStats.opBillsCount],
+          ["diagnostic", "Diagnosis Test Billing", FlaskConical, "Pathology & Tests", billingStats.diagBillsCount],
+          ["pharmacy", "Pharmacy Billing", Pill, "Medication Dispensary", billingStats.rxBillsCount],
+        ].map(([mode, label, IconComponent, tagText, count]) => (
           <button
             key={mode}
             type="button"
-            className={billingMode === mode ? "active" : ""}
+            className={`rc-med-billing-tab rc-med-billing-tab--${mode} ${billingMode === mode ? "active" : ""}`}
             onClick={() => {
               setBillingMode(mode);
               setMessage("");
               setMessageType("");
+              setShowCreateForm(false);
+              setEditingBill(null);
             }}
           >
-            {label}
+            <span className="tab-icon-wrap">
+              <IconComponent size={16} />
+            </span>
+            <div className="tab-text-wrap">
+              <span className="tab-title">{label}</span>
+              <small className="tab-subtitle">{tagText}</small>
+            </div>
+            <span className="tab-count-pill">{count}</span>
           </button>
         ))}
       </div>
 
       <div className="rc-billing-layout">
-        {billingMode !== "consultation" ? (
-        <form className="rc-card rc-billing-form" onSubmit={generate} noValidate>
-          <div className="rc-billing-card-head">
-            <div>
-              <h3>
-                {billingMode === "pharmacy"
-                  ? "Generate Pharmacy Bill"
-                  : "Generate Diagnosis Test Bill"}
-              </h3>
-              <p>
-                {billingMode === "pharmacy"
-                  ? "Load medicines from the doctor's prescription and collect pharmacy payment."
-                  : "Load prescribed diagnostic tests and collect payment."}
-              </p>
+        {/* 1. TABLE FIRST AT THE TOP - ZERO EMPTY SPACE */}
+        <section className={`rc-card rc-latest-bills glass-panel rc-latest-bills--${billingMode}`}>
+          <div className="rc-latest-bills-head">
+            <div className="rc-latest-bills-title-group">
+              <div className={`rc-latest-bills-icon-capsule rc-latest-bills-icon-capsule--${billingMode}`}>
+                {billingMode === "pharmacy" ? (
+                  <Pill size={22} />
+                ) : billingMode === "diagnostic" ? (
+                  <FlaskConical size={22} />
+                ) : (
+                  <Stethoscope size={22} />
+                )}
+              </div>
+              <div>
+                <h3 className={`rc-latest-bills-title rc-latest-bills-title--${billingMode}`}>
+                  {billingMode === "pharmacy"
+                    ? "Pharmacy Dispensary Ledger"
+                    : billingMode === "diagnostic"
+                      ? "Diagnostic Investigation Ledger"
+                      : "OP Consultation Invoices"}
+                </h3>
+                <p>
+                  Instrument-verified{" "}
+                  {billingMode === "pharmacy"
+                    ? "pharmacy dispensary"
+                    : billingMode === "diagnostic"
+                      ? "diagnostic pathology"
+                      : "out-patient (OP)"}{" "}
+                  invoices and receipts.
+                </p>
+              </div>
+            </div>
+            <div className="rc-latest-bills-header-telemetry">
+              {billingMode !== "consultation" && (
+                <button
+                  type="button"
+                  className="rc-btn-toggle-bill-form"
+                  onClick={() => setShowCreateForm((prev) => !prev)}
+                >
+                  {showCreateForm || editingBill ? <Minus size={14} /> : <Plus size={14} />}
+                  {showCreateForm || editingBill
+                    ? "Hide Form"
+                    : billingMode === "pharmacy"
+                      ? "+ Create Pharmacy Bill"
+                      : "+ Create Diagnostic Bill"}
+                </button>
+              )}
+              <span className="rc-ledger-badge">
+                <ShieldCheck size={14} /> Certified Medical Ledger
+              </span>
+              <span className="rc-ledger-counter">
+                {visibleRecentServiceBills.length} records
+              </span>
             </div>
           </div>
-        {selectedAppointment ? (
-          <div className="rc-patient-summary">
-            <strong>
-              {getAppointmentPatientName(selectedAppointment)}
-            </strong>
-            <span>
-              {getAppointmentPatientId(selectedAppointment)} |{" "}
-              {getAppointmentDoctorName(selectedAppointment)}
-            </span>
-          </div>
-        ) : null}
-        <div className="rc-billing-fields">
-          <label className="rc-field-wide">
-            <span>{billingMode === "consultation" ? "Appointment" : "Booked Appointment"}</span>
-            <select
-              value={form.appointmentId}
-              onChange={(e) => setField("appointmentId", e.target.value)}
-              className={billingMode === "consultation" && fieldErrors.appointmentId ? "is-invalid" : ""}
-            >
-              <option value="">
-                {billingMode === "diagnostic"
-                  ? "Manual / walk-in diagnostic billing"
-                  : "Manual / walk-in billing"}
-              </option>
-              {filteredBillingAppointments.length === 0 ? (
-                <option value="">
-                  {billingMode === "diagnostic" ? "No submitted diagnostic requests found" : "No booked appointments found"}
-                </option>
-              ) : null}
-              {filteredBillingAppointments.map((a) => (
-                <option value={getAppointmentId(a)} key={getAppointmentId(a)}>
-                  {getAppointmentPatientName(a)} - {formatInvoiceDate(getAppointmentDate(a))} - {getAppointmentTime(a)} -{" "}
-                  {getAppointmentStatus(a) || "-"}
-                </option>
-              ))}
-            </select>
-            {billingMode === "consultation" && fieldErrors.appointmentId ? <small className="rc-field-error">{fieldErrors.appointmentId}</small> : null}
-          </label>
-          <div className="rc-field-wide rc-billing-appointment-tools">
-            <div className="rc-patient-list-tabs" role="tablist" aria-label="Billing appointment list view">
-              <button
-                type="button"
-                className={appointmentListView === "today" ? "active" : ""}
-                onClick={() => setAppointmentListView("today")}
-                role="tab"
-                aria-selected={appointmentListView === "today"}
-              >
-                <CalendarDays size={16} /> Today
-                <span>{todayBillingAppointmentCount}</span>
-              </button>
-              <button
-                type="button"
-                className={appointmentListView === "past" ? "active" : ""}
-                onClick={() => setAppointmentListView("past")}
-                role="tab"
-                aria-selected={appointmentListView === "past"}
-              >
-                <History size={16} /> Past
-                <span>{pastBillingAppointmentCount}</span>
-              </button>
-            </div>
-            <label className="rc-filter-field">
-              <span>Appointment Date</span>
-              <input
-                type="date"
-                value={appointmentDateFilter}
-                onChange={(event) => setAppointmentDateFilter(event.target.value)}
-              />
-            </label>
-            <button type="button" className="rc-btn ghost" onClick={() => setAppointmentDateFilter("")}>
+          <div className="rc-bill-date-filter">
+            <label htmlFor="saved-bill-patient-search">Patient Name</label>
+            <input
+              id="saved-bill-patient-search"
+              className="rc-bill-patient-search"
+              type="search"
+              placeholder="Search by patient name..."
+              value={billPatientSearch}
+              onChange={(event) => setBillPatientSearch(event.target.value)}
+            />
+            <label htmlFor="saved-bill-date">Bill Date</label>
+            <DatePickerField id="saved-bill-date" value={billDateFilter} onChange={setBillDateFilter} />
+            <button type="button" className="rc-btn ghost" onClick={() => setBillDateFilter("")} disabled={!billDateFilter}>
               Clear Date
             </button>
           </div>
-        <label>
-          <span>Payment Mode</span>
-          <select
-            value={form.paymentMode}
-            onChange={(e) => setField("paymentMode", e.target.value)}
-            className={fieldErrors.paymentMode ? "is-invalid" : ""}
-          >
-            <option value="UPI">UPI</option>
-            <option value="Cash">Cash</option>
-            <option value="Card">Card</option>
-          </select>
-          {fieldErrors.paymentMode ? <small className="rc-field-error">{fieldErrors.paymentMode}</small> : null}
-        </label>
-        <label>
-          <span>Discount (%)</span>
-          <input
-            type="number"
-            min="0"
-            max="100"
-            step="0.01"
-            value={form.discount}
-            placeholder="0"
-            onChange={(e) => setField("discount", e.target.value)}
-            onBlur={() => formatAmountField("discount")}
-            className={fieldErrors.discount ? "is-invalid" : ""}
-          />
-          {fieldErrors.discount ? <small className="rc-field-error">{fieldErrors.discount}</small> : null}
-        </label>
-        {billingMode === "consultation" ? (
-          <>
-            <label>
-              <span>Medicine Charges</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={form.medicineCharges}
-                placeholder="0.00"
-                onChange={(e) => setField("medicineCharges", e.target.value)}
-                onBlur={() => formatAmountField("medicineCharges")}
-                className={`rc-amount-input ${fieldErrors.medicineCharges ? "is-invalid" : ""}`}
-              />
-              {fieldErrors.medicineCharges ? <small className="rc-field-error">{fieldErrors.medicineCharges}</small> : null}
-            </label>
-            <label>
-              <span>Lab Charges</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={form.labCharges}
-                placeholder="0.00"
-                onChange={(e) => setField("labCharges", e.target.value)}
-                onBlur={() => formatAmountField("labCharges")}
-                className={`rc-amount-input ${fieldErrors.labCharges ? "is-invalid" : ""}`}
-              />
-              {fieldErrors.labCharges ? <small className="rc-field-error">{fieldErrors.labCharges}</small> : null}
-            </label>
-          </>
-        ) : null}
-        </div>
-        {billingMode !== "consultation" ? (
-          <div className="rc-service-billing">
-            <div className="rc-service-head">
-              <strong>{billingMode === "pharmacy" ? "Medicine Items" : "Diagnostic Test Items"}</strong>
-            </div>
-            {billingMode === "diagnostic" ? (
-              <label className="rc-service-picker">
-                <span>Test Name</span>
-                <input
-                  value={serviceSearch}
-                  list={`${billingMode}-billing-items`}
-                  placeholder={
-                    activePriceList.length
-                      ? "Search or select lab test"
-                      : labMasterLoading
-                        ? "Loading lab tests..."
-                        : "No lab file tests available"
-                  }
-                  onChange={(event) => updateServiceSearch(event.target.value)}
-                  disabled={labMasterLoading && !activePriceList.length}
-                />
-              </label>
-            ) : (
-              <div className="rc-service-picker">
-                <span>Doctor Prescription</span>
-                <strong>
-                  {pharmacyPrescriptionLoading
-                    ? "Loading prescribed medicines..."
-                    : selectedAppointment
-                      ? pharmacyRows.length
-                        ? `${pharmacyRows.length} prescribed medicine(s) loaded. Enter unit price and quantity.`
-                        : "No prescribed medicines found for this appointment."
-                      : "Select a booked appointment to load prescribed medicines."}
-                </strong>
-              </div>
-            )}
-            <div className="rc-service-table">
-              <datalist id={`${billingMode}-billing-items`}>
-                {activePriceList.map((item, index) => (
-                  <option key={`${item.diagnosis}-${getPriceListItemKey(item, index)}`} value={getPriceListItemName(item)} />
-                ))}
-              </datalist>
-              <div className={`rc-service-grid rc-service-grid-head ${billingMode === "diagnostic" ? "is-diagnostic" : ""}`}>
-                <span>{billingMode === "pharmacy" ? "Selected Medicine" : "Selected Test"}</span>
-                {billingMode === "pharmacy" ? <span>Qty</span> : null}
-                <span>Amount</span>
-                <span>CGST</span>
-                <span>SGST</span>
-                <span>Net Amount</span>
-                <span />
-              </div>
-              {activeServiceRows.map((row) => {
-                const rowQuantity = billingMode === "pharmacy" ? Number(row.quantity) || 1 : 1;
-                const lineAmount = (Number(row.unitPrice) || 0) * rowQuantity;
-                const lineCgst = lineAmount * HALF_GST_RATE;
-                const lineSgst = lineAmount * HALF_GST_RATE;
-                const lineTotal = lineAmount + lineCgst + lineSgst;
-                return (
-                  <div className={`rc-service-grid ${billingMode === "diagnostic" ? "is-diagnostic" : ""}`} key={row.id}>
-                    <strong className="rc-service-item-name">
-                      {row.item}
-                      {billingMode === "pharmacy" && (row.dosage || row.frequency || row.duration) ? (
-                        <small>
-                          {[row.dosage, row.frequency, row.duration].filter(Boolean).join(" | ")}
-                        </small>
-                      ) : null}
-                    </strong>
-                    {billingMode === "pharmacy" ? (
-                      <input
-                        className="rc-service-qty"
-                        type="number"
-                        min="1"
-                        value={rowQuantity}
-                        onChange={(event) => updatePharmacyQuantity(row.id, event.target.value)}
-                        aria-label={`Quantity for ${row.item}`}
-                      />
-                    ) : null}
-                    <input
-                      className="rc-service-amount-input"
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={Number(row.unitPrice) || 0}
-                      onChange={(event) => updateServiceUnitPrice(row.id, event.target.value)}
-                      aria-label={`Amount for ${row.item}`}
-                    />
-                    <strong>{formatCurrency(lineCgst)}</strong>
-                    <strong>{formatCurrency(lineSgst)}</strong>
-                    <strong>{formatCurrency(lineTotal)}</strong>
-                    <button
-                      type="button"
-                      className="rc-service-remove-btn"
-                      onClick={() => removeServiceRow(row.id)}
-                      aria-label="Remove item"
-                    >
-                      <Minus size={16} />
-                    </button>
-                  </div>
-                );
-              })}
-              <div className={`rc-service-grid rc-service-total-row ${billingMode === "diagnostic" ? "is-diagnostic" : ""}`}>
-                <strong className="rc-service-total-label">Total</strong>
-                {billingMode === "pharmacy" ? <span /> : null}
-                <strong>{formatCurrency(serviceDisplayTotals.subtotal)}</strong>
-                <strong>{formatCurrency(serviceDisplayTotals.cgst)}</strong>
-                <strong>{formatCurrency(serviceDisplayTotals.sgst)}</strong>
-                <strong>{formatCurrency(serviceDisplayTotals.total)}</strong>
-                <span />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="rc-total">
-            <span>Total</span>
-            <strong>{formatCurrency(total)}</strong>
-          </div>
-        )}
-        {billingMode !== "consultation" ? (
-          <div className="rc-service-actions">
-            <button type="button" className="rc-service-preview" onClick={() => openServiceInvoice({ autoPrint: false })}>
-              <Eye size={15} /> Preview
-            </button>
-            <button type="button" className="rc-service-print" onClick={() => openServiceInvoice({ autoPrint: true })}>
-              <Printer size={15} /> Print
-            </button>
-            <button className="rc-confirm" type="submit" disabled={editingBill ? !canEditBill : !canCreateBill}>
-              <CheckCircle size={15} /> Submit
-            </button>
-          </div>
-        ) : (
-          <button className="rc-confirm" type="submit" disabled={editingBill ? !canEditBill : !canCreateBill}>
-            <FileText size={15} /> Generate Invoice
-          </button>
-        )}
-      </form>
-        ) : null}
-
-        <section className="rc-card rc-latest-bills">
-          <div className="rc-latest-bills-head">
-            <div>
-              <h3>Latest Bills</h3>
-              <p>
-                Submitted{" "}
-                {billingMode === "pharmacy"
-                  ? "pharmacy"
-                  : billingMode === "diagnostic"
-                    ? "diagnostic"
-                    : "OP"}{" "}
-                invoices.
-              </p>
-            </div>
-          </div>
           {visibleRecentServiceBills.length ? (
             <div className="rc-latest-bills-list">
+              <div className="rc-latest-bills-table-head">
+                <span className="th-instrument">INSTRUMENT</span>
+                <span>PATIENT & INVOICE DETAILS</span>
+                <span className="text-center">PAYMENT STATUS</span>
+                <span className="text-right">TOTAL AMOUNT</span>
+                <span className="text-right">ACTIONS</span>
+              </div>
               {visibleRecentServiceBills.map((bill, index) => {
                 const billType = getServiceBillType(bill);
                 const invoiceNo = bill.invoiceNo || bill.invoiceNumber || bill.billNumber || `BILL-${index + 1}`;
                 const amount = getSavedBillAmount(bill, 0);
                 const createdAt = bill.createdAt || bill.invoiceDate || bill.billDate;
-                const canManageBill = hasBackendBillingId(bill);
+                const canManageBill = hasBackendBillingId(bill) && billType !== "pharmacy" && String(bill.paymentStatus || bill.PaymentStatus || bill.status || bill.Status || "").toLowerCase() !== "paid";
+                const paymentHistoryKey = String(getBillingPaymentBillId(bill) || "");
+                const rawStatus = String(bill.paymentStatus || bill.PaymentStatus || bill.status || bill.Status || "Paid").trim();
+                const isCleared = rawStatus.toLowerCase() === "paid";
                 return (
-                  <article className="rc-latest-bill-row" key={`${invoiceNo}-${index}`}>
-                    <div className="rc-latest-bill-pdf">
-                      <FileText size={20} />
+                  <article className={`rc-latest-bill-row rc-bill-type-${billType}`} key={`${invoiceNo}-${index}`}>
+                    <div className={`rc-latest-bill-pdf rc-instrument-capsule-${billType}`}>
+                      {billType === "pharmacy" ? (
+                        <Pill size={20} />
+                      ) : billType === "diagnostic" ? (
+                        <FlaskConical size={20} />
+                      ) : (
+                        <Stethoscope size={20} />
+                      )}
                     </div>
                     <div className="rc-latest-bill-main">
-                      <strong>{bill.patientName || "Walk-in Patient"}</strong>
-                      <span>
-                        {invoiceNo} | {billType === "pharmacy" ? "Pharmacy" : billType === "diagnostic" ? "Diagnostic" : "OP"} |{" "}
-                        {createdAt ? formatInvoiceDate(createdAt) : "Just now"}
-                      </span>
+                      <div className="rc-bill-patient-line">
+                        <strong>{bill.patientName || "Walk-in Patient"}</strong>
+                        {bill.patientId ? (
+                          <span className="rc-bill-patient-id-tag">ID: #{bill.patientId}</span>
+                        ) : null}
+                      </div>
+                      <div className="rc-bill-meta-tags">
+                        <span className="rc-bill-inv-no">{invoiceNo}</span>
+                        <span className={`rc-bill-type-tag type-${billType}`}>
+                          {billType === "pharmacy" ? "💊 Pharmacy" : billType === "diagnostic" ? "🔬 Diagnostic" : "🩺 OP Consultation"}
+                        </span>
+                        <span className="rc-bill-date-tag">
+                          <CalendarDays size={11} /> {createdAt ? formatInvoiceDate(createdAt) : "Just now"}
+                        </span>
+                      </div>
                     </div>
-                    <b>{formatCurrency(amount)}</b>
+                    <div className="rc-latest-bill-status-cell">
+                      {isCleared ? (
+                        <span className="rc-latest-bill-paid-stamp">
+                          <ShieldCheck size={13} /> PAID
+                        </span>
+                      ) : (
+                        <PaymentStatusBadge status={rawStatus} />
+                      )}
+                    </div>
+                    <div className="rc-bill-amount-cell">
+                      <b className="rc-bill-amount-text">{formatCurrency(amount)}</b>
+                    </div>
                     <div className="rc-latest-bill-actions">
-                      <button type="button" onClick={() => viewRecentServiceBill(bill)} aria-label="View bill PDF">
-                        <FileText size={16} />
+                      {rawStatus.toLowerCase() === "pending" && canCreateBill && paymentHistoryKey && (
+                        <button
+                          type="button"
+                          className="rc-payment-refresh-btn"
+                          onClick={() => recordExistingBillPayment(bill)}
+                          disabled={Boolean(recordingPaymentId)}
+                          title="Record collected payment"
+                          aria-label="Record collected payment"
+                        >
+                          <CreditCard size={14} />
+                          {recordingPaymentId === paymentHistoryKey ? "Recording..." : "Record payment"}
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        className="rc-payment-refresh-btn"
+                        onClick={() => refreshBillPaymentStatus(bill)}
+                        disabled={!getBillingPaymentBillId(bill)}
+                        title="Check payment status"
+                        aria-label="Check payment status"
+                      >
+                        <RefreshCw size={14} />
                       </button>
-                      {canManageBill ? (
-                        <>
-                          {canEditBill ? (
-                            <button type="button" onClick={() => editRecentServiceBill(bill)} aria-label="Edit bill">
-                              <Edit3 size={16} />
-                            </button>
-                          ) : null}
-                          {canDeleteBill ? (
-                            <button type="button" onClick={() => deleteRecentServiceBill(bill)} aria-label="Delete bill">
-                              <Trash2 size={16} />
-                            </button>
-                          ) : null}
-                        </>
-                      ) : null}
+                      <button
+                        type="button"
+                        className="rc-payment-history-btn"
+                        onClick={() => loadBillPaymentHistory(bill)}
+                        disabled={!paymentHistoryKey || paymentHistoryLoadingId === paymentHistoryKey}
+                        title="View payment history"
+                        aria-label="View payment history"
+                        aria-expanded={paymentHistoryByBill[paymentHistoryKey] !== undefined}
+                      >
+                        <History size={14} />
+                      </button>
+                      <ActionsGroup
+                        rowId={invoiceNo}
+                        activeActionState={activeActionState}
+                        setActiveActionState={setActiveActionState}
+                        canView={true}
+                        canEdit={canManageBill && canEditBill}
+                        onEdit={() => editRecentServiceBill(bill)}
+                        canStatus={false}
+                        canDelete={canManageBill && canDeleteBill}
+                        onView={() => viewRecentServiceBill(bill)}
+                        onDelete={() => deleteRecentServiceBill(bill)}
+                      />
                     </div>
+                    {paymentHistoryErrorByBill[paymentHistoryKey] ? (
+                      <div className="rc-payment-history-panel is-error" role="alert">
+                        {paymentHistoryErrorByBill[paymentHistoryKey]}
+                      </div>
+                    ) : null}
+                    {paymentHistoryByBill[paymentHistoryKey] !== undefined ? (
+                      <div className="rc-payment-history-panel">
+                        <strong>Payment history</strong>
+                        {paymentHistoryLoadingId === paymentHistoryKey ? (
+                          <p>Loading payment transactions...</p>
+                        ) : paymentHistoryByBill[paymentHistoryKey].length ? (
+                          <div className="rc-payment-history-list">
+                            {paymentHistoryByBill[paymentHistoryKey].map((payment, paymentIndex) => (
+                              <div className="rc-payment-history-item" key={payment.id ?? payment.Id ?? payment.transactionId ?? payment.TransactionId ?? paymentIndex}>
+                                <span>{payment.paymentMethod || payment.PaymentMethod || payment.method || payment.Method || "Payment"}</span>
+                                <span>{String(payment.paymentStatus || payment.PaymentStatus || payment.status || payment.Status || "-")}</span>
+                                <span>{formatCurrency(readAmount(payment, ["amount", "Amount", "paidAmount", "PaidAmount", "paymentAmount", "PaymentAmount"], 0))}</span>
+                                <span>{payment.paidDate || payment.PaidDate || payment.createdAt || payment.CreatedAt || payment.paymentDate || payment.PaymentDate || "-"}</span>
+                                <span>{payment.transactionId || payment.TransactionId || payment.reference || payment.Reference || "-"}</span>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p>No payment transactions recorded for this bill.</p>
+                        )}
+                      </div>
+                    ) : paymentHistoryLoadingId === paymentHistoryKey ? (
+                      <div className="rc-payment-history-panel">Loading payment transactions...</div>
+                    ) : null}
                   </article>
                 );
               })}
             </div>
           ) : (
             <div className="rc-latest-bills-empty">
-              No submitted {billingMode === "pharmacy" ? "pharmacy" : billingMode === "diagnostic" ? "diagnostic" : "OP"} bills yet.
+              <div className="rc-bills-empty-icon">
+                {billingMode === "pharmacy" ? <Pill size={36} /> : billingMode === "diagnostic" ? <FlaskConical size={36} /> : <Stethoscope size={36} />}
+              </div>
+              <h4>No Invoices Recorded Yet</h4>
+              <p>No submitted {billingMode === "pharmacy" ? "pharmacy" : billingMode === "diagnostic" ? "diagnostic" : "OP"} bills currently found in the system.</p>
             </div>
           )}
         </section>
 
+        {/* 2. FORM PLACED BELOW THE TABLE WHEN CREATING OR EDITING */}
+        {billingMode !== "consultation" && (showCreateForm || editingBill) ? (
+          <form className={`rc-card rc-billing-form glass-panel rc-billing-form--${billingMode}`} onSubmit={generate} noValidate>
+            <div className="rc-billing-card-head">
+              <div className="rc-billing-head-title-wrap">
+                <span className={`rc-billing-head-icon-tag rc-billing-head-icon-tag--${billingMode}`}>
+                  {billingMode === "pharmacy" ? <Pill size={18} /> : <FlaskConical size={18} />}
+                </span>
+                <div>
+                  <h3 className={`rc-billing-form-h3--${billingMode}`}>
+                    {editingBill
+                      ? `Edit ${billingMode === "pharmacy" ? "Pharmacy" : "Diagnostic"} Bill (${editingBill.invoiceNo || "Draft"})`
+                      : billingMode === "pharmacy"
+                        ? "Generate Pharmacy Bill"
+                        : "Generate Diagnosis Test Bill"}
+                  </h3>
+                  <p>
+                    {billingMode === "pharmacy"
+                      ? "Load medicines from the doctor's prescription and collect pharmacy payment."
+                      : "Load prescribed diagnostic tests and collect payment."}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="rc-btn-close-form"
+                onClick={() => {
+                  setShowCreateForm(false);
+                  setEditingBill(null);
+                }}
+              >
+                ✕ Close
+              </button>
+            </div>
+            {selectedAppointment ? (
+              <div className="rc-patient-banner-card glass-subcard">
+                <div className="rc-patient-banner-main">
+                  <div className="rc-patient-banner-info">
+                    <span className="rc-patient-banner-label">PATIENT DETAILS</span>
+                    <h4 className="rc-patient-banner-name">{getAppointmentPatientName(selectedAppointment)}</h4>
+                    <div className="rc-patient-banner-meta">
+                      <span><b>ID:</b> {getAppointmentPatientId(selectedAppointment)}</span>
+                      <span><b>Phone:</b> {getAppointmentPatientPhone(selectedAppointment)}</span>
+                      <span><b>Age/Gender:</b> {[getAppointmentPatientAge(selectedAppointment), getAppointmentPatientGender(selectedAppointment)].filter((x) => x && x !== "-").join(" / ") || "-"}</span>
+                      {getAppointmentTokenNumber(selectedAppointment) !== "-" && (
+                        <span><b>Token:</b> #{getAppointmentTokenNumber(selectedAppointment)}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="rc-patient-banner-doctor">
+                    <span className="rc-patient-banner-label">ATTENDING DOCTOR</span>
+                    <h5 className="rc-patient-banner-doc-name">{getAppointmentDoctorName(selectedAppointment)}</h5>
+                    {readAppointmentDiagnosis(selectedAppointment) ? (
+                      <span className="rc-patient-banner-diagnosis">
+                        <b>Diagnosis:</b> {readAppointmentDiagnosis(selectedAppointment)}
+                      </span>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+            <div className="rc-billing-fields">
+              <label className="rc-field-wide">
+                <span>{billingMode === "consultation" ? "Appointment" : "Booked Appointment"}</span>
+                <select
+                  value={form.appointmentId}
+                  onChange={(e) => setField("appointmentId", e.target.value)}
+                  className={billingMode === "consultation" && fieldErrors.appointmentId ? "is-invalid" : ""}
+                >
+                  <option value="">
+                    {billingMode === "diagnostic"
+                      ? "Manual / walk-in diagnostic billing"
+                      : "Manual / walk-in billing"}
+                  </option>
+                  {filteredBillingAppointments.length === 0 ? (
+                    <option value="">
+                      {billingMode === "diagnostic" ? "No submitted diagnostic requests found" : "No booked appointments found"}
+                    </option>
+                  ) : null}
+                  {filteredBillingAppointments.map((a) => (
+                    <option value={getAppointmentId(a)} key={getAppointmentId(a)}>
+                      {getAppointmentPatientName(a)} - {formatInvoiceDate(getAppointmentDate(a))} - {getAppointmentTime(a)} -{" "}
+                      {getAppointmentStatus(a) || "-"}
+                    </option>
+                  ))}
+                </select>
+                {billingMode === "consultation" && fieldErrors.appointmentId ? <small className="rc-field-error">{fieldErrors.appointmentId}</small> : null}
+              </label>
+              <div className="rc-field-wide rc-billing-appointment-tools">
+                <div className="rc-patient-list-tabs" role="tablist" aria-label="Billing appointment list view">
+                  <button
+                    type="button"
+                    className={appointmentListView === "today" ? "active" : ""}
+                    onClick={() => setAppointmentListView("today")}
+                    role="tab"
+                    aria-selected={appointmentListView === "today"}
+                  >
+                    <CalendarDays size={16} /> Today
+                    <span>{todayBillingAppointmentCount}</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={appointmentListView === "past" ? "active" : ""}
+                    onClick={() => setAppointmentListView("past")}
+                    role="tab"
+                    aria-selected={appointmentListView === "past"}
+                  >
+                    <History size={16} /> Past
+                    <span>{pastBillingAppointmentCount}</span>
+                  </button>
+                </div>
+                <label className="rc-filter-field">
+                  <span>Appointment Date</span>
+                  <DatePickerField
+                    value={appointmentDateFilter}
+                    onChange={setAppointmentDateFilter}
+                  />
+                </label>
+                <button type="button" className="rc-btn ghost" onClick={() => setAppointmentDateFilter("")}>
+                  Clear Date
+                </button>
+              </div>
+              <label>
+                <span>Payment Mode</span>
+                <select
+                  value={form.paymentMode}
+                  onChange={(e) => setField("paymentMode", e.target.value)}
+                  className={fieldErrors.paymentMode ? "is-invalid" : ""}
+                >
+                  <option value="UPI">UPI</option>
+                  <option value="Cash">Cash</option>
+                  <option value="Card">Card</option>
+                </select>
+                {fieldErrors.paymentMode ? <small className="rc-field-error">{fieldErrors.paymentMode}</small> : null}
+              </label>
+              {billingMode === "consultation" ? (
+                <>
+                  <label>
+                    <span>Medicine Charges</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={form.medicineCharges}
+                      placeholder="0.00"
+                      onChange={(e) => setField("medicineCharges", e.target.value)}
+                      onBlur={() => formatAmountField("medicineCharges")}
+                      className={`rc-amount-input ${fieldErrors.medicineCharges ? "is-invalid" : ""}`}
+                    />
+                    {fieldErrors.medicineCharges ? <small className="rc-field-error">{fieldErrors.medicineCharges}</small> : null}
+                  </label>
+                  <label>
+                    <span>Lab Charges</span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={form.labCharges}
+                      placeholder="0.00"
+                      onChange={(e) => setField("labCharges", e.target.value)}
+                      onBlur={() => formatAmountField("labCharges")}
+                      className={`rc-amount-input ${fieldErrors.labCharges ? "is-invalid" : ""}`}
+                    />
+                    {fieldErrors.labCharges ? <small className="rc-field-error">{fieldErrors.labCharges}</small> : null}
+                  </label>
+                </>
+              ) : null}
+            </div>
+            {billingMode !== "consultation" ? (
+              <div className="rc-service-billing">
+                <div className="rc-service-head">
+                  <strong>{billingMode === "pharmacy" ? "Medicine Items" : "Diagnostic Test Items"}</strong>
+                </div>
+                {billingMode === "diagnostic" ? (
+                  <label className="rc-service-picker">
+                    <span>Test Name</span>
+                    <input
+                      value={serviceSearch}
+                      list={`${billingMode}-billing-items`}
+                      placeholder={
+                        activePriceList.length
+                          ? "Search or select lab test"
+                          : labMasterLoading
+                            ? "Loading lab tests..."
+                            : "No lab file tests available"
+                      }
+                      onChange={(event) => updateServiceSearch(event.target.value)}
+                      disabled={labMasterLoading && !activePriceList.length}
+                    />
+                  </label>
+                ) : (
+                  <div className="rc-service-picker">
+                    <span>Doctor Prescription</span>
+                    <strong>
+                      {pharmacyPrescriptionLoading
+                        ? "Loading prescribed medicines..."
+                        : selectedAppointment
+                          ? pharmacyRows.length
+                            ? `${pharmacyRows.length} prescribed medicine(s) loaded. Billing uses backend dispensing amounts.`
+                            : "No prescribed medicines found for this appointment."
+                          : "Select a booked appointment to load prescribed medicines."}
+                    </strong>
+                  </div>
+                )}
+                <div className="rc-service-table">
+                  <datalist id={`${billingMode}-billing-items`}>
+                    {activePriceList.map((item, index) => (
+                      <option key={`${item.diagnosis}-${getPriceListItemKey(item, index)}`} value={getPriceListItemName(item)} />
+                    ))}
+                  </datalist>
+                  <div className={`rc-service-grid rc-service-grid-head ${billingMode === "diagnostic" ? "is-diagnostic" : ""}`}>
+                    <span>{billingMode === "pharmacy" ? "Selected Medicine" : "Selected Test"}</span>
+                    {billingMode === "pharmacy" ? <span>Qty</span> : null}
+                    <span>Amount</span>
+                    <span>CGST</span>
+                    <span>SGST</span>
+                    <span>Net Amount</span>
+                    <span />
+                  </div>
+                  {activeServiceRows.map((row) => {
+                    const rowQuantity = billingMode === "pharmacy" ? Number(row.quantity) || 1 : 1;
+                    const lineAmount = (Number(row.unitPrice) || 0) * rowQuantity;
+                    const lineCgst = lineAmount * HALF_GST_RATE;
+                    const lineSgst = lineAmount * HALF_GST_RATE;
+                    const lineTotal = lineAmount + lineCgst + lineSgst;
+                    return (
+                      <div className={`rc-service-grid ${billingMode === "diagnostic" ? "is-diagnostic" : ""}`} key={row.id}>
+                        <strong className="rc-service-item-name">
+                          {row.item}
+                          {billingMode === "pharmacy" && (row.dosage || row.frequency || row.duration) ? (
+                            <small>
+                              {[row.dosage, row.frequency, row.duration].filter(Boolean).join(" | ")}
+                            </small>
+                          ) : null}
+                        </strong>
+                        {billingMode === "pharmacy" ? (
+                          <input
+                            className="rc-service-qty"
+                            type="number"
+                            min="1"
+                            value={rowQuantity}
+                            readOnly
+                            onChange={(event) => updatePharmacyQuantity(row.id, event.target.value)}
+                            aria-label={`Quantity for ${row.item}`}
+                          />
+                        ) : null}
+                        <input
+                          className="rc-service-amount-input"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={Number(row.unitPrice) || 0}
+                          readOnly={billingMode === "pharmacy"}
+                          onChange={(event) => updateServiceUnitPrice(row.id, event.target.value)}
+                          aria-label={`Amount for ${row.item}`}
+                        />
+                        <strong>{formatCurrency(lineCgst)}</strong>
+                        <strong>{formatCurrency(lineSgst)}</strong>
+                        <strong>{formatCurrency(lineTotal)}</strong>
+                        <button
+                          type="button"
+                          className="rc-service-remove-btn"
+                          disabled={billingMode === "pharmacy"}
+                          onClick={() => removeServiceRow(row.id)}
+                          aria-label="Remove item"
+                        >
+                          <Minus size={16} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                  <div className={`rc-service-grid rc-service-total-row ${billingMode === "diagnostic" ? "is-diagnostic" : ""}`}>
+                    <strong className="rc-service-total-label">Total</strong>
+                    {billingMode === "pharmacy" ? <span /> : null}
+                    <strong>{formatCurrency(serviceDisplayTotals.subtotal)}</strong>
+                    <strong>{formatCurrency(serviceDisplayTotals.cgst)}</strong>
+                    <strong>{formatCurrency(serviceDisplayTotals.sgst)}</strong>
+                    <strong>{formatCurrency(serviceDisplayTotals.total)}</strong>
+                    <span />
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rc-total">
+                <span>Total</span>
+                <strong>{formatCurrency(total)}</strong>
+              </div>
+            )}
+            {billingMode !== "consultation" ? (
+              <div className="rc-service-actions">
+                <button type="button" className="rc-service-preview" onClick={() => openServiceInvoice({ autoPrint: false })}>
+                  <Eye size={15} /> Preview
+                </button>
+                <button type="button" className="rc-service-print" onClick={() => openServiceInvoice({ autoPrint: true })}>
+                  <Printer size={15} /> Print
+                </button>
+                <button
+                  className={`rc-confirm ${showPaidStamp ? "is-paid" : ""}`}
+                  type="submit"
+                  disabled={showPaidStamp || (editingBill ? !canEditBill : !canCreateBill)}
+                  onClick={(e) => {
+                    if (showPaidStamp) {
+                      e.preventDefault();
+                      const msg = "This bill has already been paid.";
+                      showMessage(msg, "info");
+                      toast.info(msg);
+                    }
+                  }}
+                >
+                  <CheckCircle size={15} /> {showPaidStamp ? "✓ Paid" : "Submit"}
+                </button>
+              </div>
+            ) : (
+              <button
+                className={`rc-confirm ${showPaidStamp ? "is-paid" : ""}`}
+                type="submit"
+                disabled={showPaidStamp || (editingBill ? !canEditBill : !canCreateBill)}
+                onClick={(e) => {
+                  if (showPaidStamp) {
+                    e.preventDefault();
+                    const msg = "This bill has already been paid.";
+                    showMessage(msg, "info");
+                    toast.info(msg);
+                  }
+                }}
+              >
+                <FileText size={15} /> {showPaidStamp ? "✓ Paid" : "Generate Invoice"}
+              </button>
+            )}
+          </form>
+        ) : null}
       </div>
     </section>
   );

@@ -1,0 +1,53 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+
+		<!-- Project Assembly Configuration -->
+		<AssemblyName>Adminclinic</AssemblyName>
+		<RootNamespace>AuthDemo</RootNamespace>
+		<UserSecretsId>1581ab91-58d5-486d-8aad-cb6c081ffa8d</UserSecretsId>
+
+		<!-- Run through the dotnet host -->
+		<UseAppHost>false</UseAppHost>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<!-- Email -->
+		<PackageReference Include="MailKit" Version="4.16.0" />
+
+		<!-- Excel Bulk Upload -->
+		<PackageReference Include="ClosedXML" Version="0.104.2" />
+
+		<!-- Entity Framework Core -->
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.26" />
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="8.0.26">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.26" />
+
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.26">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<!-- JWT Authentication -->
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+
+		<!-- Password Hashing -->
+		<PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+
+		<!-- Swagger -->
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Folder Include="wwwroot\images\Doctors\" />
+	</ItemGroup>
+
+</Project>

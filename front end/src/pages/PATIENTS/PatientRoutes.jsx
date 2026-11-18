@@ -1,16 +1,19 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import DatePickerField from "../../components/DatePickerField";
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
-  Activity, Bell, Calendar, Check, CheckCircle2, ChevronDown, ChevronRight, Circle, ClipboardList,
-  CreditCard, Download, Eye, EyeOff, FileText, Heart, KeyRound, LogOut, Mail, MapPin, Pill,
-  Menu, Phone, Printer, Search, Share2, Star, Stethoscope, Trash2, UserRound, X,
+  Activity, ArrowLeftToLine, Bell, Calendar, Check, CheckCircle2, ChevronDown, ChevronRight, Circle, ClipboardList,
+  CreditCard, Download, Droplet, Eye, EyeOff, FileText, Heart, KeyRound, LogOut, Mail, MapPin, Pill,
+  Menu, Phone, Printer, Search, Share2, Star, Stethoscope, Syringe, Trash2, UserRound, X,
 } from "lucide-react";
+import { useToast } from "../../components/ToastProvider";
 import PatientDashboard from "./PatientDashboard";
-import { apiUrl, patientApiUrl, PATIENT_API } from "../../config/api";
-import { validateStrongPassword } from "../../utils/validation";
+import { apiUrl, assetUrl, patientApiUrl, PATIENT_API, BILLING_API_PATHS } from "../../config/api";
+import { validateMobile, validateName, validateStrongPassword } from "../../utils/validation";
 import { formatIndianCurrency, formatTitleCase } from "../../utils/format";
 import {
   PATIENT_PORTAL_OP_BILLS_KEY,
+  RECEPTION_RECENT_SERVICE_BILLS_KEY,
   readPatientPortalBills,
   storePatientPortalBill,
 } from "../../utils/billingRevenue";
@@ -20,6 +23,17 @@ import {
   DUPLICATE_APPOINTMENT_MESSAGE,
   hasDuplicateAppointmentForPatientDoctorDate,
 } from "../../utils/appointmentDuplicateValidation";
+
+// Keep state needed by the page while delivering action feedback as toasts.
+function usePatientToastState(type = "error") {
+  const toast = useToast();
+  const [message, setMessage] = useState("");
+  const updateMessage = useCallback((value) => {
+    setMessage(value);
+    if (value && value !== "Processing payment...") toast[type](value);
+  }, [toast, type]);
+  return [message, updateMessage];
+}
 
 const getNestedValue = (record, path) => {
   if (record == null) return undefined;
@@ -142,11 +156,11 @@ const getBillRecordKey = (bill) => {
     'patientId', 'patient.id', 'invoice.patientId', 'invoice.patient.id',
     'patientCode', 'patient.code', 'patient.patientCode',
   ]);
-  const parts = [billId, billNumber, appointmentId, patientId]
-    .map((value) => String(value || "").trim())
-    .filter(Boolean);
+  const kind = normalizePortalBillingType(readFirst(bill,["invoiceType","InvoiceType","billingType","BillingType","serviceType","type"]));
+  const identity = billId || billNumber;
+  if (identity) return [kind,String(identity)].join("|");
+  if (appointmentId) return [kind,"appointment",appointmentId,patientId].join("|");
 
-  if (parts.length) return parts.join("|");
   const stableKeys = Object.keys(bill).sort();
   return JSON.stringify(stableKeys.reduce((acc, key) => {
     acc[key] = bill[key];
@@ -163,17 +177,18 @@ const getBillDateValue = (bill) => {
 
 const selectBestBillRecord = (existing, incoming) => {
   if (!existing) return incoming;
-  const existingDate = getBillDateValue(existing);
-  const incomingDate = getBillDateValue(incoming);
-  if (incomingDate > existingDate) return incoming;
-  if (incomingDate < existingDate) return existing;
-
-  const existingStatus = String(readFirst(existing, ['status', 'paymentStatus', 'billStatus', 'state']) || '').toLowerCase();
-  const incomingStatus = String(readFirst(incoming, ['status', 'paymentStatus', 'billStatus', 'state']) || '').toLowerCase();
-  if (incomingStatus === 'paid' && existingStatus !== 'paid') return incoming;
-  if (existingStatus === 'paid' && incomingStatus !== 'paid') return existing;
-
-  return incoming;
+  const existingDate = getBillDateValue(existing), incomingDate = getBillDateValue(incoming);
+  const status = row => String(readFirst(row,['paymentStatus','PaymentStatus','status','Status']) || '').toLowerCase();
+  const preferExisting = existingDate > incomingDate || (existingDate === incomingDate && status(existing) === 'paid' && status(incoming) !== 'paid');
+  const preferred = preferExisting ? existing : incoming;
+  const other = preferExisting ? incoming : existing;
+  const merged = {...other,...preferred};
+  // Summary responses must not erase line items returned by another backend source.
+  for (const key of Object.keys(other)) {
+    const value = preferred[key];
+    if (value == null || value === '' || (Array.isArray(value) && !value.length)) merged[key] = other[key];
+  }
+  return merged;
 };
 
 const parseApiList = (value) => {
@@ -199,6 +214,40 @@ const parseApiList = (value) => {
   return [];
 };
 
+const getPrescriptionDisplayKey = (prescription = {}) => {
+  const prescriptionId = readFirst(prescription, [
+    "prescriptionId",
+    "PrescriptionId",
+    "id",
+    "Id",
+    "_id",
+    "referenceId",
+    "prescription.id",
+    "Prescription.Id",
+  ]);
+  if (prescriptionId) return `id:${String(prescriptionId).trim()}`;
+
+  const medicineList = [
+    prescription.medicines,
+    prescription.medications,
+    prescription.medicineList,
+    prescription.prescribedMedicines,
+    prescription.items,
+    prescription.drugs,
+  ].find(Array.isArray) || [];
+  const medicineKey = medicineList.map((medicine) =>
+    typeof medicine === "object" ? JSON.stringify(medicine) : String(medicine)
+  ).join("|");
+
+  return [
+    readFirst(prescription, ["appointmentId", "appointment.id", "visitId"]),
+    readFirst(prescription, ["prescriptionDate", "date", "createdAt", "createdOn", "appointmentDate"]),
+    readFirst(prescription, ["doctorName", "doctor.name", "doctor.fullName", "prescribedBy", "providerName"]),
+    readFirst(prescription, ["diagnosis", "title", "condition", "chiefComplaint"]),
+    medicineKey,
+  ].map((value) => String(value || "").trim().toLowerCase()).join("|");
+};
+
 const PATIENT_PORTAL_BILLING_TYPES = ["op", "lab", "pharmacy"];
 
 const normalizePortalBillingType = (type = "") => {
@@ -217,29 +266,74 @@ const withQueryParams = (path, params = {}) => {
   return `${path}${String(path).includes("?") ? "&" : "?"}${query}`;
 };
 
+const parsePatientBillRows = (payload, depth = 0) => {
+  if (Array.isArray(payload)) return payload;
+  if (!payload || typeof payload !== "object" || depth > 6) return null;
+  for (const key of ["bills", "billings", "invoices", "data", "items", "records", "results", "result", "$values"]) {
+    const actual = Object.keys(payload).find((candidate) => candidate.toLowerCase() === key);
+    if (!actual) continue;
+    const rows = parsePatientBillRows(payload[actual], depth + 1);
+    if (rows) return rows;
+  }
+  return null;
+};
+
 const fetchPatientPortalBillingRows = async ({ headers = {}, cache = "no-store", billingType = "" } = {}) => {
   const type = billingType ? normalizePortalBillingType(billingType) : "";
   const path = withQueryParams(PATIENT_API.bills, type ? { billingType: type } : {});
   const response = await fetch(patientApiUrl(path), { headers, cache }).catch(() => null);
   if (!response?.ok) return [];
   const data = await response.json().catch(() => []);
-  return parseApiList(data).map((bill) => ({
+  return (parsePatientBillRows(data) || []).map((sourceBill) => {
+    const bill = {...sourceBill, billingType: sourceBill.billingType || sourceBill.BillingType || type};
+    return ({
     ...bill,
+    id: bill.id ?? bill.Id ?? bill.billId ?? bill.BillId ?? bill.billingId ?? bill.BillingId,
+    patientId: bill.patientId ?? bill.PatientId ?? bill.patient?.id ?? bill.Patient?.Id,
+    appointmentId: bill.appointmentId ?? bill.AppointmentId,
+    patientName: bill.patientName ?? bill.PatientName ?? bill.patient?.name ?? bill.Patient?.Name,
+    invoiceNo: bill.invoiceNo ?? bill.InvoiceNo ?? bill.invoiceNumber ?? bill.InvoiceNumber ?? bill.billNumber ?? bill.BillNumber,
+    totalAmount: bill.totalAmount ?? bill.TotalAmount ?? bill.netAmount ?? bill.NetAmount ?? bill.grandTotal ?? bill.GrandTotal,
+    paymentStatus: bill.paymentStatus ?? bill.PaymentStatus ?? bill.status ?? bill.Status,
+    paymentMethod: bill.paymentMethod ?? bill.PaymentMethod ?? bill.paymentMode ?? bill.PaymentMode,
+    createdAt: bill.createdAt ?? bill.CreatedAt ?? bill.billDate ?? bill.BillDate,
+    medicines: bill.medicines ?? bill.Medicines ?? bill.lineItems ?? bill.LineItems ?? [],
     billingType: bill.billingType || bill.BillingType || type || "",
     BillingType: bill.BillingType || bill.billingType || type || "",
-    invoiceType: bill.invoiceType || bill.InvoiceType || type || "",
-    InvoiceType: bill.InvoiceType || bill.invoiceType || type || "",
+    invoiceType: bill.invoiceType || bill.InvoiceType || normalizePortalBillingType(bill.billingType || bill.BillingType || type),
+    InvoiceType: bill.InvoiceType || bill.invoiceType || normalizePortalBillingType(bill.billingType || bill.BillingType || type),
     __sourcePath: path,
-  }));
+  }); });
 };
 
+const fetchPatientBillingPageRows = async ({ headers = {}, cache = "no-store" } = {}) => {
+  const patientId = localStorage.getItem("patientId") || sessionStorage.getItem("patientId");
+  if (!patientId) return [];
+  const results = await Promise.allSettled(BILLING_API_PATHS.map(async (path) => {
+    const response = await fetch(apiUrl(withQueryParams(path,{patientId})),{headers,cache});
+    if (!response.ok) throw new Error("Billing source unavailable: " + response.status);
+    const rows = parsePatientBillRows(await response.json()) || [];
+    return rows.filter(bill => String(readFirst(bill,["patientId","PatientId","patient.id","patient.Id"])) === String(patientId)).map(bill => ({
+      ...bill,
+      id: readFirst(bill,["id","Id","billId","BillId","billingId","BillingId"]),
+      patientId,
+      appointmentId: readFirst(bill,["appointmentId","AppointmentId","appointment.id"]),
+      invoiceNo: readFirst(bill,["invoiceNo","InvoiceNo","invoiceNumber","InvoiceNumber","billNumber","BillNumber"]),
+      billingType: bill.billingType || bill.BillingType || path.split("/").pop(),
+      invoiceType: bill.invoiceType || bill.InvoiceType || path.split("/").pop(),
+      createdAt: bill.createdAt || bill.CreatedAt || bill.billDate || bill.BillDate,
+      totalAmount: bill.netAmount ?? bill.NetAmount ?? bill.totalAmount ?? bill.TotalAmount,
+      __sourcePath:path,
+    }));
+  }));
+  return results.flatMap(result => result.status === "fulfilled" ? result.value : []);
+};
 const fetchAllPatientPortalBillingRows = async ({ headers = {}, cache = "no-store" } = {}) => {
-  const results = await Promise.all(
-    PATIENT_PORTAL_BILLING_TYPES.map((billingType) =>
-      fetchPatientPortalBillingRows({ headers, cache, billingType }).catch(() => [])
-    )
-  );
-  return dedupeBillsByInvoice(results.flat());
+  const groups = await Promise.all([
+    ...["", ...PATIENT_PORTAL_BILLING_TYPES].map(billingType => fetchPatientPortalBillingRows({headers,cache,billingType}).catch(() => [])),
+    fetchPatientBillingPageRows({headers,cache}).catch(() => []),
+  ]);
+  return dedupeBillsByInvoice(groups.flat());
 };
 
 const dedupeBillsByInvoice = (bills = []) => {
@@ -346,49 +440,19 @@ const getPatientNameValues = (patient = {}, visits = []) => {
 };
 
 const billBelongsToPatient = (bill, patient = {}, visits = []) => {
-  const patientIds = getPatientIdentityValues(patient, visits);
-  const patientNames = getPatientNameValues(patient, visits);
-  const billIds = [
-    readFirst(bill, [
-      "patientId",
-      "PatientId",
-      "patientID",
-      "patient.id",
-      "patient.Id",
-      "patient.patientId",
-      "patient.PatientId",
-      "invoice.patientId",
-      "invoice.PatientId",
-      "bill.patientId",
-      "bill.PatientId",
-      "patientCode",
-      "PatientCode",
-      "patient.patientCode",
-      "patient.PatientCode",
-    ]),
-    readFirst(bill, ["appointmentId", "AppointmentId", "appointment.id", "appointment.Id", "appointmentNumber", "AppointmentNumber", "appointmentNo", "AppointmentNo"]),
-  ].map((value) => normalizeComparable(value)).filter(Boolean);
-  if (billIds.some((value) => patientIds.has(value))) return true;
+  const patientIds = new Set([
+    patient.id, patient.Id, patient.patientId, patient.PatientId, patient.patientCode,
+    localStorage.getItem("patientId"), localStorage.getItem("PatientId"), localStorage.getItem("patientCode"),
+    ...visits.map(visit => readFirst(visit,["patientId","PatientId","patient.id","patient.PatientId"])),
+  ].map(normalizeComparable).filter(Boolean));
+  const owner = normalizeComparable(readFirst(bill,["patientId","PatientId","patientID","patient.id","patient.Id","patient.patientId","patient.PatientId","invoice.patientId","invoice.PatientId","bill.patientId","bill.PatientId","patientCode","PatientCode"]));
+  // A mismatching owner must never be accepted because a numeric appointment ID happens to match.
+  if (owner) return patientIds.has(owner);
+  const appointment = normalizeComparable(readFirst(bill,["appointmentId","AppointmentId","appointment.id","appointment.Id","appointmentNumber","AppointmentNumber","appointmentNo","AppointmentNo"]));
+  if (appointment && getAppointmentIdentityValues(visits).has(appointment)) return true;
   if (patientIds.size) return false;
-
-  const billFirstName = readFirst(bill, ["patient.firstName", "patient.FirstName", "firstName", "FirstName"]);
-  const billLastName = readFirst(bill, ["patient.lastName", "patient.LastName", "lastName", "LastName"]);
-  const billNames = [
-    readFirst(bill, [
-      "patientName",
-      "PatientName",
-      "patient.name",
-      "patient.Name",
-      "patient.fullName",
-      "patient.FullName",
-      "customerName",
-      "CustomerName",
-      "name",
-      "Name",
-    ]),
-    billFirstName || billLastName ? `${billFirstName} ${billLastName}` : "",
-  ].map((value) => normalizeComparable(value)).filter(Boolean);
-  return billNames.some((value) => patientNames.has(value));
+  const name = normalizeComparable(readFirst(bill,["patientName","PatientName","patient.name","patient.Name","patient.fullName","patient.FullName","customerName"]));
+  return Boolean(name && getPatientNameValues(patient,visits).has(name));
 };
 
 const getAppointmentIdentityValues = (visits = []) =>
@@ -600,10 +664,11 @@ const isSlotHiddenByCurrentTime = (slot, selectedDate) => {
   return hour * 60 + minute <= nowMinutes;
 };
 
-const isActiveAppointmentBooking = (appointment = {}) =>
-  !["cancelled", "canceled", "rejected"].includes(
-    String(readFirst(appointment, ["status", "appointmentStatus", "state"]) || "").trim().toLowerCase()
-  );
+const isActiveAppointmentBooking = (appointment = {}) => {
+  const status = String(readFirst(appointment, ["status", "Status", "appointmentStatus", "AppointmentStatus", "state", "State"]) || "")
+    .trim().toLowerCase().replace(/[\s_-]+/g, "");
+  return !["completed", "complete", "closed", "cancelled", "canceled", "rejected"].includes(status);
+};
 
 export const findPatientBookingConflict = (visits = [], date, time) => {
   const selectedDate = normalizeAppointmentBookingDate(date);
@@ -866,14 +931,43 @@ const normalizeSlotOption = (slot, doctorId = "", selectedDate = "") => {
   };
 };
 
+const PATIENT_PAGE_TITLES = {
+  "/patient/dashboard": { title: "Patient Dashboard", area: "Overview" },
+  "/patient/appointments/book": { title: "Book Appointment", area: "Appointments" },
+  "/patient/appointments": { title: "Appointments", area: "Schedule" },
+  "/patient/medical-history": { title: "Medical History", area: "Health Records" },
+  "/patient/prescriptions": { title: "Prescriptions", area: "Pharmacy" },
+  "/patient/bills": { title: "Bills & Payments", area: "Billing" },
+  "/patient/notifications": { title: "Notifications", area: "Alerts" },
+  "/patient/profile": { title: "Patient Profile", area: "Account" },
+  "/patient/change-password": { title: "Change Password", area: "Security" },
+};
+
 function PatientShell({ notifications, children, patient }) {
   const navigate = useNavigate();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem("patient_sidebar_collapsed") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggleCollapse = () => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem("patient_sidebar_collapsed", String(next));
+      } catch {}
+      return next;
+    });
+  };
+
   const menuRef = useRef(null);
-  const searchRef = useRef(null);
   const unreadCount = (notifications || []).filter((item) => item.unread).length;
 
   useEffect(() => {
@@ -886,10 +980,6 @@ function PatientShell({ notifications, children, patient }) {
     document.addEventListener("mousedown", closeMenu);
     return () => document.removeEventListener("mousedown", closeMenu);
   }, []);
-
-  useEffect(() => {
-    if (searchOpen) searchRef.current?.focus();
-  }, [searchOpen]);
 
   const logout = async () => {
     setMenuOpen(false);
@@ -913,7 +1003,6 @@ function PatientShell({ notifications, children, patient }) {
     const match = destinations.find(({ terms }) => terms.some((term) => term.includes(query) || query.includes(term)));
     if (match) {
       navigate(match.path);
-      setSearchOpen(false);
     }
   };
 
@@ -940,184 +1029,230 @@ function PatientShell({ notifications, children, patient }) {
       .toUpperCase();
   })();
 
+  const currentPathMatch = Object.entries(PATIENT_PAGE_TITLES).find(([path]) =>
+    location.pathname === path || (path !== "/patient/dashboard" && location.pathname.startsWith(path))
+  );
+  const currentTitle = currentPathMatch ? currentPathMatch[1].title : "Patient Portal";
+  const currentArea = currentPathMatch ? currentPathMatch[1].area : "Dashboard";
+
+  const navItems = [
+    { to: "/patient/dashboard", label: "Dashboard", icon: Activity, tone: "cyan", badge: "Live" },
+    { to: "/patient/appointments", label: "Appointments", icon: Calendar, tone: "purple", badge: "Book" },
+    { to: "/patient/medical-history", label: "Medical History", icon: FileText, tone: "emerald", badge: "Records" },
+    { to: "/patient/prescriptions", label: "Prescriptions", icon: Pill, tone: "rose", badge: "Rx" },
+    { to: "/patient/bills", label: "Bills & Payments", icon: CreditCard, tone: "amber", badge: "Pay" },
+    { to: "/patient/notifications", label: "Notifications", icon: Bell, tone: "indigo", badge: unreadCount ? String(unreadCount) : undefined },
+  ];
+
   return (
-    <div className={`patient-portal ${searchOpen ? "pp-search-open" : ""}`}>
-      <button
-        type="button"
-        className={`pp-sidebar-overlay ${sidebarOpen ? "is-visible" : ""}`}
-        onClick={() => setSidebarOpen(false)}
-        aria-label="Close navigation menu"
-        tabIndex={sidebarOpen ? 0 : -1}
-      />
-      <aside className={`pp-sidebar ${sidebarOpen ? "is-open" : ""}`}>
+    <div className={`pp-shell patient-portal ${sidebarOpen ? "pp-sidebar-open" : ""} ${collapsed ? "pp-sidebar-collapsed" : ""}`}>
+      {sidebarOpen && (
+        <div
+          className="pp-overlay"
+          onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <aside className={`pp-sidebar ${sidebarOpen ? "is-open" : ""} ${collapsed ? "collapsed" : ""}`}>
         <div className="pp-brand">
           <div className="pp-brand-mark">
-            <Heart size={20} />
+            <Heart size={22} />
           </div>
-          <div>
+          <div className="pp-brand-text">
             <strong>CMS</strong>
             <span>Patient Portal</span>
           </div>
         </div>
+
         <nav className="pp-nav" onClick={() => setSidebarOpen(false)}>
-          <span className="pp-nav-label">MAIN MENU</span>
-          <NavLink to="/patient/dashboard" className={({ isActive }) => `pp-nav-item ${isActive ? "active" : ""}`}>
-            <ClipboardList size={16} />
-            <span>Dashboard</span>
-          </NavLink>
-          <NavLink to="/patient/appointments" className={({ isActive }) => `pp-nav-item ${isActive ? "active" : ""}`}>
-            <Calendar size={16} />
-            <span>Appointments</span>
-          </NavLink>
-          <NavLink to="/patient/medical-history" className={({ isActive }) => `pp-nav-item ${isActive ? "active" : ""}`}>
-            <FileText size={16} />
-            <span>Medical History</span>
-          </NavLink>
-          <NavLink to="/patient/prescriptions" className={({ isActive }) => `pp-nav-item ${isActive ? "active" : ""}`}>
-            <Pill size={16} />
-            <span>Prescriptions</span>
-          </NavLink>
-          <NavLink to="/patient/bills" className={({ isActive }) => `pp-nav-item ${isActive ? "active" : ""}`}>
-            <CreditCard size={16} />
-            <span>Bills</span>
-          </NavLink>
-          <NavLink to="/patient/notifications" className={({ isActive }) => `pp-nav-item ${isActive ? "active" : ""}`}>
-            <Bell size={16} />
-            <span>Notifications</span>
-            {unreadCount ? <em>{unreadCount}</em> : null}
-          </NavLink>
+          {!collapsed && <span className="pp-nav-label">MAIN MENU</span>}
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) => `pp-nav-item tone-${item.tone} ${isActive ? "active" : ""}`}
+              title={collapsed ? item.label : undefined}
+            >
+              <div className="pp-nav-icon-box">
+                <item.icon size={18} />
+              </div>
+              {!collapsed && <span className="pp-nav-text">{item.label}</span>}
+              {!collapsed && item.badge ? (
+                <span className={`pp-nav-pill tone-${item.tone}`}>{item.badge}</span>
+              ) : null}
+            </NavLink>
+          ))}
         </nav>
-        <div className="pp-patient-chip">
-          <div className="pp-avatar">{initials}</div>
-          <div>
-            <strong>{patientTitle}</strong>
-            <span>{patientSubtitle}</span>
-            <div className="pp-patient-status">
-              <span className="pp-status-dot pp-status-dot--online" />
-              Online
-            </div>
+
+        <div className="pp-sidebar-footer">
+          <div className="pp-patient-chip">
+            <div className="pp-avatar">{initials}</div>
+            {!collapsed && (
+              <div className="pp-patient-chip-copy">
+                <strong>{patientTitle}</strong>
+                <span>{patientSubtitle}</span>
+                <div className="pp-patient-status">
+                  <span className="pp-status-dot pp-status-dot--online" />
+                  Online
+                </div>
+              </div>
+            )}
           </div>
+
+          <button
+            type="button"
+            className="pp-collapse-btn"
+            onClick={handleToggleCollapse}
+            title={collapsed ? "Expand menu" : "Collapse menu"}
+          >
+            <ArrowLeftToLine size={16} style={{ transform: collapsed ? "rotate(180deg)" : "none", transition: "transform 0.25s ease" }} />
+            {!collapsed && <span>Collapse Menu</span>}
+          </button>
         </div>
       </aside>
-      <main className="pp-main">
+
+      <div className={`pp-main ${collapsed ? "collapsed" : ""}`}>
         <header className="pp-topbar">
-          <form className={`pp-search-box ${searchOpen ? "is-expanded" : ""}`} onSubmit={submitSearch}>
+          <div className="pp-topbar-left">
             <button
               type="button"
-              className="pp-search-toggle"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search patient portal"
+              className="pp-topbar-menu"
+              onClick={() => {
+                if (typeof window !== "undefined" && window.innerWidth <= 900) {
+                  setSidebarOpen((prev) => !prev);
+                } else {
+                  handleToggleCollapse();
+                }
+              }}
+              aria-label="Toggle navigation menu"
             >
-              <Search size={18} className="pp-search-icon" />
+              <Menu size={20} />
             </button>
-            <input
-              type="search"
-              ref={searchRef}
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search appointments, bills, prescriptions..."
-              aria-label="Search patient portal"
-            />
-            <button
-              type="button"
-              className="pp-search-close"
-              onClick={() => setSearchOpen(false)}
-              aria-label="Close search"
-            >
-              <X size={18} />
-            </button>
-          </form>
+            <div className="pp-topbar-title-wrap">
+              <h1>{currentTitle}</h1>
+              <div className="pp-crumbs">
+                <span>Home</span>
+                <ChevronRight size={13} />
+                <span>Patient Portal</span>
+                <ChevronRight size={13} />
+                <span className="pp-crumb-active">{currentArea}</span>
+              </div>
+            </div>
+          </div>
+
           <div className="pp-top-actions">
-            <button
-              type="button"
-              className="pp-menu-btn"
-              onClick={() => setSidebarOpen(true)}
-              aria-label="Open navigation menu"
-              aria-expanded={sidebarOpen}
-            >
-              <Menu size={21} />
-            </button>
-            <NavLink to="/patient/notifications" className="pp-icon-btn">
-              <Bell size={17} />
+            <form className="pp-search-box" onSubmit={submitSearch}>
+              <Search size={17} className="pp-search-icon" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                placeholder="Search appointments, bills, prescriptions..."
+                aria-label="Search patient portal"
+              />
+            </form>
+
+            <NavLink to="/patient/notifications" className="pp-icon-btn" title="Notifications">
+              <Bell size={18} />
               {unreadCount ? <span className="pp-dot" /> : null}
             </NavLink>
+
             <div className="pp-account-menu" ref={menuRef}>
               <button
-                className="pp-account-toggle"
+                className={`pp-account-toggle ${menuOpen ? "open" : ""}`}
                 type="button"
                 onClick={() => setMenuOpen((open) => !open)}
                 aria-haspopup="menu"
                 aria-expanded={menuOpen}
               >
                 <span className="pp-avatar">{initials}</span>
-                <span className="pp-account-name">{formatTitleCase(patient?.firstName || patient?.name || '')}</span>
-                <ChevronDown size={15} />
+                <span className="pp-account-name">{formatTitleCase(patient?.firstName || patient?.name || "Patient")}</span>
+                <ChevronDown size={16} className={`pp-dropdown-arrow ${menuOpen ? "is-open" : ""}`} />
               </button>
+
               {menuOpen ? (
-                <div className="pp-account-dropdown" role="menu">
+                <div className="pp-account-dropdown rc-blood-profile-dropdown" role="menu">
+                  <div className="rc-blood-capillary-stream" aria-hidden="true">
+                    <span className="rc-blood-capillary-drop-1" />
+                    <span className="rc-blood-capillary-drop-2" />
+                  </div>
+
                   <div className="pp-account-summary">
                     <span className="pp-account-summary-avatar">{initials}</span>
-                    <strong>{formatTitleCase(patient?.name || patient?.firstName || '')}</strong>
-                    <span>{patient?.email || ''}</span>
-                    <span className="pp-account-badge">Patient</span>
+                    <div className="pp-account-summary-details">
+                      <strong>{formatTitleCase(patient?.name || patient?.firstName || "")}</strong>
+                      <span>{patient?.email || ""}</span>
+                      <span className="pp-account-badge">Patient</span>
+                    </div>
                   </div>
-                  <button
-                    type="button"
-                    className="pp-account-item"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      navigate('/patient/profile');
-                    }}
-                    role="menuitem"
-                  >
-                    <span className="pp-account-menu-icon">
-                      <UserRound size={20} />
-                    </span>
-                    <span className="pp-account-menu-copy">
-                      <b>My Profile</b>
-                      <small>View and edit your profile</small>
-                    </span>
-                    <ChevronRight size={17} className="pp-account-menu-arrow" />
-                  </button>
-                  <button
-                    type="button"
-                    className="pp-account-item"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      navigate('/patient/change-password');
-                    }}
-                    role="menuitem"
-                  >
-                    <span className="pp-account-menu-icon">
-                      <KeyRound size={20} />
-                    </span>
-                    <span className="pp-account-menu-copy">
-                      <b>Change Password</b>
-                      <small>Update your password</small>
-                    </span>
-                    <ChevronRight size={17} className="pp-account-menu-arrow" />
-                  </button>
-                  <button
-                    type="button"
-                    className="pp-account-item pp-account-item--logout"
-                    onClick={logout}
-                    role="menuitem"
-                  >
-                    <span className="pp-account-menu-icon danger">
-                      <LogOut size={20} />
-                    </span>
-                    <span className="pp-account-menu-copy">
-                      <b>Logout</b>
-                      <small>Sign out from your account</small>
-                    </span>
-                  </button>
+
+                  <div className="pp-account-menu-flow">
+                    <button
+                      type="button"
+                      className="pp-account-item rc-blood-drop-item"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        navigate("/patient/profile");
+                      }}
+                      role="menuitem"
+                    >
+                      <span className="rc-blood-drop-badge">
+                        <Droplet size={16} className="rc-blood-drop-svg" />
+                        <UserRound size={13} className="rc-blood-drop-inner-icon" />
+                      </span>
+                      <span className="pp-account-menu-copy rc-blood-drop-text">
+                        <b>My Profile</b>
+                        <small>View and edit your profile</small>
+                      </span>
+                      <ChevronRight size={17} className="pp-account-menu-arrow" />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="pp-account-item rc-blood-drop-item"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        navigate("/patient/change-password");
+                      }}
+                      role="menuitem"
+                    >
+                      <span className="rc-blood-drop-badge">
+                        <Droplet size={16} className="rc-blood-drop-svg" />
+                        <KeyRound size={13} className="rc-blood-drop-inner-icon" />
+                      </span>
+                      <span className="pp-account-menu-copy rc-blood-drop-text">
+                        <b>Change Password</b>
+                        <small>Update your password</small>
+                      </span>
+                      <ChevronRight size={17} className="pp-account-menu-arrow" />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="pp-account-item pp-account-item--logout rc-blood-drop-item danger"
+                      onClick={logout}
+                      role="menuitem"
+                    >
+                      <span className="rc-blood-drop-badge rc-blood-drop-badge--logout">
+                        <Droplet size={16} className="rc-blood-drop-svg" />
+                        <LogOut size={13} className="rc-blood-drop-inner-icon" />
+                      </span>
+                      <span className="pp-account-menu-copy rc-blood-drop-text">
+                        <b>Logout</b>
+                        <small>Sign out from your account</small>
+                      </span>
+                    </button>
+                  </div>
                 </div>
               ) : null}
             </div>
           </div>
         </header>
-        {children}
-      </main>
+
+        <main className="pp-content" onClick={() => sidebarOpen && setSidebarOpen(false)}>
+          {children}
+        </main>
+      </div>
     </div>
   );
 }
@@ -1243,7 +1378,7 @@ function PatientRoutes() {
 function PatientPageShell({ title, subtitle, action, children }) {
   return (
     <div className="patient-dashboard">
-      <div className="pd-header">
+      <div className="pd-header" data-page-header>
         <div className="pd-header-copy">
           <h1 className="pd-greeting-title">{title}</h1>
           <p className="pd-greeting-subtitle">{subtitle}</p>
@@ -1256,6 +1391,7 @@ function PatientPageShell({ title, subtitle, action, children }) {
 }
 
 function PatientAppointmentsPage({ visits = [], onRefresh }) {
+  const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
   const rows = visits || [];
@@ -1266,7 +1402,7 @@ function PatientAppointmentsPage({ visits = [], onRefresh }) {
   const [selectedAppointment, setSelectedAppointment] = useState(rows[0] || null);
 
   const [cancelling, setCancelling] = useState(false);
-  const [cancelError, setCancelError] = useState("");
+  const [, setCancelError] = usePatientToastState();
   const [cancelLoading, setCancelLoading] = useState(false);
 
   const [rescheduling, setRescheduling] = useState(false);
@@ -1274,7 +1410,7 @@ function PatientAppointmentsPage({ visits = [], onRefresh }) {
   const [rescheduleTime, setRescheduleTime] = useState("");
   const [rescheduleSlots, setRescheduleSlots] = useState([]);
   const [rescheduleLoadingSlots, setRescheduleLoadingSlots] = useState(false);
-  const [rescheduleError, setRescheduleError] = useState("");
+  const [, setRescheduleError] = usePatientToastState();
   const [rescheduleSaving, setRescheduleSaving] = useState(false);
 
   const getAppointmentKeys = (visit) =>
@@ -1344,6 +1480,7 @@ function PatientAppointmentsPage({ visits = [], onRefresh }) {
         throw new Error(errorText || "Unable to cancel appointment.");
       }
       setCancelling(false);
+      toast.success("Appointment cancelled successfully.");
       if (onRefresh) await onRefresh();
     } catch (err) {
       setCancelError(err.message || "Failed to cancel appointment.");
@@ -1416,6 +1553,7 @@ function PatientAppointmentsPage({ visits = [], onRefresh }) {
         throw new Error(errorText || "Unable to reschedule appointment.");
       }
       setRescheduling(false);
+      toast.success("Appointment rescheduled successfully.");
       setRescheduleDate("");
       setRescheduleTime("");
       if (onRefresh) await onRefresh();
@@ -1554,7 +1692,6 @@ function PatientAppointmentsPage({ visits = [], onRefresh }) {
               <div className="pd-action-form">
                 <h3>Cancel Appointment</h3>
                 <p>Are you sure you want to cancel appointment {getAppointmentNumber(selectedAppointment)}?</p>
-                {cancelError && <p className="pd-error-text">{cancelError}</p>}
                 <div className="pd-form-actions">
                   <button
                     type="button"
@@ -1581,13 +1718,12 @@ function PatientAppointmentsPage({ visits = [], onRefresh }) {
                 <h3>Reschedule Appointment</h3>
                 <div className="pd-form-group">
                   <label htmlFor="reschedule-date">Select new date</label>
-                  <input
+                  <DatePickerField
                     id="reschedule-date"
-                    type="date"
                     min={new Date().toISOString().split("T")[0]}
                     value={rescheduleDate}
-                    onChange={(e) => {
-                      setRescheduleDate(e.target.value);
+                    onChange={(nextValue) => {
+                      setRescheduleDate(nextValue);
                       setRescheduleTime("");
                     }}
                   />
@@ -1615,7 +1751,6 @@ function PatientAppointmentsPage({ visits = [], onRefresh }) {
                     )}
                   </div>
                 )}
-                {rescheduleError && <p className="pd-error-text">{rescheduleError}</p>}
                 <div className="pd-form-actions">
                   <button
                     type="button"
@@ -1643,7 +1778,99 @@ function PatientAppointmentsPage({ visits = [], onRefresh }) {
   );
 }
 
+
+const MEDICAL_REASON_TERMS = [
+  "fever", "high fever", "low fever", "viral fever", "cold", "common cold", "cough", "dry cough", "wet cough",
+  "sore throat", "throat pain", "tonsil pain", "running nose", "runny nose", "blocked nose", "sneezing", "sinus", "sinus pain",
+  "headache", "head ache", "head pain", "headace", "migraine", "dizziness", "giddiness", "vertigo", "fainting",
+  "chest pain", "chest tightness", "palpitation", "shortness of breath", "breathlessness", "breathing problem", "wheezing", "asthma",
+  "stomach pain", "abdominal pain", "belly pain", "gastric pain", "acidity", "heartburn", "nausea", "vomiting", "loose motions",
+  "diarrhea", "constipation", "indigestion", "gas", "bloating", "food poisoning", "loss of appetite", "dehydration",
+  "body pain", "body pains", "body ache", "body aches", "muscle pain", "joint pain", "bone pain", "back pain", "lower back pain",
+  "neck pain", "shoulder pain", "arm pain", "elbow pain", "wrist pain", "hand pain", "finger pain", "hip pain", "leg pain",
+  "knee pain", "ankle pain", "foot pain", "heel pain", "calf pain", "thigh pain", "cramp", "cramps", "sprain", "strain",
+  "swelling", "inflammation", "stiffness", "numbness", "tingling", "weakness", "fatigue", "tiredness",
+  "skin rash", "rash", "itching", "itch", "allergy", "hives", "redness", "pimples", "acne", "boil", "fungal infection",
+  "skin infection", "eczema", "psoriasis", "burn", "wound", "cut", "injury", "bleeding", "bruising",
+  "eye pain", "red eye", "eye redness", "eye itching", "eye watering", "blurred vision", "vision problem", "ear pain", "ear discharge",
+  "hearing problem", "tooth pain", "toothache", "gum pain", "mouth ulcer", "mouth pain", "jaw pain",
+  "urine infection", "urinary infection", "burning urination", "frequent urination", "urine pain", "kidney pain", "blood in urine",
+  "period pain", "menstrual pain", "irregular periods", "heavy bleeding", "pregnancy", "white discharge", "pelvic pain",
+  "diabetes", "high sugar", "low sugar", "blood pressure", "high bp", "low bp", "hypertension", "thyroid", "cholesterol",
+  "anxiety", "depression", "stress", "insomnia", "sleep problem", "seizure", "fits", "memory problem",
+  "followup", "follow up", "follow-up", "review", "checkup", "check up", "consultation",
+  "pain", "ache", "aches", "sore", "soreness", "infection", "infections", "disease", "diseases", "illness",
+  "malaria", "dengue", "typhoid", "jaundice", "hepatitis", "tb", "tuberculosis", "pneumonia", "bronchitis",
+  "covid", "flu", "influenza", "chickenpox", "measles", "mumps", "cholera", "ulcer", "ulcers", "hernia",
+  "appendicitis", "arthritis", "sciatica", "spondylitis", "anemia", "anaemia", "obesity", "stroke",
+  "paralysis", "epilepsy", "sinusitis", "tonsillitis", "gastritis"
+];
+
+const MEDICAL_REASON_BODY_WORDS = new Set([
+  "head", "hair", "face", "forehead", "eye", "eyes", "ear", "ears", "nose", "mouth", "tooth", "teeth", "gum", "gums",
+  "jaw", "neck", "throat", "chest", "heart", "lung", "lungs", "stomach", "abdomen", "belly", "back", "spine", "waist",
+  "shoulder", "arm", "arms", "elbow", "wrist", "hand", "hands", "finger", "fingers", "hip", "leg", "legs", "knee",
+  "knees", "ankle", "foot", "feet", "heel", "calf", "thigh", "skin", "body", "muscle", "muscles", "joint", "joints",
+  "bone", "bones", "blood", "urine", "kidney", "kidneys", "pelvis", "pelvic", "period", "periods", "brain",
+  "scalp", "temple", "eyelid", "eyelids", "eyebrow", "eyebrows", "tongue", "lip", "lips", "cheek", "cheeks",
+  "chin", "tonsil", "tonsils", "windpipe", "rib", "ribs", "breast", "breasts", "liver", "pancreas", "spleen",
+  "gallbladder", "intestine", "intestines", "colon", "rectum", "anus", "bladder", "urethra", "uterus", "ovary",
+  "ovaries", "vagina", "penis", "testicle", "testicles", "groin", "buttock", "buttocks", "nerve", "nerves",
+  "vein", "veins", "artery", "arteries", "nail", "nails", "toe", "toes"
+]);
+
+const MEDICAL_REASON_STOP_WORDS = new Set([
+  "i", "am", "have", "having", "has", "with", "and", "or", "the", "a", "an", "for", "from", "since", "to", "of",
+  "in", "on", "at", "my", "me", "is", "are", "feel", "feeling", "very", "too", "more", "less", "little", "some",
+  "severe", "mild", "moderate", "high", "low", "acute", "chronic", "left", "right", "upper", "lower", "front", "side",
+  "morning", "night", "today", "yesterday", "days", "day", "week", "weeks", "month", "months", "problem", "issue",
+  "visit", "doctor", "please", "need", "want", "consult", "consulting", "appointment", "again", "near", "inside",
+  "outside", "behind", "below", "above", "around"
+]);
+
+const normalizeMedicalReasonWord = (word = "") => String(word).toLowerCase().replace(/[^a-z]/g, "");
+const normalizeMedicalPhrase = (value = "") => String(value).toLowerCase().replace(/[^a-z0-9]+/g, "");
+const stripCommonPlural = (word = "") => {
+  if (word.endsWith("ies") && word.length > 5) return `${word.slice(0, -3)}y`;
+  return word.endsWith("s") && word.length > 4 ? word.slice(0, -1) : word;
+};
+
+const MEDICAL_REASON_ALLOWED_WORDS = new Set([
+  ...MEDICAL_REASON_BODY_WORDS,
+  ...MEDICAL_REASON_TERMS.flatMap((term) => term.split(/[\s-]+/).map(normalizeMedicalReasonWord)),
+].filter(Boolean));
+
+const isMedicalReasonWord = (word = "") => {
+  const normalized = stripCommonPlural(normalizeMedicalReasonWord(word));
+  return Boolean(normalized) && MEDICAL_REASON_ALLOWED_WORDS.has(normalized);
+};
+
+const validateMedicalVisitReason = (value = "") => {
+  const reason = String(value || "").trim();
+  if (!reason) return "Please enter symptoms or disease for the visit.";
+
+  const normalizedReason = reason.toLowerCase().replace(/[^a-z0-9\s-]/g, " ").replace(/\s+/g, " ").trim();
+  const compactReason = normalizeMedicalPhrase(normalizedReason);
+  const hasMedicalPhrase = MEDICAL_REASON_TERMS.some((term) => {
+    const normalizedTerm = term.toLowerCase();
+    return normalizedReason.includes(normalizedTerm) || compactReason.includes(normalizeMedicalPhrase(normalizedTerm));
+  });
+  const reasonWords = normalizedReason
+    .split(/\s+/)
+    .map(normalizeMedicalReasonWord)
+    .map(stripCommonPlural)
+    .filter(Boolean);
+  const hasMedicalWord = reasonWords.some(isMedicalReasonWord);
+  if (!hasMedicalPhrase && !hasMedicalWord) return "Reason for visit must contain body part, symptom, or disease only.";
+
+  const invalidWords = reasonWords
+    .filter((word) => word.length > 2 && !isMedicalReasonWord(word) && !MEDICAL_REASON_STOP_WORDS.has(word));
+
+  if (invalidWords.length) return "Reason for visit must contain body part, symptom, or disease only.";
+  return "";
+};
 function PatientBookingWizardPage({ patient = null, visits = [], onRefresh }) {
+  const toast = useToast();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [branches, setBranches] = useState([]);
@@ -1659,8 +1886,8 @@ function PatientBookingWizardPage({ patient = null, visits = [], onRefresh }) {
   const [selectedTime, setSelectedTime] = useState("");
   const [reasonForVisit, setReasonForVisit] = useState("");
   const [bookingState, setBookingState] = useState("idle");
-  const [bookingError, setBookingError] = useState("");
-  const [paymentMode, setPaymentMode] = useState("UPI");
+  const [bookingError, setBookingError] = usePatientToastState();
+  const [paymentMode, setPaymentMode] = useState("Cash");
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const bookingRequestRef = useRef(false);
@@ -2075,12 +2302,13 @@ function PatientBookingWizardPage({ patient = null, visits = [], onRefresh }) {
   );
 
   const stepItems = ['Branch', 'Department', 'Doctor', 'Date & time', 'Confirm'];
+  const reasonForVisitError = validateMedicalVisitReason(reasonForVisit);
   const canConfirm =
     selectedBranch &&
     selectedDoctor &&
     selectedDate &&
     selectedTime &&
-    reasonForVisit.trim();
+    !reasonForVisitError;
   const canContinue =
     (step === 1 && selectedBranch) ||
     (step === 2 && selectedDepartment) ||
@@ -2287,7 +2515,6 @@ function PatientBookingWizardPage({ patient = null, visits = [], onRefresh }) {
       <div><b>Bill Date</b><span>${escapeHtml(billDate)}</span></div>
       <div><b>Appointment</b><span>${escapeHtml(paymentDetails.appointmentId)}</span></div>
       <div><b>Payment Mode</b><span>${escapeHtml(paymentDetails.paymentMode)}</span></div>
-      <div class="status"><b>Status</b><span>PAID</span></div>
     </div>
   </div>
   <div class="title">CONSULTATION FEE INVOICE (UPI)</div>
@@ -2333,6 +2560,7 @@ function PatientBookingWizardPage({ patient = null, visits = [], onRefresh }) {
       <div class="total-row total"><span>Total Amount Payable</span><span class="num">&#8377; ${escapeHtml(amount.toFixed(2))}</span></div>
     </div>
   </div>
+  <div class="status" style="margin:16px 0;break-inside:avoid"><b>Status</b><span>PAID</span></div>
   <div class="bottom">
     <div class="notes">
       <p>• Consultation charges only. Additional tests or medicines, if any, are billed separately.</p>
@@ -2363,11 +2591,14 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
 
   const handleConfirmBooking = async () => {
     if (bookingRequestRef.current) return;
+    if (String(paymentMode).trim().toLowerCase() !== "cash") {
+      setBookingError("Online patient appointment payments are not available through the current payment API.");
+      return;
+    }
 
-    const conflict = findPatientBookingConflict(visits, selectedDate, selectedTime);
-    if (conflict) {
-      const message = "You already have an active appointment. Please complete or cancel the current appointment before booking another one.";
-      setBookingError(message);
+    const visitReasonError = validateMedicalVisitReason(reasonForVisit);
+    if (visitReasonError) {
+      setBookingError(visitReasonError);
       setBookingState("error");
       return;
     }
@@ -2397,16 +2628,26 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
         "mobileNumber",
         "MobileNumber",
       ]);
-      const duplicateAppointments = [...visits];
       const headers = getApiHeaders();
-      const allAppointmentsResponse = await fetch(apiUrl("Appointment"), { headers }).catch(() => null);
+      // Re-read current status so a consultation completed in another session no longer blocks booking.
+      let currentVisits = visits;
+      const latestResponse = await fetch(patientApiUrl(PATIENT_API.appointments), { headers, cache: "no-store" }).catch(() => null);
+      if (latestResponse?.ok) {
+        const latestData = await latestResponse.json().catch(() => null);
+        if (latestData !== null) currentVisits = parseApiList(latestData).filter((visit) => appointmentBelongsToPatient(visit, patient || {}));
+      }
+      if (findPatientBookingConflict(currentVisits, selectedDate, selectedTime)) {
+        throw new Error("You already have an active appointment. Please complete or cancel the current appointment before booking another one.");
+      }
+      const duplicateAppointments = [...currentVisits];
+      const allAppointmentsResponse = await fetch(apiUrl("Appointment"), { headers, cache: "no-store" }).catch(() => null);
       if (allAppointmentsResponse?.ok) {
         const allAppointmentsData = await allAppointmentsResponse.json().catch(() => []);
         duplicateAppointments.push(...parseApiList(allAppointmentsData));
       }
 
       if (
-        hasDuplicateAppointmentForPatientDoctorDate(duplicateAppointments, {
+        hasDuplicateAppointmentForPatientDoctorDate(duplicateAppointments.filter(isActiveAppointmentBooking), {
           patientId,
           patientName,
           phone: patientPhone,
@@ -2554,6 +2795,7 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
         paymentMode,
         bill: generatedBill,
       });
+      toast.success("Payment completed and consultation bill generated" + (transactionId ? ` - ${transactionId}` : "") + ".");
       setBookingState('success');
       setStep(5);
       if (onRefresh) await onRefresh();
@@ -2607,7 +2849,7 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
                     <button
                       key={branch.id || branch.name}
                       type="button"
-                      className={`booking-card ${selectedBranch?.id === branch.id ? 'selected' : ''}`}
+                      className={`booking-card booking-card--branch ${selectedBranch?.id === branch.id ? 'selected' : ''}`}
                       onClick={() => {
                         setSelectedBranch(branch);
                         setSelectedDepartment(null);
@@ -2682,7 +2924,7 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
                         key={doctor.id || doctor.name}
                         role="button"
                         tabIndex={0}
-                        className={`booking-card ${selectedDoctor?.id === doctor.id ? 'selected' : ''}`}
+                        className={`booking-card booking-card--doctor ${selectedDoctor?.id === doctor.id ? 'selected' : ''}`}
                         onClick={() => {
                           setSelectedDoctor(doctor);
                           setSelectedDate('');
@@ -2740,13 +2982,12 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
               </div>
               <div className="booking-field-group">
                 <label htmlFor="appointment-date">Appointment date</label>
-                <input
+                <DatePickerField
                   id="appointment-date"
-                  type="date"
                   value={selectedDate}
-                  onChange={(event) => {
-                    setSelectedDate(event.target.value);
-                    setSelectedTime('');
+                  onChange={(nextValue) => {
+                    setSelectedDate(nextValue);
+                    setSelectedTime("");
                   }}
                 />
               </div>
@@ -2808,9 +3049,14 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
                   id="reason-for-visit"
                   rows={4}
                   value={reasonForVisit}
-                  onChange={(event) => setReasonForVisit(event.target.value)}
-                  placeholder="Fever, follow-up consultation, knee pain..."
+                  onChange={(event) => {
+                    setReasonForVisit(event.target.value);
+                    if (bookingError) setBookingError("");
+                  }}
+                  placeholder="Fever, cough, knee pain, skin rash..."
+                  className={reasonForVisit && reasonForVisitError ? "is-invalid" : ""}
                 />
+                {reasonForVisit && reasonForVisitError ? <span className="booking-error">{reasonForVisitError}</span> : null}
               </div>
               <div className="booking-payment-panel">
                 <div>
@@ -2820,20 +3066,14 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
                 <label>
                   <span>Payment Mode</span>
                   <select value={paymentMode} onChange={(event) => setPaymentMode(event.target.value)}>
-                    <option value="UPI">UPI</option>
                     <option value="Cash">Cash</option>
-                    <option value="Card">Card</option>
                   </select>
                 </label>
               </div>
-              {bookingError ? <p className="booking-error">{bookingError}</p> : null}
               {bookingState === 'success' && (
-                <div className="booking-success">
-                  <p>Payment completed and consultation bill generated{paymentDetails?.transactionId ? ` - ${paymentDetails.transactionId}` : ""}.</p>
-                  <div className="booking-success-actions">
+                <div className="booking-success-actions">
                     <button type="button" className="booking-button booking-button--ghost" onClick={() => handlePrintBill(false)}>View Bill</button>
                     <button type="button" className="booking-button booking-button--secondary" onClick={handlePrintBill}>Print Bill</button>
-                  </div>
                 </div>
               )}
             </section>
@@ -2998,8 +3238,10 @@ ${print ? '<script>window.onload=()=>window.print()</script>' : ''}
 function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] }) {
   const [history, setHistory] = useState(null);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [historyError, setHistoryError] = useState("");
+  const [historyError, setHistoryError] = usePatientToastState();
   const [reportsExpanded, setReportsExpanded] = useState(false);
+  const [visibleVisitCount, setVisibleVisitCount] = useState(5);
+  const [patientLabReports, setPatientLabReports] = useState([]);
 
   const patientId = String(
     patient?.id ||
@@ -3035,7 +3277,7 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
       try {
         let historyData = null;
         let hadServerError = false;
-        const response = await fetch(patientApiUrl(PATIENT_API.medicalHistory), { headers, cache: "no-store" }).catch(() => null);
+        const response = await fetch(patientApiUrl(PATIENT_API.medicalHistory, { patientId }), { headers, cache: "no-store" }).catch(() => null);
         if (response?.ok) {
           const data = await response.json().catch(() => null);
           const records = normalizeHistoryRecords(data).filter(belongsToCurrentPatient);
@@ -3044,12 +3286,20 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
           hadServerError = true;
         }
 
+        const labResponse = await fetch(apiUrl("Lab/patient/reports"), { headers, cache: "no-store" }).catch(() => null);
+        const labReportsData = labResponse?.ok ? await labResponse.json().catch(() => null) : null;
+        const labReports = normalizeLabPatientReports(labReportsData).filter(belongsToCurrentPatient);
+
         if (isCurrent) {
           setHistory(historyData);
-          setHistoryError(historyData || !hadServerError ? "" : "Unable to load medical history.");
+          setPatientLabReports(labReports);
+          setHistoryError(historyData || labReports.length || !hadServerError ? "" : "Unable to load medical history.");
         }
       } catch (error) {
-        if (isCurrent) setHistoryError(error.message || 'Unable to load medical history.');
+        if (isCurrent) {
+          setPatientLabReports([]);
+          setHistoryError(error.message || 'Unable to load medical history.');
+        }
       } finally {
         if (isCurrent) setLoadingHistory(false);
       }
@@ -3080,6 +3330,71 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
     return [];
   };
 
+  const normalizeLabPatientReports = (value) => {
+    if (Array.isArray(value)) return value.filter(Boolean);
+    if (!value || typeof value !== "object") return [];
+
+    const directReports = [
+      ...normalizeRecords(value),
+      ...normalizeRecords(value.reports),
+      ...normalizeRecords(value.Reports),
+      ...normalizeRecords(value.labReports),
+      ...normalizeRecords(value.LabReports),
+      ...normalizeRecords(value.data?.reports),
+      ...normalizeRecords(value.data?.Reports),
+      ...normalizeRecords(value.data?.labReports),
+      ...normalizeRecords(value.data?.LabReports),
+      ...normalizeRecords(value.result?.reports),
+      ...normalizeRecords(value.result?.Reports),
+      ...normalizeRecords(value.result?.labReports),
+      ...normalizeRecords(value.result?.LabReports),
+    ];
+
+    if (directReports.length) return directReports;
+
+    const candidate =
+      value.data && typeof value.data === "object"
+        ? value.data
+        : value.result && typeof value.result === "object"
+          ? value.result
+          : value;
+
+    const reportKeys = [
+      "reportId",
+      "ReportId",
+      "reportName",
+      "ReportName",
+      "reportTitle",
+      "ReportTitle",
+      "testName",
+      "TestName",
+      "documentName",
+      "DocumentName",
+      "documentUrl",
+      "DocumentUrl",
+      "fileUrl",
+      "FileUrl",
+      "reportUrl",
+      "ReportUrl",
+      "downloadUrl",
+      "DownloadUrl",
+      "url",
+      "Url",
+      "createdAt",
+      "CreatedAt",
+      "reportDate",
+      "ReportDate",
+      "date",
+      "Date",
+    ];
+
+    const hasReportFields = reportKeys.some(
+      (key) => candidate?.[key] != null && String(candidate[key]).trim() !== ""
+    );
+
+    return hasReportFields ? [candidate] : [];
+  };
+
   const normalizeHistoryRecords = (value) => {
     if (Array.isArray(value)) return value.filter(Boolean);
     if (!value || typeof value !== "object") return [];
@@ -3102,6 +3417,7 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
       "allergyList",
       "currentMedications",
       "medications",
+      "surgeries",
       "reports",
       "labReports",
       "prescriptions",
@@ -3213,11 +3529,13 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
   })();
 
   const generatedLabReports = readGeneratedLabReports().filter(belongsToCurrentPatient);
+  const apiLabReports = normalizeLabPatientReports(patientLabReports).filter(belongsToCurrentPatient);
   const reportRecords = [
     ...normalizeRecords(historyRecord?.reports),
     ...normalizeRecords(historyRecord?.labReports),
     ...normalizeRecords(historyRecord?.scanReports),
     ...normalizeRecords(historyRecord?.attachments),
+    ...apiLabReports,
     ...generatedLabReports,
     ...rawVisitRecords
       .map((visit) => readFirst(visit, ['report', 'reportName', 'reportTitle', 'reportUrl', 'documentUrl']) ? visit : null)
@@ -3400,8 +3718,43 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
   const readReportTitle = (report) =>
     readFirst(report, ['title', 'reportTitle', 'reportName', 'name', 'testName']) || 'Report';
 
-  const readReportDate = (report) =>
-    readFirst(report, ['date', 'reportDate', 'createdAt', 'appointmentDate']) || 'Unknown date';
+  const readReportDate = (report) => {
+    const rawDate = readFirst(report, [
+      'reportedAt',
+      'ReportedAt',
+      'reportGeneratedAt',
+      'ReportGeneratedAt',
+      'generatedAt',
+      'GeneratedAt',
+      'reportCompletedAt',
+      'ReportCompletedAt',
+      'completedAt',
+      'CompletedAt',
+      'reportDate',
+      'ReportDate',
+      'reportGeneratedDate',
+      'ReportGeneratedDate',
+      'generatedDate',
+      'GeneratedDate',
+      'completedDate',
+      'CompletedDate',
+      'reportCreatedAt',
+      'ReportCreatedAt',
+      'report.createdAt',
+      'Report.CreatedAt',
+      'finishedAt',
+      'FinishedAt',
+      'updatedAt',
+      'UpdatedAt',
+      'createdAt',
+      'CreatedAt',
+      'appointmentDate',
+      'AppointmentDate',
+      'date',
+      'Date',
+    ]);
+    return formatPatientDate(rawDate) || 'Unknown date';
+  };
 
   const readReportType = (report) =>
     readFirst(report, ['type', 'category', 'reportType', 'documentType']) || 'Other Attachment';
@@ -3565,9 +3918,9 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
     if (/^data:/i.test(rawUrl) || /^blob:/i.test(rawUrl)) return rawUrl;
     if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
     if (/^\/?api\//i.test(rawUrl)) return apiUrl(rawUrl.replace(/^\/?api\/?/i, ''));
-    if (/^\//.test(rawUrl)) return `${window.location.origin}${rawUrl}`;
+    if (/^\//.test(rawUrl)) return assetUrl(rawUrl);
     if (/\.pdf(\?|$)/i.test(rawUrl) || /\/[^"]+\.[a-z0-9]{2,5}(\?|$)/i.test(rawUrl)) {
-      return `${window.location.origin}/${rawUrl.replace(/^\/?/, '')}`;
+      return assetUrl(rawUrl);
     }
     return '';
   };
@@ -3706,7 +4059,6 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
         <span>This section is for your reference only. For any medical concerns, please consult your doctor.</span>
       </div>
 
-      {historyError ? <div className="mh-error">{historyError}</div> : null}
       {!historyError && loadingHistory ? <div className="mh-loading">Loading medical history...</div> : null}
       {!historyError && !loadingHistory && !hasAnyHistory ? (
         <div className="mh-empty">
@@ -3855,7 +4207,7 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
         </div>
         {visitRecords.length ? (
           <div className="mh-visit-list">
-            {visitRecords.map((visit, index) => (
+            {visitRecords.slice(0, visibleVisitCount).map((visit, index) => (
               <div className="mh-visit-item" key={visit.id || visit.appointmentId || index}>
                 <div className="mh-visit-summary">
                   <div className="mh-visit-icon">
@@ -3911,9 +4263,9 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
             <p>No previous visits found.</p>
           </div>
         )}
-        {visitRecords.length ? (
+        {visitRecords.length > visibleVisitCount ? (
           <div className="mh-panel-footer">
-            <button type="button" className="mh-view-more-btn">View More</button>
+            <button type="button" className="mh-view-more-btn" onClick={() => setVisibleVisitCount((count) => count + 5)}>View More</button>
           </div>
         ) : null}
       </div>
@@ -3922,11 +4274,20 @@ function PatientMedicalHistoryPage({ patient, visits = [], prescriptions = [] })
 }
 
 function PatientPrescriptionsPage({ prescriptions = [], patient = null, visits = [] }) {
+  const toast = useToast();
   const [apiPrescriptions, setApiPrescriptions] = useState([]);
   const prescriptionRecords = useMemo(
-    () =>
-      parseApiList([...parseApiList(prescriptions), ...apiPrescriptions])
-        .filter((prescription) => appointmentBelongsToPatient(prescription, patient || {})),
+    () => {
+      const seen = new Set();
+      return parseApiList([...parseApiList(prescriptions), ...apiPrescriptions])
+        .filter((prescription) => appointmentBelongsToPatient(prescription, patient || {}))
+        .filter((prescription) => {
+          const key = getPrescriptionDisplayKey(prescription);
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+    },
     [apiPrescriptions, patient, prescriptions]
   );
   const [selectedPrescription, setSelectedPrescription] = useState(prescriptionRecords[0] || null);
@@ -3983,9 +4344,9 @@ function PatientPrescriptionsPage({ prescriptions = [], patient = null, visits =
     if (/^data:/i.test(rawUrl) || /^blob:/i.test(rawUrl)) return rawUrl;
     if (/^https?:\/\//i.test(rawUrl)) return rawUrl;
     if (/^\/?api\//i.test(rawUrl)) return apiUrl(rawUrl.replace(/^\/?api\/?/i, ''));
-    if (/^\//.test(rawUrl)) return `${window.location.origin}${rawUrl}`;
+    if (/^\//.test(rawUrl)) return assetUrl(rawUrl);
     if (/\.pdf(\?|$)/i.test(rawUrl) || /\/[^\s]+\.[a-z0-9]{2,5}(\?|$)/i.test(rawUrl)) {
-      return `${window.location.origin}/${rawUrl.replace(/^\/?/, '')}`;
+      return assetUrl(rawUrl);
     }
     return '';
   };
@@ -4124,61 +4485,121 @@ function PatientPrescriptionsPage({ prescriptions = [], patient = null, visits =
   const downloadPrescription = async (url, prescription = null) => {
     const latestPrescription = prescription ? await fetchPrescriptionById(prescription) : null;
     const latestUrl = getDownloadUrl(latestPrescription) || url;
-    // Primary: download existing URL
+    // Display existing PDF documents in the current tab.
     if (latestUrl) {
       try {
         const response = await fetch(latestUrl, { headers: getApiHeaders(), mode: 'cors' });
         if (!response.ok) throw new Error('Unable to download prescription.');
         const blob = await response.blob();
-        const filename = getFileNameFromUrl(latestUrl);
-        const objectUrl = URL.createObjectURL(blob);
-        const anchor = document.createElement('a');
-        anchor.href = objectUrl;
-        anchor.download = filename;
-        document.body.appendChild(anchor);
-        anchor.click();
-        anchor.remove();
-        URL.revokeObjectURL(objectUrl);
+        const objectUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+        window.location.assign(objectUrl);
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
         return;
-      } catch (error) {
-        // fallback to opening in new tab
-        try { window.open(latestUrl, '_blank', 'noopener,noreferrer'); return; } catch (e) {}
+      } catch {
+        try {
+          window.location.assign(latestUrl);
+          return;
+        } catch {
+          toast.error('Unable to open the prescription PDF.');
+          return;
+        }
       }
     }
 
-    // Fallback: generate printable HTML and open print dialog so user can save as PDF
+    // Fallback: print the prescription in the current tab without replacing the app page.
     if (latestPrescription) {
       try {
+        const diagnosis = readFirst(latestPrescription, ['diagnosis', 'condition', 'title']) || '';
+        const doctor = readFirst(latestPrescription, ['doctorName', 'doctor.name', 'prescribedBy']) || '';
         const html = `
-          <html>
+          <!doctype html>
+          <html lang="en">
             <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
               <title>Prescription</title>
-              <style>body{font-family: Arial, sans-serif; padding:20px;}</style>
+              <style>
+                *{box-sizing:border-box}
+                body{margin:0;padding:32px;background:#f1f5f9;color:#17243b;font:15px/1.55 Arial,sans-serif}
+                .page{max-width:820px;margin:0 auto;padding:40px;border:1px solid #e2e8f0;border-radius:20px;background:#fff;box-shadow:0 18px 48px rgba(15,23,42,.1)}
+                .header{display:flex;align-items:center;gap:14px;padding-bottom:22px;border-bottom:1px solid #e2e8f0}
+                .mark{display:grid;width:44px;height:44px;place-items:center;border-radius:14px;background:#0f766e;color:#fff;font-size:20px;font-weight:800}
+                .brand{color:#0f766e;font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}
+                .header h1{margin:3px 0 0;font-size:20px}
+                .tag{margin-left:auto;padding:7px 12px;border:1px solid #99f6e4;border-radius:999px;background:#f0fdfa;color:#0f766e;font-size:12px;font-weight:700}
+                .intro{padding:28px 0 20px}
+                .eyebrow{margin:0 0 5px;color:#64748b;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+                .intro h2{margin:0;color:#17243b;font-size:28px;line-height:1.2}
+                .intro p{margin:8px 0 0;color:#64748b}
+                .details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:28px}
+                .detail{min-width:0;padding:16px;border:1px solid #e2e8f0;border-radius:14px;background:#f8fafc}
+                .detail span{display:block;margin-bottom:6px;color:#64748b;font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}
+                .detail strong{display:block;overflow-wrap:anywhere;color:#17243b;font-size:15px}
+                .section-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px}
+                .section-heading h3{margin:0;font-size:17px}
+                .section-heading span{color:#64748b;font-size:12px}
+                .medicines{overflow:hidden;border:1px solid #dbe4ed;border-radius:14px}
+                .medicine{display:grid;grid-template-columns:minmax(0,1fr) minmax(140px,.7fr) minmax(180px,1fr);gap:16px;padding:14px 16px}
+                .medicine + .medicine{border-top:1px solid #e8edf3}
+                .medicine:nth-child(even){background:#f8fafc}
+                .medicine span{overflow-wrap:anywhere;color:#475569}
+                .medicine strong{overflow-wrap:anywhere;color:#17243b}
+                .table-head{background:#f1f5f9;color:#64748b;font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+                .footer{margin-top:24px;padding-top:14px;border-top:1px solid #e2e8f0;color:#64748b;font-size:11px}
+                @media(max-width:600px){body{padding:12px}.page{padding:22px 18px;border-radius:14px}.details{grid-template-columns:1fr}.medicine{grid-template-columns:1fr;gap:5px}.tag{font-size:10px}}
+                @media print{body{padding:0;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}.page{max-width:none;padding:0;border:0;border-radius:0;box-shadow:none}.medicine{break-inside:avoid}}
+              </style>
             </head>
             <body>
-              <h2>Prescription</h2>
-              <p><strong>Diagnosis:</strong> ${escapeHtml(readFirst(latestPrescription, ['diagnosis', 'condition', 'title']) || '')}</p>
-              <p><strong>Doctor:</strong> ${escapeHtml(readFirst(latestPrescription, ['doctorName','doctor.name','prescribedBy']) || '')}</p>
-              <h3>Medicines</h3>
-              <ul>
-                ${getMedicineList(latestPrescription)
-                  .map(m => `<li><strong>${escapeHtml(m.name)}</strong> - ${escapeHtml(m.dosage)} - ${escapeHtml(m.instructions)}</li>`)
-                  .join('')}
-              </ul>
+              <main class="page">
+                <header class="header">
+                  <div class="mark" aria-hidden="true">+</div>
+                  <div><div class="brand">Patient care</div><h1>Prescription</h1></div>
+                  <span class="tag">Medical record</span>
+                </header>
+                <section class="intro">
+                  <p class="eyebrow">Treatment details</p>
+                  <h2>${escapeHtml(diagnosis || 'Prescription details')}</h2>
+                  <p>Keep this record for reference and follow your doctor's instructions.</p>
+                </section>
+                <section class="details" aria-label="Prescription details">
+                  <div class="detail"><span>Diagnosis</span><strong>${escapeHtml(diagnosis || '—')}</strong></div>
+                  <div class="detail"><span>Doctor</span><strong>${escapeHtml(doctor || '—')}</strong></div>
+                </section>
+                <section>
+                  <div class="section-heading"><h3>Medicines</h3><span>Prescribed instructions</span></div>
+                  <div class="medicines">
+                    <div class="medicine table-head"><span>Medicine</span><span>Dosage</span><span>Instructions</span></div>
+                    ${getMedicineList(latestPrescription)
+                      .map(m => `<div class="medicine"><strong>${escapeHtml(m.name)}</strong><span>${escapeHtml(m.dosage || '—')}</span><span>${escapeHtml(m.instructions || '—')}</span></div>`)
+                      .join('')}
+                  </div>
+                </section>
+                <footer class="footer">This prescription is provided for your personal medical reference.</footer>
+              </main>
             </body>
           </html>`;
 
-        const win = window.open('', '_blank');
-        if (!win) return;
-        win.document.open();
-        win.document.write(html);
-        win.document.close();
-        // Ask user to print/save as PDF
-        win.focus();
-        setTimeout(() => { try { win.print(); } catch (e) {} }, 500);
+        const frame = window.document.createElement('iframe');
+        frame.title = 'Prescription print preview';
+        frame.setAttribute('aria-hidden', 'true');
+        frame.style.cssText = 'position:fixed;left:0;top:0;width:1px;height:1px;border:0;opacity:0;pointer-events:none';
+        frame.onload = () => {
+          const printWindow = frame.contentWindow;
+          if (!printWindow) {
+            frame.remove();
+            toast.error('Unable to prepare the prescription PDF.');
+            return;
+          }
+          printWindow.addEventListener('afterprint', () => frame.remove(), { once: true });
+          printWindow.focus();
+          printWindow.print();
+        };
+        frame.srcdoc = html;
+        window.document.body.appendChild(frame);
         return;
-      } catch (e) {
-        // ignore and fall through
+      } catch {
+        toast.error('Unable to prepare the prescription PDF.');
       }
     }
   };
@@ -4223,12 +4644,12 @@ function PatientPrescriptionsPage({ prescriptions = [], patient = null, visits =
       try {
         if (latestUrl) {
           await navigator.clipboard.writeText(latestUrl);
-          window.alert('Prescription link copied to clipboard.');
+          toast.success('Prescription link copied to clipboard.');
           return;
         }
         if (latestPrescription) {
           await navigator.clipboard.writeText(formatShareText(latestPrescription));
-          window.alert('Prescription text copied to clipboard.');
+          toast.success('Prescription text copied to clipboard.');
           return;
         }
       } catch (err) {
@@ -4575,8 +4996,8 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
   const [apiBills, setApiBills] = useState([]);
   const [loadingBills, setLoadingBills] = useState(false);
   const [portalRefreshTick, setPortalRefreshTick] = useState(0);
-  const [downloadStatus, setDownloadStatus] = useState("");
-  const [downloadError, setDownloadError] = useState("");
+  const [, setDownloadStatus] = usePatientToastState("success");
+  const [, setDownloadError] = usePatientToastState();
   const authenticatedPatientId = normalizeComparable(
     localStorage.getItem("patientId") || readFirst(patient || {}, ["patientId", "PatientId", "id", "Id"])
   );
@@ -4600,7 +5021,7 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
   useEffect(() => {
     const refreshBills = () => setPortalRefreshTick((value) => value + 1);
     const refreshStoredBills = (event) => {
-      if (event.key === PATIENT_PORTAL_OP_BILLS_KEY) refreshBills();
+      if ([PATIENT_PORTAL_OP_BILLS_KEY, RECEPTION_RECENT_SERVICE_BILLS_KEY].includes(event.key)) refreshBills();
     };
     window.addEventListener("patientPortalBillsUpdated", refreshBills);
     window.addEventListener("storage", refreshStoredBills);
@@ -4649,28 +5070,33 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
     const refresh = () => {
       if (document.visibilityState === "visible") loadSubmittedBills();
     };
+    const billRefreshTimer = window.setInterval(refresh, 30000);
     window.addEventListener("focus", loadSubmittedBills);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       isCurrent = false;
+      window.clearInterval(billRefreshTimer);
       window.removeEventListener("focus", loadSubmittedBills);
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [patient, visits]);
   const formatAmount = (value) =>
-    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(Number(value || 0));
+    new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(value || 0));
 
-  const formatDate = (record) =>
-    readFirst(record, ['invoiceDate', 'billDate', 'date', 'createdAt', 'createdOn', 'updatedAt']) || 'Unknown date';
+  const formatDate = (record) => {
+    const raw = readFirst(record,['invoiceDate','InvoiceDate','billDate','BillDate','date','createdAt','CreatedAt','createdOn','updatedAt']);
+    const date = raw ? new Date(raw) : null;
+    return date && !Number.isNaN(date.getTime()) ? date.toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Unknown date';
+  };
 
   const invoiceNumber = (record) =>
     readFirst(record, ['invoiceNo', 'invoiceNumber', 'billNo', 'billNumber', 'referenceNumber', 'transactionId', 'id']) || 'Invoice';
 
   const billTypeLabel = (record) => {
-    const rawType = String(readFirst(record, ['invoiceType', 'billingType', 'type', 'serviceType', 'category']) || '').toLowerCase();
+    const rawType = String(readFirst(record, ['invoiceType', 'InvoiceType', 'billingType', 'BillingType', 'type', 'serviceType', 'ServiceType', 'category']) || '').toLowerCase();
     if (rawType.includes('pharmacy') || rawType.includes('medicine')) return 'Pharmacy';
     if (rawType.includes('diagnostic') || rawType.includes('diagnosis') || rawType.includes('lab') || rawType.includes('test')) return 'Diagnostic';
-    if (getConsultationFee(record) > 0 || rawType.includes('consult')) return 'OP Bill';
+    if (/^(op|op bill|op billing|outpatient|consultation)$/.test(rawType) || getConsultationFee(record) > 0 || rawType.includes('consult')) return 'OP Bill';
     const hasLab = Number(readFirst(record, ['labCharge', 'labCharges', 'laboratoryCharges']) || 0) > 0;
     const hasMedicine = Number(readFirst(record, ['medicineCharge', 'medicineCharges', 'medicationCharges']) || 0) > 0;
     if (hasLab && !hasMedicine) return 'Diagnostic';
@@ -4742,103 +5168,67 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
   };
 
   const paymentStatus = (record) =>
-    String(readFirst(record, ['status', 'paymentStatus', 'billStatus']) || 'Pending').toLowerCase();
+    String(readFirst(record, ['paymentStatus', 'PaymentStatus', 'status', 'Status', 'billStatus']) || 'Pending').toLowerCase();
 
-  const totalAmount = (record) => Number(readFirst(record, ['total', 'totalAmount', 'amount', 'invoiceAmount', 'grandTotal', 'payableAmount', 'paymentAmount', 'paidAmount', 'netAmount', 'dueAmount', 'totals.total']) || 0);
+  const totalAmount = (record) => Number(readFirst(record, ['totals.total', 'netAmount', 'NetAmount', 'TotalAmount', 'totalAmount', 'total', 'amount', 'invoiceAmount', 'grandTotal', 'payableAmount', 'paymentAmount', 'paidAmount', 'netAmount', 'dueAmount', 'totals.total']) || 0);
   const dueAmount = (record) => Number(readFirst(record, ['dueAmount', 'balance', 'outstandingAmount']) || 0);
 
-  const serviceItemArrays = (record) => [
-    record.lineItems,
-    record.LineItems,
-    record.rows,
-    record.Rows,
-    record.serviceItems,
-    record.ServiceItems,
-    record.billItems,
-    record.BillItems,
-    record.billingItems,
-    record.BillingItems,
-    record.billingDetails,
-    record.BillingDetails,
-    record.items,
-    record.Items,
-    record.diagnosticTests,
-    record.DiagnosticTests,
-    record.labTests,
-    record.LabTests,
-    record.tests,
-    record.Tests,
-    record.medicines,
-    record.Medicines,
-    record.medications,
-    record.Medications,
-  ].find((items) => Array.isArray(items) && items.length) || [];
-
+  // Preserve zeroes and currency precision when reading saved invoice values.
+  const readInvoiceAmount = (record, keys, fallback = 0) => {
+    for (const key of keys) {
+      const value = getNestedValue(record, key);
+      if (value === undefined || value === null || value === "") continue;
+      const number = Number(typeof value === "string" ? value.replace(/[^0-9.-]/g, "") : value);
+      if (Number.isFinite(number)) return number;
+    }
+    return fallback;
+  };
+  const itemLabel = (row) => readFirst(row, ['medicineName','MedicineName','testName','TestName','productName','ProductName','test.name','Test.Name','medicine.name','Medicine.Name','item','Item','label','Label','name','Name','serviceName','ServiceName']) || 'Service item';
+  const serviceItemArrays = (record, seen = new Set()) => {
+    if (!record || typeof record !== "object" || seen.has(record)) return [];
+    seen.add(record);
+    const arrays = ['lineItems','LineItems','rows','Rows','serviceItems','ServiceItems','billItems','BillItems','billingItems','BillingItems','billingDetails','BillingDetails','items','Items','diagnosticTests','DiagnosticTests','labTests','LabTests','tests','Tests','medicines','Medicines','medications','Medications','dispensedMedicines','DispensedMedicines']
+      .map(key => record[key]).filter(value => Array.isArray(value) && value.length);
+    for (const key of ['data','result','bill','invoice','details']) {
+      const nested = serviceItemArrays(record[key] || record[key[0].toUpperCase() + key.slice(1)], seen);
+      if (nested.length) arrays.push(nested);
+    }
+    const score = rows => rows.reduce((sum,row) => sum + (/^(service item|lab charges|diagnostic charges|medicine charges|pharmacy charges)$/i.test(String(itemLabel(row))) ? 0 : 100) + (readInvoiceAmount(row,['amount','Amount','unitPrice','UnitPrice','price','Price','totalAmount','TotalAmount']) > 0 ? 1 : 0),0);
+    return arrays.sort((a,b) => score(b)-score(a))[0] || [];
+  };
   const getLineItems = (record) => {
-    const serviceItems = serviceItemArrays(record);
-    if (Array.isArray(serviceItems) && serviceItems.length) {
-      return serviceItems.map((row) => ({
-        label: readFirst(row, ['item', 'Item', 'label', 'Label', 'testName', 'TestName', 'test', 'Test', 'name', 'Name', 'serviceName', 'ServiceName', 'medicineName', 'MedicineName', 'productName', 'ProductName', 'diagnosis', 'Diagnosis']) || 'Service item',
-        diagnosis: readFirst(row, ['diagnosis', 'Diagnosis', 'category', 'Category', 'department', 'Department']) || '',
-        quantity: Number(readFirst(row, ['quantity', 'Quantity', 'qty', 'Qty']) || 1) || 1,
-        amount: Number(readFirst(row, ['amount', 'Amount', 'total', 'Total', 'totalAmount', 'TotalAmount', 'netAmount', 'NetAmount', 'lineTotal', 'LineTotal']) || 0) || ((Number(readFirst(row, ['unitPrice', 'UnitPrice', 'price', 'Price', 'rate', 'Rate']) || 0) || 0) * (Number(readFirst(row, ['quantity', 'Quantity', 'qty', 'Qty']) || 1) || 1)),
-      }));
-    }
-    if (record.charges && typeof record.charges === 'object') {
-      return Object.entries(record.charges).map(([label, amount]) => ({ label, amount }));
-    }
-    return [
-      { label: 'Consultation charges', amount: readFirst(record, ['consultationCharges', 'consultationCharge']) },
-      { label: 'Lab charges', amount: readFirst(record, ['labCharge', 'labCharges', 'laboratoryCharges']) },
-      { label: 'Medicine charges', amount: readFirst(record, ['medicineCharge', 'medicineCharges', 'medicationCharges']) },
-      { label: 'Other charges', amount: readFirst(record, ['otherCharges', 'miscCharges', 'serviceCharges']) },
-    ].filter((item) => item.amount != null && item.amount !== '');
-  };
-
-  const getGstAmount = (record) => Number(readFirst(record, ['gst', 'tax', 'gstAmount', 'taxAmount', 'taxAmountTotal']) || 0);
-
-  const getCgstAmount = (record) => {
-    const explicit = Number(readFirst(record, ['cgst', 'cgstAmount', 'centralGst', 'centralTax']) || 0);
-    return explicit || getGstAmount(record) / 2;
-  };
-
-  const getSgstAmount = (record) => {
-    const explicit = Number(readFirst(record, ['sgst', 'sgstAmount', 'stateGst', 'stateTax']) || 0);
-    return explicit || getGstAmount(record) / 2;
-  };
-
-  const getInvoiceSubTotal = (record) => {
-    const explicit = Number(readFirst(record, ['subTotal', 'subtotal', 'taxableAmount', 'amountBeforeTax', 'netTotal']) || 0);
-    if (explicit) return explicit;
-    return getLineItems(record).reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  };
-
-  const getInvoiceRows = (record) => {
-    const items = getLineItems(record);
-    const subTotal = getInvoiceSubTotal(record);
-    const cgst = getCgstAmount(record);
-    const sgst = getSgstAmount(record);
-    if (!items.length) {
-      return [{
-        label: 'Invoice amount',
-        amount: subTotal || totalAmount(record),
-        cgst,
-        sgst,
-        netAmount: totalAmount(record),
-      }];
-    }
-
-    return items.map((item) => {
-      const amount = Number(item.amount || 0);
-      const ratio = subTotal > 0 ? amount / subTotal : 0;
-      const itemCgst = Math.round((cgst * ratio) * 100) / 100;
-      const itemSgst = Math.round((sgst * ratio) * 100) / 100;
+    const items = serviceItemArrays(record);
+    if (items.length) return items.map(row => {
+      const quantity = readInvoiceAmount(row,['quantity','Quantity','dispensedQuantity','DispensedQuantity','qty','Qty'],1);
+      const unitPrice = readInvoiceAmount(row,['unitPrice','UnitPrice','price','Price','rate','Rate']);
       return {
-        ...item,
-        cgst: itemCgst,
-        sgst: itemSgst,
-        netAmount: Math.round((amount + itemCgst + itemSgst) * 100) / 100,
+        label: itemLabel(row), diagnosis: readFirst(row,['diagnosis','Diagnosis','category','Category']) || '', quantity, unitPrice,
+        amount: readInvoiceAmount(row,['taxableAmount','TaxableAmount','baseAmount','amount','Amount','lineTotal','LineTotal','totalAmount','TotalAmount'],unitPrice * quantity),
+        cgst: readInvoiceAmount(row,['cgstAmount','CGSTAmount','cgst','CGST'],null),
+        sgst: readInvoiceAmount(row,['sgstAmount','SGSTAmount','sgst','SGST'],null),
+        netAmount: readInvoiceAmount(row,['netAmount','NetAmount','grossAmount','GrossAmount'],null),
       };
+    });
+    return [
+      {label:'Consultation charges',amount:readInvoiceAmount(record,['consultationCharge','ConsultationCharge','consultationCharges'])},
+      {label:'Lab charges',amount:readInvoiceAmount(record,['labCharge','LabCharge','labCharges'])},
+      {label:'Medicine charges',amount:readInvoiceAmount(record,['medicineCharge','MedicineCharge','medicineCharges'])},
+      {label:'Other charges',amount:readInvoiceAmount(record,['otherCharges','OtherCharges'])},
+    ].filter(item => item.amount > 0).map(item => ({...item,quantity:1,cgst:null,sgst:null,netAmount:null}));
+  };
+  const getGstAmount = record => readInvoiceAmount(record,['totals.gst','gstAmount','GSTAmount','gst','taxAmount']);
+  const getCgstAmount = record => readInvoiceAmount(record,['totals.cgst','cgstAmount','CGSTAmount','cgst','CGST'],getGstAmount(record)/2);
+  const getSgstAmount = record => readInvoiceAmount(record,['totals.sgst','sgstAmount','SGSTAmount','sgst','SGST'],getGstAmount(record)/2);
+  const getInvoiceSubTotal = record => readInvoiceAmount(record,['totals.subtotal','subtotal','subTotal','Subtotal','taxableAmount'],getLineItems(record).reduce((sum,row)=>sum+row.amount,0));
+  const getInvoiceRows = record => {
+    const items = getLineItems(record);
+    const subtotal = items.reduce((sum,row)=>sum+row.amount,0);
+    const round = value => Math.round(value*100)/100;
+    return items.map(item => {
+      const share = subtotal > 0 ? item.amount/subtotal : 0;
+      const cgst = item.cgst ?? round(getCgstAmount(record)*share);
+      const sgst = item.sgst ?? round(getSgstAmount(record)*share);
+      return {...item,cgst,sgst,netAmount:item.netAmount ?? round(item.amount+cgst+sgst)};
     });
   };
 
@@ -4905,38 +5295,47 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
   const getInvoiceId = (record) =>
     readFirst(record, ['invoiceId', 'billId', 'billingId', 'id', '_id', 'referenceId']);
 
-  const getBillDetailUrl = (billId) =>
-    patientApiUrl(PATIENT_API.billDetails, { id: billId });
+  const getBillDetailUrl = (billId, record = {}) =>
+    withQueryParams(patientApiUrl(PATIENT_API.billDetails, { id: billId }), { billingType: normalizePortalBillingType(billTypeLabel(record)) });
 
-  const normalizeBillDetailResponse = (data) => {
-    if (!data) return {};
-    if (Array.isArray(data)) return data[0] || {};
-    if (Array.isArray(data.data)) return data.data[0] || {};
-    if (data.data && typeof data.data === 'object') return data.data;
-    if (data.result && typeof data.result === 'object' && !Array.isArray(data.result)) return data.result;
-    if (data.bill && typeof data.bill === 'object') return data.bill;
-    if (data.invoice && typeof data.invoice === 'object') return data.invoice;
-    return typeof data === 'object' ? data : {};
+  const normalizeBillDetailResponse = (data, depth = 0) => {
+    if (!data || typeof data !== "object" || depth > 6) return {};
+    if (Array.isArray(data)) return normalizeBillDetailResponse(data[0],depth+1);
+    for (const key of ['data','result','bill','invoice']) if (data[key] && typeof data[key] === "object") return {...data,...normalizeBillDetailResponse(data[key],depth+1)};
+    return data;
   };
-
+  const mergeInvoiceDetails = (record, details) => {
+    const merged = {...record,...details};
+    const detailRows = serviceItemArrays(details);
+    const namedDetails = detailRows.length && detailRows.some(row => !/^(service item|lab charges|diagnostic charges|medicine charges|pharmacy charges)$/i.test(String(itemLabel(row))));
+    merged.lineItems = namedDetails ? detailRows : serviceItemArrays(record);
+    if (!details.totals && record.totals && !namedDetails) merged.totals = record.totals;
+    return merged;
+  };
   const fetchPatientBillDetails = async (record) => {
     const invoiceId = getInvoiceId(record);
     if (!invoiceId) return record;
+    let merged = record;
+    const patientId = authenticatedPatientId;
+    const paths = [getBillDetailUrl(invoiceId,record), withQueryParams(apiUrl("Billing/" + encodeURIComponent(invoiceId)),{patientId,billingType:normalizePortalBillingType(billTypeLabel(record))})];
+    for (const path of paths) {
+      const response = await fetch(path,{headers:getApiHeaders(),cache:'no-store'}).catch(()=>null);
+      // A denied Billing request never retries using a staff/admin session.
+      if (!response?.ok) continue;
+      const contentType = (response.headers.get('content-type') || '').toLowerCase();
+      if (contentType.includes('pdf') || contentType.includes('octet-stream')) continue;
+      const details = normalizeBillDetailResponse(await response.json().catch(()=>null));
+      if (!Object.keys(details).length) continue;
+      const owner = normalizeComparable(readFirst(details,['patientId','PatientId','patient.id','patient.Id']));
+      if (owner && owner !== patientId) continue;
+      const returnedId = readFirst(details,['id','Id','billId','BillId','billingId','BillingId']);
+      if (returnedId && String(returnedId) !== String(invoiceId)) continue;
+      const kind = readFirst(details,['invoiceType','InvoiceType','billingType','BillingType']);
+      if (kind && normalizePortalBillingType(kind) !== normalizePortalBillingType(billTypeLabel(record))) continue;
+      merged = mergeInvoiceDetails(merged,details);
 
-    const response = await fetch(getBillDetailUrl(invoiceId, record), {
-      headers: getApiHeaders(),
-      cache: "no-store",
-    }).catch(() => null);
-    if (!response?.ok) return record;
-
-    const contentType = (response.headers.get('content-type') || '').toLowerCase();
-    if (contentType.includes('pdf') || contentType.includes('octet-stream') || contentType.includes('binary')) {
-      return record;
     }
-
-    const data = await response.json().catch(() => null);
-    const details = normalizeBillDetailResponse(data);
-    return { ...record, ...details };
+    return merged;
   };
 
   const getInvoiceSourceUrl = async (record) => {
@@ -4969,10 +5368,12 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
     const invoiceNumberValue = invoiceNumber(record);
-    const patientName = readFirst(record, ['patientName', 'patient.name', 'name', 'customerName']) || 'Patient';
+    const patientName = readFirst(record, ['patientName', 'PatientName', 'patient.name', 'name', 'customerName']) || readFirst(patient || {}, ['name','fullName','patientName']) || 'Patient';
     const doctorName = readFirst(record, ['doctorName', 'doctor.name', 'provider.name', 'physician']) || 'Doctor';
     const appointmentNumber = readFirst(record, ['appointmentNumber', 'appointmentNo', 'appointmentId', 'appointment.id']) || '-';
-    const billDate = formatDate(record);
+    const rawBillDate = formatDate(record);
+    const parsedBillDate = new Date(rawBillDate);
+    const billDate = Number.isNaN(parsedBillDate.getTime()) ? rawBillDate : parsedBillDate.toLocaleString('en-IN', {day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
     const total = formatAmount(totalAmount(record));
     const due = formatAmount(dueAmount(record));
     const paymentModeValue = displayPaymentMode(record);
@@ -5001,6 +5402,7 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
               <strong>${escapeHtml(item.label)}</strong>
               ${item.diagnosis ? `<small>${escapeHtml(item.diagnosis)}</small>` : ''}
             </td>
+            <td style="text-align:center;">${escapeHtml(item.quantity ?? 1)}</td>
             <td style="text-align:right;">${formatAmount(item.amount)}</td>
             <td style="text-align:right;">${formatAmount(item.cgst)}</td>
             <td style="text-align:right;">${formatAmount(item.sgst)}</td>
@@ -5009,7 +5411,7 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
         `).join('')
       : `
           <tr>
-            <td>Description</td>
+            <td>Itemized details unavailable</td><td>?</td>
             <td style="text-align:right;">${total}</td>
             <td style="text-align:right;">${formatAmount(0)}</td>
             <td style="text-align:right;">${formatAmount(0)}</td>
@@ -5098,11 +5500,12 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
             </div>
             <div class="section">
               <h2>Line Items</h2>
+              ${!serviceItemArrays(record).length ? '<p>Individual item names and prices were not supplied with this saved bill.</p>' : ''}
               <table>
                 <thead>
-                  <tr><th>Description</th><th>Amount</th><th>CGST</th><th>SGST</th><th>Net Amount</th></tr>
+                  <tr><th>Description</th><th>Qty</th><th>Amount</th><th>CGST</th><th>SGST</th><th>Net Amount</th></tr>
                 </thead>
-                <tbody>${lineRows}</tbody>
+                <tbody>${lineRows}</tbody><tfoot><tr><td colspan="2"><b>Sub Total</b></td><td>${formatAmount(getInvoiceSubTotal(record))}</td><td>${formatAmount(getCgstAmount(record))}</td><td>${formatAmount(getSgstAmount(record))}</td><td>${formatAmount(getInvoiceRows(record).reduce((sum,row)=>sum+row.netAmount,0))}</td></tr><tr><td colspan="5">Discount</td><td>${formatAmount(readInvoiceAmount(record,['totals.discountAmount','discountAmount','DiscountAmount','discount']))}</td></tr></tfoot>
               </table>
             </div>
             <div class="summary">
@@ -5121,41 +5524,75 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
   };
 
   const viewInvoice = async (record, directUrl = '') => {
-    const detailedRecord = directUrl ? record : await fetchPatientBillDetails(record);
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      setDownloadError('Please allow popups to view the invoice.');
+    const detailedRecord = await fetchPatientBillDetails(record);
+    const preview = document.createElement('dialog');
+    preview.setAttribute('aria-label', 'Invoice preview');
+    preview.style.cssText = 'width:min(1100px,calc(100vw - 32px));height:min(900px,calc(100vh - 32px));max-width:none;max-height:none;padding:0;border:0;border-radius:12px;overflow:hidden;box-shadow:0 24px 80px rgba(15,23,42,.35)';
+
+    const toolbar = document.createElement('div');
+    toolbar.style.cssText = 'height:52px;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border-bottom:1px solid #e2e8f0;font:600 14px Arial,sans-serif;color:#17243b';
+    const label = document.createElement('span');
+    label.textContent = 'Invoice preview';
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.textContent = 'Close';
+    closeButton.setAttribute('aria-label', 'Close invoice preview');
+    closeButton.style.cssText = 'padding:8px 14px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;color:#17243b;font:600 14px Arial,sans-serif;cursor:pointer';
+    closeButton.addEventListener('click', () => preview.close());
+    toolbar.append(label, closeButton);
+
+    const frame = document.createElement('iframe');
+    frame.title = 'Invoice';
+    frame.style.cssText = 'display:block;width:100%;height:calc(100% - 52px);border:0;background:#eef2f7';
+    frame.srcdoc = getPrintableInvoiceHtml(detailedRecord, { autoPrint: false });
+    preview.append(toolbar, frame);
+    preview.addEventListener('close', () => preview.remove(), { once: true });
+
+    if (typeof preview.showModal !== 'function') {
+      setDownloadError('Invoice preview is not supported in this browser.');
       return;
     }
-    printWindow.document.write(getPrintableInvoiceHtml(detailedRecord, { autoPrint: false }));
-    printWindow.document.close();
+    document.body.appendChild(preview);
+    preview.showModal();
   };
 
   const printInvoice = async (record) => {
-    const detailedRecord = await fetchPatientBillDetails(record);
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       setDownloadError('Please allow popups to view the invoice print preview.');
       return;
     }
+    const detailedRecord = await fetchPatientBillDetails(record);
     printWindow.document.write(getPrintableInvoiceHtml(detailedRecord, { autoPrint: true }));
     printWindow.document.close();
   };
 
   const downloadInvoice = async (record, directUrl = '', filename = '') => {
     void filename;
-    const detailedRecord = directUrl ? record : await fetchPatientBillDetails(record);
+    const detailedRecord = await fetchPatientBillDetails(record);
     setDownloadStatus('Invoice is being prepared for PDF download.');
     setDownloadError('');
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      setDownloadStatus('');
-      setDownloadError('Please allow popups to download the invoice PDF.');
-      return;
-    }
-    printWindow.document.write(getPrintableInvoiceHtml(detailedRecord, { autoPrint: true }));
-    printWindow.document.close();
-    window.setTimeout(() => setDownloadStatus(''), 1200);
+    const frame = document.createElement('iframe');
+    frame.title = 'Invoice PDF print preview';
+    frame.setAttribute('aria-hidden', 'true');
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:800px;height:1px;border:0;pointer-events:none';
+    frame.onload = () => {
+      const printWindow = frame.contentWindow;
+      if (!printWindow) {
+        frame.remove();
+        setDownloadStatus('');
+        setDownloadError('Unable to prepare the invoice PDF.');
+        return;
+      }
+      printWindow.addEventListener('afterprint', () => {
+        frame.remove();
+        setDownloadStatus('');
+      }, { once: true });
+      printWindow.focus();
+      printWindow.print();
+    };
+    frame.srcdoc = getPrintableInvoiceHtml(detailedRecord, { autoPrint: false });
+    document.body.appendChild(frame);
   };
 
   const isBillPaid = (record) => {
@@ -5295,7 +5732,7 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
       key: 'op',
       title: 'OP Bills',
       bills: billRecords
-        .filter((bill) => billTypeLabel(bill) === 'OP Bill' && isCurrentPatientOpBill(bill))
+        .filter((bill) => billTypeLabel(bill) === 'OP Bill')
         .sort((a, b) => billDateValue(b) - billDateValue(a)),
     },
     {
@@ -5319,15 +5756,13 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
       title="Billing"
       subtitle="Latest OP, diagnostic, and pharmacy invoices."
     >
-      {downloadStatus ? <div className="pb-invoice-status pb-invoice-status--success">{downloadStatus}</div> : null}
-      {downloadError ? <div className="pb-invoice-status pb-invoice-status--error">{downloadError}</div> : null}
       {loadingBills ? <div className="pd-selected-notification">Loading latest bills...</div> : null}
       {latestBillSections.map((section) => (
         <section className="pd-card" key={section.key}>
           <div className="pd-section-header">
             <div>
               <h2>{section.title}</h2>
-              <p>{section.bills.length ? `${section.bills.length} invoice(s) generated by reception.` : 'No invoice generated yet.'}</p>
+              <p>{section.bills.length ? `${section.bills.length} invoice(s).` : loadingBills ? 'Checking saved invoices...' : 'No invoice found for this category.'}</p>
             </div>
           </div>
           {section.bills.length ? (
@@ -5382,7 +5817,7 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
             </div>
           ) : (
             <div className="pd-selected-notification">
-              <p>No {section.title.toLowerCase()} found.</p>
+              <p>{loadingBills ? "Loading invoices..." : `No ${section.title.toLowerCase()} found.`}</p>
             </div>
           )}
         </section>
@@ -5392,6 +5827,7 @@ export function PatientBillsPage({ bills = [], patient = null, visits = [] }) {
 }
 
 function PatientNotificationsPage({ notifications = [], prescriptions = [], bills = [], patient = null, visits = [] }) {
+  const toast = useToast();
   const navigate = useNavigate();
   const [apiNotifications, setApiNotifications] = useState([]);
   const [pendingNotificationActions, setPendingNotificationActions] = useState({});
@@ -5818,7 +6254,7 @@ function PatientNotificationsPage({ notifications = [], prescriptions = [], bill
       if (!response.ok) throw new Error(`Unable to ${action} notification.`);
     } catch (error) {
       setNotificationRows(previousRows);
-      window.alert(error.message || "Unable to update notification.");
+      toast.error(error.message || "Unable to update notification.");
     } finally {
       setPendingNotificationActions((actions) => {
         const next = { ...actions };
@@ -6069,6 +6505,7 @@ function PatientAccountLayout({ active = "profile", children }) {
 }
 
 function PatientChangePasswordPage() {
+  const toast = useToast();
   const [form, setForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -6079,8 +6516,6 @@ function PatientChangePasswordPage() {
     newPassword: false,
     confirmPassword: false,
   });
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
   const [saving, setSaving] = useState(false);
 
   const passwordRequirements = useMemo(
@@ -6094,8 +6529,6 @@ function PatientChangePasswordPage() {
 
   const updateField = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-    setMessage("");
-    setMessageType("");
   };
 
   const togglePasswordVisibility = (field) => {
@@ -6104,38 +6537,31 @@ function PatientChangePasswordPage() {
 
   const changePassword = async (event) => {
     event.preventDefault();
-    setMessage("");
-    setMessageType("");
 
     if (!form.currentPassword || !form.newPassword || !form.confirmPassword) {
-      setMessage("Please fill all password fields.");
-      setMessageType("error");
+      toast.error("Please fill all password fields.");
       return;
     }
 
     const currentPasswordError = validateStrongPassword(form.currentPassword, "Current Password");
     if (currentPasswordError) {
-      setMessage(currentPasswordError);
-      setMessageType("error");
+      toast.error(currentPasswordError);
       return;
     }
 
     const newPasswordError = validateStrongPassword(form.newPassword, "New Password");
     if (newPasswordError) {
-      setMessage(newPasswordError);
-      setMessageType("error");
+      toast.error(newPasswordError);
       return;
     }
 
     if (form.currentPassword === form.newPassword) {
-      setMessage("New password must be different from current password.");
-      setMessageType("error");
+      toast.error("New password must be different from current password.");
       return;
     }
 
     if (form.newPassword !== form.confirmPassword) {
-      setMessage("New password and confirm password must match.");
-      setMessageType("error");
+      toast.error("New password and confirm password must match.");
       return;
     }
 
@@ -6156,13 +6582,11 @@ function PatientChangePasswordPage() {
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(data.message || `Request failed with status ${response.status}`);
-      setMessage(data.message || "Password changed successfully.");
-      setMessageType("success");
+      toast.success(data.message || "Password changed successfully.");
       setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setVisiblePasswords({ currentPassword: false, newPassword: false, confirmPassword: false });
     } catch (error) {
-      setMessage(error.message || "Unable to change password right now.");
-      setMessageType("error");
+      toast.error(error.message || "Unable to change password right now.");
     } finally {
       setSaving(false);
     }
@@ -6209,7 +6633,6 @@ function PatientChangePasswordPage() {
             ))}
           </ul>
           {renderPasswordField("confirmPassword", "Confirm Password", "new-password")}
-          {message ? <p className={`pp-password-message pp-password-message--${messageType}`}>{message}</p> : null}
           <button type="submit" className="pp-password-submit" disabled={saving}>
             {saving ? "Updating..." : "Update Password"}
           </button>
@@ -6220,11 +6643,10 @@ function PatientChangePasswordPage() {
 }
 
 function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = [], notifications = [], onProfileUpdated = () => {} }) {
+  const toast = useToast();
   const navigate = useNavigate();
   const [editMode, setEditMode] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("");
   const [form, setForm] = useState({
     name: "",
     gender: "",
@@ -6341,18 +6763,32 @@ function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = 
   };
 
   const handleFieldChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-    setMessage("");
-    setMessageType("");
+    const nextValue = ["mobile", "emergencyContactPhone"].includes(field)
+      ? String(value).replace(/\D/g, "").slice(0, 10)
+      : value;
+    setForm((prev) => ({ ...prev, [field]: nextValue }));
   };
 
   const saveProfile = async () => {
+    const nameError = validateName(form.name, "Name");
+    const mobileError = validateMobile(form.mobile, "Mobile number");
+    const emergencyNameError = form.emergencyContactName.trim()
+      ? validateName(form.emergencyContactName, "Emergency contact name")
+      : "";
+    const emergencyPhoneError = form.emergencyContactPhone.trim()
+      ? validateMobile(form.emergencyContactPhone, "Emergency contact phone")
+      : "";
+    const validationError = nameError || mobileError || emergencyNameError || emergencyPhoneError;
+
+    if (validationError) {
+      toast.error(validationError);
+      return;
+    }
+
     setSaving(true);
-    setMessage("");
-    setMessageType("");
     try {
       const profileUrl = patientApiUrl(PATIENT_API.profile);
-      const nameParts = splitProfileName(form.name || profileName);
+      const nameParts = splitProfileName(formatTitleCase(form.name || profileName));
       const payload = {
         firstName: nameParts.firstName,
         lastName: nameParts.lastName,
@@ -6362,7 +6798,7 @@ function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = 
         mobileNumber: form.mobile.trim(),
         email: form.email.trim(),
         address: form.address.trim(),
-        emergencyContactName: form.emergencyContactName.trim(),
+        emergencyContactName: formatTitleCase(form.emergencyContactName.trim()),
         emergencyContactRelationship: form.emergencyContactRelationship.trim(),
         emergencyContactPhone: form.emergencyContactPhone.trim(),
         allergies: profileAllergies === "Not recorded" ? "" : profileAllergies,
@@ -6387,12 +6823,10 @@ function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = 
         ...payload,
         ...(returnedProfile && typeof returnedProfile === "object" && !Array.isArray(returnedProfile) ? returnedProfile : {}),
       });
-      setMessage(data.message || "Profile updated successfully.");
-      setMessageType("success");
+      toast.success(data.message || "Profile updated successfully.");
       setEditMode(false);
     } catch (error) {
-      setMessage(error.message || "Unable to update profile.");
-      setMessageType("error");
+      toast.error(error.message || "Unable to update profile.");
     } finally {
       setSaving(false);
     }
@@ -6410,6 +6844,8 @@ function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = 
         type={type}
         value={value}
         disabled={!editMode || disabled}
+        inputMode={type === "tel" ? "numeric" : undefined}
+        maxLength={type === "tel" ? 10 : undefined}
         onChange={(e) => handleFieldChange(field, e.target.value)}
       />
     </label>
@@ -6455,7 +6891,6 @@ function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = 
                 )}
               </div>
             </div>
-            {message ? <p className={`pd-message pd-message--${messageType}`}>{message}</p> : null}
             <div className="pd-profile-card">
               <div className="pd-profile-avatar">{profileInitials}</div>
               <div className="pd-profile-copy">
@@ -6495,7 +6930,7 @@ function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = 
               <section className="pd-profile-section">
                 <h3>Contact</h3>
                 <div className="pd-profile-strip pd-profile-strip--expanded">
-                  {renderField("Mobile", form.mobile, "mobile", "text")}
+                  {renderField("Mobile", form.mobile, "mobile", "tel")}
                   <div><span>Email</span><strong>{profileEmail}</strong></div>
                   {renderField("Address", form.address, "address")}
                 </div>
@@ -6506,7 +6941,7 @@ function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = 
                 <div className="pd-profile-strip pd-profile-strip--expanded">
                   {renderField("Name", form.emergencyContactName, "emergencyContactName")}
                   {renderField("Relationship", form.emergencyContactRelationship, "emergencyContactRelationship")}
-                  {renderField("Phone", form.emergencyContactPhone, "emergencyContactPhone")}
+                  {renderField("Phone", form.emergencyContactPhone, "emergencyContactPhone", "tel")}
                 </div>
               </section>
 
@@ -6527,3 +6962,9 @@ function PatientProfilePage({ patient, visits = [], prescriptions = [], bills = 
 }
 
 export default PatientRoutes;
+
+
+
+
+
+

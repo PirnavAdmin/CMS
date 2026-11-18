@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
+import DatePickerField from "../../components/DatePickerField";
 import { useNavigate, Link } from "react-router-dom";
-import { apiUrl, patientApiUrl, PATIENT_API } from "../../config/api";
+import { apiUrl } from "../../config/api";
 import { useToast } from "../../components/ToastProvider";
 import PasswordField from "../../components/PasswordField";
 import { buildAddress, emptyAddressParts, onlyPincodeValue } from "../../utils/address";
 import { INDIA_COUNTRY } from "../../utils/indianLocations";
 import { fetchPincodeLocation } from "../../utils/pincodeLocation";
 import { formatTitleCase } from "../../utils/format";
-import { validateStrongPassword, validateEmail, validateName, validateText } from "../../utils/validation";
+import { validateStrongPassword, validateEmail, validateMobile, validateName, validateText } from "../../utils/validation";
 import { validateUniqueMobileNumber } from "../../utils/mobileUniqueness";
 import { ChevronRight, ChevronLeft, Check, Heart } from "lucide-react";
 import clinicBg from '../../assests/clinic-bg.jpg';
@@ -177,24 +178,16 @@ function PatientRegister() {
     let mounted = true;
     const loadClinics = async () => {
       setLoadingClinics(true);
-      const token = localStorage.getItem("patientToken") || localStorage.getItem("token") || "";
       const headers = { "ngrok-skip-browser-warning": "true" };
-      if (token) headers["Authorization"] = `Bearer ${token}`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
       try {
-        const primaryUrl = patientApiUrl(PATIENT_API.clinics);
-        let list = await fetchClinicList(primaryUrl, headers, controller.signal);
-
-        if (list === null || list.length === 0) {
-          const fallbackUrl = apiUrl("Clinics");
-          console.debug("loadClinics: primary endpoint returned no data, trying fallback", fallbackUrl);
-          const fallbackList = await fetchClinicList(fallbackUrl, headers, controller.signal);
-          if (Array.isArray(fallbackList) && fallbackList.length > 0) {
-            list = fallbackList;
-          }
-        }
+        const list = await fetchClinicList(
+          apiUrl("public/clinics"),
+          headers,
+          controller.signal
+        );
 
         if (!mounted) return;
 
@@ -316,8 +309,9 @@ function PatientRegister() {
         }
       }
 
-      if (name === "mobile" && value && !/^\d{10}$/.test(value)) {
-        next.mobile = "Enter a valid 10 digit mobile number.";
+      if (name === "mobile" && value) {
+        const mobileError = validateMobile(value, "Mobile number");
+        if (mobileError) next.mobile = mobileError;
       }
 
       if (name === "streetVillage" && value.trim()) {
@@ -398,16 +392,14 @@ function PatientRegister() {
     }
 
     if (step === 2) {
-      if (!form.mobile) nextErrors.mobile = "Mobile number is required.";
+      const mobileError = validateMobile(form.mobile, "Mobile number");
+      if (mobileError) nextErrors.mobile = mobileError;
       if (!form.email.trim()) nextErrors.email = "Email is required.";
       if (!form.addressParts?.streetVillage?.trim()) nextErrors.streetVillage = "Street/Village is required.";
       if (!form.addressParts?.area) nextErrors.area = "Area is required.";
       if (!form.addressParts?.pincode) nextErrors.pincode = "Pincode is required.";
       if (!form.address.trim()) nextErrors.address = "Full address is required.";
 
-      if (form.mobile && !/^\d{10}$/.test(form.mobile)) {
-        nextErrors.mobile = "Enter a valid 10 digit mobile number.";
-      }
       if (form.addressParts?.pincode && !/^\d{6}$/.test(form.addressParts.pincode)) {
         nextErrors.pincode = "Pincode must be exactly 6 digits.";
       }
@@ -605,7 +597,7 @@ function PatientRegister() {
                 </div>
                 <div className="form-group">
                   <label htmlFor="reg-dob">DOB</label>
-                  <input id="reg-dob" type="date" name="dob" value={form.dob} onChange={handleChange} placeholder="dd-mm-yyyy" />
+                  <DatePickerField id="reg-dob" name="dob" value={form.dob} onChange={(nextValue) => handleChange({ target: { name: "dob", value: nextValue } })} />
                   {errors.dob && <span className="error-message">{errors.dob}</span>}
                 </div>
               </div>
@@ -701,3 +693,5 @@ function PatientRegister() {
 }
 
 export default PatientRegister;
+
+

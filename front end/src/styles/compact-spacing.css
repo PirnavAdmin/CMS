@@ -7,12 +7,12 @@
   --space-4: 16px;
   --space-5: 20px;
   --space-6: 24px;
-  --app-page-padding: var(--space-4);
-  --app-card-padding: var(--space-4);
-  --app-section-gap: var(--space-4);
-  --app-major-gap: var(--space-5);
-  --app-inline-gap: var(--space-2);
-  --app-control-height: 38px;
+  --app-page-padding: 10px;
+  --app-card-padding: 12px;
+  --app-section-gap: 10px;
+  --app-major-gap: 12px;
+  --app-inline-gap: 6px;
+  --app-control-height: 36px;
   --app-control-height-sm: 34px;
   --app-table-row-y: var(--space-2);
   --app-table-row-x: var(--space-3);
@@ -79,6 +79,12 @@
   gap: var(--space-3) !important;
   margin: 0 0 var(--space-4) !important;
   padding: 0 !important;
+}
+
+/* The Super Admin dashboard header is a bordered card, so it needs its own
+   interior spacing instead of the shared zero-padding header reset. */
+.sa-dashboard-page .sa-page-header {
+  padding: 16px 20px !important;
 }
 
 :where(
@@ -151,6 +157,41 @@
   .booking-grid
 ) {
   gap: var(--app-section-gap) !important;
+}
+
+:where(
+  .ds-grid,
+  .branches-grid,
+  .admin-settings-grid,
+  .sa-card-grid,
+  .sa-grid,
+  .lab-grid,
+  .rc-stat-grid,
+  .pd-stat-grid,
+  .mh-grid,
+  .booking-grid
+) {
+  align-items: stretch !important;
+}
+
+:where(
+  .ds-card,
+  .branches-card,
+  .admin-settings-card,
+  .sa-card,
+  .sa-panel,
+  .sa-form-card,
+  .rc-card,
+  .lab-profile-card,
+  .lab-report-form-card,
+  .pd-card,
+  .mh-card,
+  .booking-card
+) {
+  display: flex !important;
+  flex-direction: column !important;
+  height: 100% !important;
+  box-sizing: border-box !important;
 }
 
 :where(
@@ -299,7 +340,11 @@
   .doctors-table,
   .patients-table,
   .appointments-table,
-  .admin-users-table
+  .admin-users-table,
+  .nurses-table,
+  .lab-files-table,
+  .appointments-table-scroll,
+  .patients-table-scroll
 ) {
   overflow-x: auto;
 }
@@ -311,14 +356,21 @@
   .admin-users-row,
   .branches-thead,
   .branches-row,
+  .receptionists-thead,
   .receptionists-table-head,
   .receptionists-row,
   .doctors-table-head,
   .doctors-row,
+  .patients-thead,
   .patients-table-head,
   .patients-row,
+  .appointments-thead,
   .appointments-table-head,
-  .appointments-row
+  .appointments-row,
+  .nurses-thead,
+  .nurses-row,
+  .lab-files-head,
+  .lab-files-row
 ) {
   align-items: center !important;
   column-gap: var(--space-2) !important;
@@ -358,8 +410,12 @@
   .admin-users-actions
 ) {
   align-items: center !important;
+  justify-content: center !important;
   gap: var(--space-2) !important;
-  justify-content: flex-start;
+  width: 100% !important;
+  overflow: visible !important;
+  padding-right: 8px !important;
+  box-sizing: border-box !important;
 }
 
 :where(
@@ -397,8 +453,72 @@
   overflow: visible !important;
 }
 
+.sa-table--clinics {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .sa-table--clinics {
+    overflow-x: auto !important;
+  }
+}
+
+.sa-table--clinics .sa-table-head,
+.sa-table--clinics .sa-table-row {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.sa-table--admins {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .sa-table--admins {
+    overflow-x: auto !important;
+  }
+}
+
+.sa-table--admins .sa-table-head,
+.sa-table--admins .sa-table-row {
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.sa-table .actions-group,
+.sa-table-cell--actions .actions-group {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 5px !important;
+  padding: 0 !important;
+  width: auto !important;
+  max-width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-table .actions-group .action-btn,
+.sa-table-cell--actions .action-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+  border-radius: 7px !important;
+}
+
+.sa-table .actions-group .action-btn svg,
+.sa-table-cell--actions .action-btn svg {
+  width: 14px !important;
+  height: 14px !important;
+}
+
 .sa-table--clinics .sa-table-cell--actions {
   min-width: 0;
+  overflow: visible !important;
 }
 
 .sa-table--clinics .sa-icon-btn {
@@ -414,12 +534,21 @@
 }
 
 .sa-table--report {
-  overflow-x: auto !important;
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+@media (max-width: 900px) {
+  .sa-table--report {
+    overflow-x: auto !important;
+  }
 }
 
 .sa-table--report .sa-table-head,
 .sa-table--report .sa-table-row {
-  min-width: 1280px;
+  min-width: 0 !important;
+  width: 100% !important;
 }
 
 .sa-table--report .sa-table-cell--performance {
@@ -430,7 +559,7 @@
 .sa-table--report .sa-report-performance {
   width: 100%;
   display: grid;
-  grid-template-columns: minmax(120px, 1fr) 48px;
+  grid-template-columns: minmax(70px, 1fr) 42px;
   align-items: center;
   gap: var(--space-2);
 }
@@ -502,8 +631,8 @@
 
 .admin-roles-page .sa-table-head,
 .admin-roles-page .sa-table-row {
-  min-width: 920px;
-  grid-template-columns: 52px minmax(120px, 0.65fr) minmax(110px, 0.55fr) minmax(180px, 1fr) minmax(180px, 0.95fr) 92px !important;
+  min-width: 980px !important;
+  grid-template-columns: 60px minmax(130px, 0.8fr) minmax(100px, 0.7fr) minmax(280px, 1.8fr) minmax(160px, 1fr) 140px !important;
 }
 
 .admin-roles-page .sa-table-row {
@@ -551,5 +680,2004 @@
   :where(.dashboard-header, .branches-header, .sa-page-header, .admin-users-header) {
     flex-direction: column;
     align-items: stretch !important;
+  }
+}
+
+/* Universal Reference Table UI System */
+:where(
+  .sa-table,
+  .branches-table,
+  .rc-table,
+  .patients-table,
+  .doctors-table,
+  .receptionists-table,
+  .appointments-table,
+  .nurses-table,
+  .lab-files-table,
+  .admin-users-table,
+  .appointments-table-scroll,
+  .patients-table-scroll
+) {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 4%, transparent) !important;
+  overflow-x: auto !important;
+}
+
+:where(
+  .sa-table-head,
+  .branches-thead,
+  .rc-table-head,
+  .patients-thead,
+  .patients-table-head,
+  .doctors-table-head,
+  .receptionists-thead,
+  .receptionists-table-head,
+  .appointments-thead,
+  .appointments-table-head,
+  .nurses-thead,
+  .lab-files-head,
+  .admin-users-table-head
+) {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: var(--theme-primary-dark) !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  min-height: 48px !important;
+  padding: 12px 16px !important;
+}
+
+:where(
+  .sa-table-row,
+  .branches-row,
+  .rc-table-row,
+  .patients-row,
+  .doctors-row,
+  .receptionists-row,
+  .appointments-row,
+  .nurses-row,
+  .lab-files-row,
+  .admin-users-row
+) {
+  min-height: 64px !important;
+  padding: 12px 16px !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  align-items: center !important;
+}
+
+:where(.sa-badge, .branches-status, .rc-status, .patient-status, .doctor-status) {
+  width: fit-content !important;
+  margin: 0 auto !important;
+  padding: 6px 16px !important;
+  border-radius: 999px !important;
+  font-size: 12.5px !important;
+  font-weight: 700 !important;
+  white-space: nowrap !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* Universal Button Flex Centering */
+:where(button, .admin-settings-save, .receptionists-primary-button, .sa-btn, .rc-confirm) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 1 !important;
+  vertical-align: middle !important;
+}
+
+:where(button, .admin-settings-save, .receptionists-primary-button, .sa-btn, .rc-confirm) > svg {
+  display: block !important;
+  flex-shrink: 0 !important;
+}
+
+/* Universal Table Cell Single-Line Text Overflow Protection */
+:where(.sa-table-row, .branches-row, .rc-table-row, .patients-row, .doctors-row, .receptionists-row, .appointments-row, .lab-files-row) > span {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+/* Universal Table Name Column Header & Cell Alignment */
+:where(
+  .receptionists-thead > :nth-child(2),
+  .nurses-thead > :nth-child(2),
+  .branches-thead > :nth-child(2),
+  .rc-table-head > :nth-child(2),
+  .doctors-table-head > :nth-child(2),
+  .receptionists-name-head,
+  .nurses-name-head,
+  .branches-name-head
+) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+}
+
+:where(
+  .patients-thead > :nth-child(2),
+  .patients-name-head,
+  .appointments-thead > :nth-child(2),
+  .appointments-patient-head,
+  .admin-users-table-head > :nth-child(2),
+  .admin-users-name-head,
+  .admin-roles-staff-head,
+  .sa-table-head > :nth-child(2)
+) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+}
+
+:where(
+  .receptionists-name-cell,
+  .nurses-name-cell,
+  .branches-name-cell
+) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+}
+
+:where(
+  .admin-users-name-cell,
+  .patients-info,
+  .appointments-patient-cell,
+  .admin-roles-staff-cell,
+  .sa-clinic-name-cell,
+  .sa-admin-name-cell
+) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  gap: 10px !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+:where(
+  .receptionists-name-highlight,
+  .nurses-name-highlight,
+  .lab-tech-name-highlight
+) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+/* Universal Table Status Column Header & Cell Alignment */
+:where(
+  .receptionists-status-head,
+  .branches-status-head,
+  .rc-status-head,
+  .patient-status-head,
+  .doctor-status-head,
+  .sa-status-head,
+  .nurses-status-head,
+  .lab-files-status-head,
+  .appointments-status-head,
+  .admin-users-status-head,
+  .appointments-thead > :nth-child(7),
+  .admin-users-table-head > :nth-child(7)
+) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+:where(
+  .receptionists-status-cell,
+  .branches-status-cell,
+  .rc-status-cell,
+  .patient-status-cell,
+  .doctor-status-cell,
+  .sa-status-cell,
+  .sa-table-cell--status,
+  .nurses-status-cell,
+  .lab-files-status-cell,
+  .appointments-status-badge,
+  .admin-users-status-cell,
+  .appointments-row > :nth-child(7),
+  .admin-users-row > :nth-child(7)
+) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-status-head,
+.sa-table-cell--status,
+.sa-sno-head,
+.sa-table-cell--sno,
+.sa-actions-header,
+.sa-table-cell--actions,
+.sa-align-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-align-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  text-align: right !important;
+}
+
+.sa-align-left,
+.sa-name-head,
+.sa-table-cell--name,
+.sa-admin-name-cell,
+.sa-clinic-name-cell,
+.sa-admin-clinic-cell,
+.sa-table--admins .sa-table-head > :nth-child(2),
+.sa-table--admins .sa-table-row > :nth-child(2),
+.sa-table--admins .sa-admin-name-cell,
+.sa-table--admins .sa-admin-clinic-cell,
+.sa-table--clinics .sa-table-head > :nth-child(2),
+.sa-table--clinics .sa-table-row > :nth-child(2),
+.sa-table--clinics .sa-clinic-name-cell {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  text-align: left !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Universal Table Actions Header & Cell Flex Centering */
+.sa-table-head > :last-child,
+.sa-actions-header,
+.rc-table-head > :last-child,
+.branches-thead > :last-child,
+.branches-actions-heading,
+.receptionists-thead > :last-child,
+.receptionists-actions-head,
+.nurses-thead > :last-child,
+.nurses-actions-head,
+.lab-files-head > :last-child,
+.appointments-thead > :last-child,
+.doctors-table-head > :last-child,
+.lab-head-actions,
+.patients-thead > :last-child,
+.actions-header-cell,
+:where(.sa-table-head > :last-child, .rc-table-head > :last-child, .branches-thead > :last-child, .receptionists-thead > :last-child, .receptionists-table-head > :last-child, .doctors-table-head > :last-child, .lab-head-actions) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+.sa-actions,
+.sa-table-cell--actions,
+.rc-row-actions,
+.branches-actions,
+.receptionists-actions,
+.nurses-actions,
+.lab-files-actions,
+.doctors-actions,
+.patients-actions,
+.patients-view-btn,
+.appointments-actions,
+.admin-users-actions,
+.lab-row-actions,
+.actions-group,
+:where(.sa-actions, .rc-row-actions, .branches-actions, .receptionists-actions, .doctors-actions, .patients-actions, .patients-view-btn, .appointments-actions, .admin-users-actions, .lab-row-actions) {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: var(--space-2, 8px) !important;
+  margin: 0 auto !important;
+  justify-self: center !important;
+  width: 100% !important;
+  overflow: visible !important;
+  box-sizing: border-box !important;
+}
+
+/* ==========================================================================
+   MEDICAL INSTRUMENTS STATUS MODEL - VITAL BIOSENSOR / TELEMETRY CAPSULE
+   Total Admin Module: Receptionists, Lab Technicians, Nurses, Doctors,
+   Branches, User Management, Appointments, Lab Files
+   ========================================================================== */
+
+/* Universal Medical Instrument Status Capsule Base */
+:where(
+  .receptionists-status,
+  .nurses-status,
+  .doctors-status,
+  .branches-status,
+  .admin-users-status,
+  .lab-files-status,
+  .appointments-status-badge,
+  .medical-status-capsule
+) {
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-width: 98px !important;
+  height: 30px !important;
+  padding: 0 30px 0 12px !important;
+  border-radius: 999px !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.025em !important;
+  text-transform: capitalize !important;
+  white-space: nowrap !important;
+  cursor: default !important;
+  margin: 0 auto !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+}
+
+/* Doctors clickable toggle button wrapper */
+.doctors-status-button {
+  cursor: pointer !important;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+.doctors-status-button .doctors-status {
+  cursor: pointer !important;
+}
+
+.doctors-status-button:hover .doctors-status {
+  transform: translateY(-1px) scale(1.04) !important;
+}
+
+.doctors-status-button:active .doctors-status {
+  transform: translateY(1px) scale(0.96) !important;
+}
+
+/* ==========================================================================
+   ACTIVE MODE: VITAL CARDIAC BIOSENSOR / ECG PULSE INSTRUMENT (GREEN)
+   ========================================================================== */
+:where(
+  .receptionists-status-active,
+  .nurses-status-active,
+  .doctors-status-active,
+  .branches-status-active,
+  .admin-users-status.is-online,
+  .lab-files-status-active,
+  .appointments-status-badge.is-completed,
+  .medical-status-active
+) {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%) !important;
+  color: #065f46 !important;
+  border: 1.5px solid #10b981 !important;
+  box-shadow:
+    0 2px 8px rgba(16, 185, 129, 0.24),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(16, 185, 129, 0.15) !important;
+}
+
+/* Vital Biosensor Sensor Lens (Active Green LED + Cardiac Pulse) */
+:where(
+  .receptionists-status-active,
+  .nurses-status-active,
+  .doctors-status-active,
+  .branches-status-active,
+  .admin-users-status.is-online,
+  .lab-files-status-active,
+  .appointments-status-badge.is-completed,
+  .medical-status-active
+)::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  border: 1.5px solid #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.5),
+    0 0 7px #10b981 !important;
+  flex-shrink: 0 !important;
+  animation: medicalVitalPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
+}
+
+/* Subtle ECG Cardiac Waveform Watermark in Background - Positioned without overlapping text */
+:where(
+  .receptionists-status-active,
+  .nurses-status-active,
+  .doctors-status-active,
+  .branches-status-active,
+  .admin-users-status.is-online,
+  .lab-files-status-active,
+  .appointments-status-badge.is-completed,
+  .medical-status-active
+)::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 18px !important;
+  height: 10px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 20' fill='none' stroke='%23059669' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M0 10 h10 l4 -8 l6 16 l4 -10 l3 4 h13'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  opacity: 0.5 !important;
+  pointer-events: none !important;
+}
+
+:where(
+  .receptionists-status-active,
+  .nurses-status-active,
+  .doctors-status-active,
+  .branches-status-active,
+  .admin-users-status.is-online,
+  .lab-files-status-active,
+  .appointments-status-badge.is-completed,
+  .medical-status-active
+):hover {
+  background: linear-gradient(135deg, #f0fdf4 0%, #bbf7d0 50%, #86efac 100%) !important;
+  border-color: #059669 !important;
+  box-shadow:
+    0 4px 14px rgba(16, 185, 129, 0.38),
+    inset 0 1px 1px #ffffff !important;
+  transform: translateY(-1px) scale(1.03) !important;
+}
+
+/* ==========================================================================
+   INACTIVE MODE: MEDICAL ASYSTOLE / STANDBY ALERT INSTRUMENT (RED)
+   ========================================================================== */
+:where(
+  .receptionists-status-inactive,
+  .nurses-status-inactive,
+  .doctors-status-inactive,
+  .branches-status-inactive,
+  .admin-users-status.is-offline,
+  .lab-files-status-inactive,
+  .appointments-status-badge.is-cancelled,
+  .medical-status-inactive
+) {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%) !important;
+  color: #991b1b !important;
+  border: 1.5px solid #ef4444 !important;
+  box-shadow:
+    0 2px 8px rgba(239, 68, 68, 0.24),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(239, 68, 68, 0.15) !important;
+}
+
+/* Medical Standby Alert Sensor Lens (Inactive Red LED + Warning Pulse) */
+:where(
+  .receptionists-status-inactive,
+  .nurses-status-inactive,
+  .doctors-status-inactive,
+  .branches-status-inactive,
+  .admin-users-status.is-offline,
+  .lab-files-status-inactive,
+  .appointments-status-badge.is-cancelled,
+  .medical-status-inactive
+)::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ef4444 !important;
+  border: 1.5px solid #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.5),
+    0 0 7px #ef4444 !important;
+  flex-shrink: 0 !important;
+  animation: medicalStandbyAlert 2.2s ease-in-out infinite !important;
+}
+
+/* Subtle Medical Flatline / Standby Watermark in Background - Positioned without overlapping text */
+:where(
+  .receptionists-status-inactive,
+  .nurses-status-inactive,
+  .doctors-status-inactive,
+  .branches-status-inactive,
+  .admin-users-status.is-offline,
+  .lab-files-status-inactive,
+  .appointments-status-badge.is-cancelled,
+  .medical-status-inactive
+) {
+  min-width: 106px !important;
+  padding: 0 30px 0 12px !important;
+}
+
+:where(
+  .receptionists-status-inactive,
+  .nurses-status-inactive,
+  .doctors-status-inactive,
+  .branches-status-inactive,
+  .admin-users-status.is-offline,
+  .lab-files-status-inactive,
+  .appointments-status-badge.is-cancelled,
+  .medical-status-inactive
+)::after {
+  content: "" !important;
+  position: absolute !important;
+  right: 8px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  width: 18px !important;
+  height: 10px !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 20' fill='none' stroke='%23dc2626' stroke-width='2' stroke-linecap='round'%3E%3Cline x1='0' y1='10' x2='40' y2='10' stroke-dasharray='4 3'/%3E%3C/svg%3E") !important;
+  background-size: contain !important;
+  background-repeat: no-repeat !important;
+  opacity: 0.5 !important;
+  pointer-events: none !important;
+}
+
+:where(
+  .receptionists-status-inactive,
+  .nurses-status-inactive,
+  .doctors-status-inactive,
+  .branches-status-inactive,
+  .admin-users-status.is-offline,
+  .lab-files-status-inactive,
+  .appointments-status-badge.is-cancelled,
+  .medical-status-inactive
+):hover {
+  background: linear-gradient(135deg, #fff1f2 0%, #fecdd3 50%, #fda4af 100%) !important;
+  border-color: #dc2626 !important;
+  box-shadow:
+    0 4px 14px rgba(239, 68, 68, 0.38),
+    inset 0 1px 1px #ffffff !important;
+  transform: translateY(-1px) scale(1.03) !important;
+}
+
+/* ==========================================================================
+   ANIMATIONS: VITAL ECG RHYTHM & STANDBY WARNING
+   ========================================================================== */
+@keyframes medicalVitalPulse {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--theme-primary) 70%, transparent), 0 0 5px var(--theme-primary);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-primary) 0%, transparent), 0 0 8px var(--theme-primary);
+    transform: scale(1.15);
+  }
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--theme-primary) 0%, transparent), 0 0 5px var(--theme-primary);
+    transform: scale(1);
+  }
+}
+
+@keyframes medicalStandbyAlert {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.5), 0 0 5px #ef4444;
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0), 0 0 8px #ef4444;
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* ==========================================================================
+   UNIVERSAL ADMIN MODAL ALIGNMENT & MEDICAL GLASSMORPHISM THEME
+   Ensures no modal in the admin module is ever clipped at top or bottom!
+   ========================================================================== */
+:where(
+  .nurses-modal-overlay,
+  .receptionists-modal-overlay,
+  .branches-modal-overlay,
+  .add-doctor-page,
+  .add-patient-overlay,
+  .appointment-modal-overlay
+) {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 3500 !important;
+  background: color-mix(in srgb, var(--theme-primary-dark) 65%, transparent) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+:where(
+  .nurses-modal,
+  .receptionists-modal,
+  .branches-modal,
+  .add-doctor-card,
+  .add-patient-modal
+) {
+  width: 100% !important;
+  max-height: min(92vh, calc(100vh - 32px)) !important;
+  margin: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1.5px solid rgba(226, 232, 240, 0.95) !important;
+  border-radius: 22px !important;
+  box-shadow:
+    0 24px 60px -10px color-mix(in srgb, var(--theme-primary-dark) 35%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.85) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.appointment-modal-card {
+  width: min(540px, 92vw) !important;
+  max-width: 540px !important;
+  max-height: min(88vh, calc(100vh - 48px)) !important;
+  margin: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border: 1.5px solid rgba(226, 232, 240, 0.95) !important;
+  border-radius: 16px !important;
+  box-shadow:
+    0 20px 50px -10px color-mix(in srgb, var(--theme-primary-dark) 25%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.85) !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+:where(
+  .nurses-modal-header,
+  .receptionists-modal-header,
+  .branches-modal-header,
+  .add-doctor-header,
+  .appointment-modal-header
+) {
+  flex-shrink: 0 !important;
+  box-sizing: border-box !important;
+}
+
+:where(
+  .nurses-form,
+  .receptionists-form,
+  .branches-form,
+  .add-doctor-form,
+  .appointment-modal-form,
+  .appointment-modal-card form
+) {
+  flex: 1 1 auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  box-sizing: border-box !important;
+}
+
+:where(
+  .nurses-modal-actions,
+  .receptionists-modal-actions,
+  .branches-modal-actions,
+  .add-doctor-actions,
+  .appointment-modal-actions
+) {
+  flex-shrink: 0 !important;
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 5 !important;
+  background: rgba(255, 255, 255, 0.96) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-top: 1.5px solid #e2e8f0 !important;
+  box-sizing: border-box !important;
+}
+
+/* Universal Smooth Modal Scrollbars */
+:where(
+  .nurses-form,
+  .receptionists-form,
+  .branches-form,
+  .add-doctor-card,
+  .add-patient-modal,
+  .appointment-modal-card
+)::-webkit-scrollbar {
+  width: 6px !important;
+}
+
+:where(
+  .nurses-form,
+  .receptionists-form,
+  .branches-form,
+  .add-doctor-card,
+  .add-patient-modal,
+  .appointment-modal-card
+)::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.6) !important;
+  border-radius: 10px !important;
+}
+
+:where(
+  .nurses-form,
+  .receptionists-form,
+  .branches-form,
+  .add-doctor-card,
+  .add-patient-modal,
+  .appointment-modal-card
+)::-webkit-scrollbar-thumb {
+  background: #cbd5e1 !important;
+  border-radius: 10px !important;
+}
+
+:where(
+  .nurses-form,
+  .receptionists-form,
+  .branches-form,
+  .add-doctor-card,
+  .add-patient-modal,
+  .appointment-modal-card
+)::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8 !important;
+}
+
+/* ==========================================================================
+   UNIVERSAL TABLE COLUMN ALIGNMENT (CENTER S.NO, NAME, DATA, STATUS, ACTIONS)
+   Ensures equal margins on both sides and content perfectly centered
+   ========================================================================== */
+/* Column 1: S.No (All Tables with S.No) */
+:where(
+  .nurses-thead > :nth-child(1),
+  .nurses-row > :nth-child(1),
+  .nurses-sno,
+  .receptionists-thead > :nth-child(1),
+  .receptionists-row > :nth-child(1),
+  .branches-thead > :nth-child(1),
+  .branches-row > :nth-child(1),
+  .branches-sno-head,
+  .branches-sno-cell,
+  .appointments-thead > :nth-child(1),
+  .appointments-row > :nth-child(1),
+  .appointments-sno-cell,
+  .patients-thead > :nth-child(1),
+  .patients-row > :nth-child(1),
+  .admin-users-table-head > :nth-child(1),
+  .admin-users-row > :nth-child(1),
+  .admin-users-sno,
+  .sa-table-head > :nth-child(1),
+  .sa-table-row > :nth-child(1),
+  .sa-table-cell--sno,
+  .sa-sno-head,
+  .da-thead > :nth-child(1),
+  .da-row > :nth-child(1),
+  .da-sno-head,
+  .da-sno-cell,
+  .dd-thead > :nth-child(1),
+  .dd-row > :nth-child(1),
+  .dd-sno-head,
+  .dd-sno-cell,
+  .rc-patient-table-header .col-sno,
+  .rc-patient-table-row .col-sno
+) {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Tokens */
+:where(
+  .da-thead > :nth-child(3),
+  .da-row > :nth-child(3),
+  .da-token-head,
+  .da-token-cell,
+  .dd-thead > :nth-child(2),
+  .dd-row > :nth-child(2),
+  .dd-token-head,
+  .dd-token-cell,
+  .rc-patient-table-header .col-pid,
+  .rc-patient-table-row .col-pid
+) {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+:where(
+  .rc-table-data th.booking-token-head,
+  .rc-table-data td.booking-token-cell,
+  .rc-table-data th:nth-child(1),
+  .rc-table-data td:nth-child(1)
+) {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+:where(
+  .da-token,
+  .dd-token,
+  .booking-token-badge
+) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+/* Column 2: Centered Identifiers & Codes */
+:where(
+  .nurses-thead > :nth-child(2),
+  .nurses-name-cell,
+  .receptionists-thead > :nth-child(2),
+  .receptionists-name-cell,
+  .lab-files-head > :nth-child(2),
+  .lab-files-row > :nth-child(2),
+  .lab-files-code-head,
+  .lab-files-code-cell
+) {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Primary Entity (Left-Aligned) */
+:where(
+  .branches-name-head,
+  .branches-name-cell,
+  .lab-files-test-head,
+  .lab-files-test-cell,
+  .appointments-thead > :nth-child(2),
+  .appointments-patient-head,
+  .appointments-patient-cell,
+  .patients-thead > :nth-child(2),
+  .patients-name-head,
+  .patients-info,
+  .admin-users-table-head > :nth-child(2),
+  .admin-users-name-head,
+  .admin-users-name-cell,
+  .sa-table-head > :nth-child(2),
+  .sa-table-cell--name,
+  .sa-clinic-name-cell,
+  .sa-admin-name-cell
+) {
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+/* Intermediate Columns: Text & Stack Columns (Left-Aligned) */
+:where(
+  .branches-contact-head,
+  .branches-contact-cell,
+  .branches-location-head,
+  .branches-location-cell,
+  .lab-files-category-head,
+  .lab-files-category-cell,
+  .lab-files-sample-head,
+  .lab-files-sample-cell,
+  .appointments-thead > :nth-child(3),
+  .appointments-row > :nth-child(3),
+  .appointments-doctor-head,
+  .appointments-doctor-cell,
+  .appointments-thead > :nth-child(4),
+  .appointments-row > :nth-child(4),
+  .appointments-schedule-head,
+  .appointments-schedule-cell,
+  .appointments-thead > :nth-child(5),
+  .appointments-row > :nth-child(5),
+  .appointments-branch-head,
+  .appointments-branch-cell,
+  .appointments-thead > :nth-child(6),
+  .appointments-row > :nth-child(6),
+  .appointments-complaint-head,
+  .appointments-complaint-cell,
+  .appointments-complaint,
+  .patients-thead > :nth-child(3),
+  .patients-row > :nth-child(3),
+  .patients-phone-head,
+  .patients-phone-cell,
+  .admin-users-table-head > :nth-child(3),
+  .admin-users-row > :nth-child(3),
+  .admin-users-email-head,
+  .admin-users-email,
+  .admin-users-table-head > :nth-child(4),
+  .admin-users-row > :nth-child(4),
+  .admin-users-clinic-head,
+  .admin-users-clinic-cell,
+  .admin-users-table-head > :nth-child(5),
+  .admin-users-row > :nth-child(5),
+  .admin-users-branch-head,
+  .admin-users-branch-cell,
+  .admin-users-table-head > :nth-child(8),
+  .admin-users-row > :nth-child(8),
+  .admin-users-active-head,
+  .admin-users-last-active
+) {
+  text-align: left !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+}
+
+:where(
+  .appointments-doctor-cell,
+  .appointments-schedule-cell,
+  .branches-contact-cell
+) {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  justify-content: center !important;
+}
+
+/* Intermediate Columns: Data, Age, Gender, Visit, Role, Price (Centered) */
+:where(
+  .receptionists-thead > :nth-child(3),
+  .receptionists-row > :nth-child(3),
+  .receptionists-thead > :nth-child(4),
+  .receptionists-row > :nth-child(4),
+  .receptionists-thead > :nth-child(5),
+  .receptionists-row > :nth-child(5),
+  .nurses-thead > :nth-child(3),
+  .nurses-row > :nth-child(3),
+  .nurses-thead > :nth-child(4),
+  .nurses-row > :nth-child(4),
+  .nurses-thead > :nth-child(5),
+  .nurses-row > :nth-child(5),
+  .patients-thead > :nth-child(4),
+  .patients-row > :nth-child(4),
+  .patients-age-head,
+  .patients-age-cell,
+  .patients-thead > :nth-child(5),
+  .patients-row > :nth-child(5),
+  .patients-gender-head,
+  .patients-gender-cell,
+  .patients-thead > :nth-child(6),
+  .patients-row > :nth-child(6),
+  .patients-visit-head,
+  .patients-visit-cell,
+  .admin-users-table-head > :nth-child(6),
+  .admin-users-row > :nth-child(6),
+  .admin-users-role-head,
+  .lab-files-head > :nth-child(5),
+  .lab-files-row > :nth-child(5),
+  .lab-files-price-head,
+  .lab-files-price-cell
+) {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+/* Status Column (All Tables) */
+:where(
+  .nurses-status-head,
+  .nurses-status-cell,
+  .nurses-thead > :nth-child(6),
+  .nurses-row > :nth-child(6),
+  .receptionists-status-head,
+  .receptionists-thead > :nth-child(6),
+  .receptionists-row > :nth-child(6),
+  .receptionists-status-cell,
+  .branches-status-head,
+  .branches-thead > :nth-child(5),
+  .branches-row > :nth-child(5),
+  .branches-status-cell,
+  .lab-files-status-head,
+  .lab-files-status-cell,
+  .lab-files-head > :nth-child(6),
+  .lab-files-row > :nth-child(6),
+  .appointments-status-head,
+  .appointments-thead > :nth-child(7),
+  .appointments-row > :nth-child(7),
+  .appointments-status-badge,
+  .admin-users-status-head,
+  .admin-users-table-head > :nth-child(7),
+  .admin-users-row > :nth-child(7),
+  .admin-users-status-cell,
+  .sa-status-head,
+  .sa-table-cell--status,
+  .da-status-head,
+  .da-status-cell,
+  .da-thead > :nth-child(6),
+  .da-row > :nth-child(6),
+  .dd-status-head,
+  .dd-status-cell,
+  .dd-thead > :nth-child(6),
+  .dd-row > :nth-child(6)
+) {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+}
+
+:where(
+  .rc-table-data th.booking-status-head,
+  .rc-table-data td.booking-status-cell,
+  .rc-table-data th:nth-child(9),
+  .rc-table-data td:nth-child(9)
+) {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+:where(
+  .da-status,
+  .dd-status,
+  .booking-status-badge
+) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+/* Actions Column (All Tables) */
+:where(
+  .nurses-actions-head,
+  .nurses-actions,
+  .receptionists-actions-head,
+  .receptionists-actions,
+  .branches-actions-heading,
+  .branches-actions-head,
+  .branches-actions,
+  .lab-files-actions-head,
+  .lab-files-actions,
+  .appointments-thead > :last-child,
+  .appointments-actions,
+  .patients-thead > :last-child,
+  .patients-actions,
+  .patients-view-btn,
+  .admin-users-table-head > :last-child,
+  .admin-users-actions,
+  .sa-table-head > :last-child,
+  .sa-actions-header,
+  .sa-actions,
+  .sa-table-cell--actions,
+  .da-thead > :last-child,
+  .da-actions-head,
+  .da-actions,
+  .dd-thead > :last-child,
+  .dd-actions-head,
+  .dd-actions,
+  .rc-patient-table-header .col-actions,
+  .rc-patient-table-row .col-actions,
+  .lab-head-actions,
+  .lab-row-actions
+) {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
+  justify-self: center !important;
+}
+
+:where(
+  .rc-table-data th.booking-vitals-head,
+  .rc-table-data td.booking-vitals-cell,
+  .rc-table-data th:nth-child(10),
+  .rc-table-data td:nth-child(10)
+) {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+:where(
+  .booking-vitals-btn,
+  .da-act-btn,
+  .dd-act-btn
+) {
+  margin: 0 auto !important;
+}
+
+/* Payment & Booking Type in HTML Tables */
+:where(
+  .booking-payment-head,
+  .booking-payment-cell,
+  .rc-table-data th:nth-child(7),
+  .rc-table-data td:nth-child(7),
+  .booking-type-head,
+  .booking-type-cell,
+  .rc-table-data th:nth-child(8),
+  .rc-table-data td:nth-child(8)
+) {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+:where(
+  .booking-payment-badge,
+  .booking-type-badge
+) {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+}
+
+/* Container Symmetry (Equal space on both left & right, centered on page) */
+:where(
+  .lab-tech-table-card,
+  .receptionists-table,
+  .branches-table,
+  .nurses-table,
+  .patients-table,
+  .appointments-table,
+  .admin-users-table,
+  .sa-table,
+  .lab-files-table,
+  .patients-table-scroll,
+  .appointments-table-scroll,
+  .rc-table-wrap,
+  .rc-table-data,
+  .booking-card,
+  .booking-hero,
+  .booking-metrics-grid,
+  .da-table-card,
+  .da-header-card,
+  .da-table,
+  .dd-queue-card,
+  .dd-stats,
+  .dd-table,
+  .rc-dash-table-card,
+  .rc-patient-kpi-grid,
+  .rc-dash-table-container,
+  .rc-booking-form,
+  .admin-settings-panel,
+  .admin-settings-preview,
+  .admin-settings-grid,
+  .admin-roles-table-card,
+  .schedule-grid,
+  .card,
+  .doctors-card-grid,
+  .doctors-clinic-card
+) {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+:where(
+  .receptionists-toolbar,
+  .branches-toolbar,
+  .doctors-toolbar,
+  .patients-toolbar,
+  .appointments-toolbar,
+  .admin-users-toolbar,
+  .booking-filter-grid,
+  .rc-toolbar,
+  .lab-list-controls,
+  .dd-queue-tools,
+  .da-header-actions
+) {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+:where(
+  .receptionists-header,
+  .branches-header,
+  .doctors-header,
+  .patients-header,
+  .appointments-header,
+  .admin-users-header,
+  .sa-page-header,
+  .ds-head,
+  .rc-dash-header,
+  .rc-page-head,
+  .lab-page-head,
+  .admin-settings-header,
+  .page-header
+) {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+}
+
+:where(
+  .dashboard,
+  .branches-page,
+  .receptionists-page,
+  .doctors-page,
+  .patients-page,
+  .appointments-page,
+  .reports-page,
+  .admin-users-page,
+  .admin-settings-page,
+  .admin-roles-page,
+  .sa-dashboard-page,
+  .rc-page,
+  .lab-page,
+  .nurse-page,
+  .doctor-page,
+  .pd-page,
+  .mh-page,
+  .booking-page,
+  .da-page,
+  .dd-page,
+  .schedule-page,
+  .revenue-report-page,
+  .doctor-wise-report-page,
+  .daily-report-page
+) {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+
+
+
+/* Receptionists: force single-screen table visibility like Nurses, including all action buttons. */
+.receptionists-page .receptionists-table {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.receptionists-page .receptionists-thead,
+.receptionists-page .receptionists-row {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  grid-template-columns: 58px minmax(170px, 1.35fr) minmax(90px, 0.7fr) minmax(220px, 1.65fr) minmax(108px, 0.8fr) 118px 178px !important;
+  column-gap: 6px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
+
+.receptionists-page .receptionists-thead > *,
+.receptionists-page .receptionists-row > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.receptionists-page .receptionists-actions-head,
+.receptionists-page .receptionists-actions {
+  width: 178px !important;
+  min-width: 178px !important;
+  max-width: 178px !important;
+  justify-self: center !important;
+  overflow: visible !important;
+}
+
+.receptionists-page .receptionists-actions .actions-group {
+  width: 178px !important;
+  min-width: 178px !important;
+  max-width: 178px !important;
+  gap: 5px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
+
+.receptionists-page .receptionists-actions .action-btn.medical-instrument-btn,
+.receptionists-page .receptionists-actions .action-btn {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  border-radius: 11px !important;
+}
+
+.receptionists-page .receptionists-cell,
+.receptionists-page .receptionists-name-highlight b {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.receptionists-page .receptionists-email {
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+/* Receptionists compact fit pass: keep every action button visible on 1366px admin viewport. */
+.receptionists-page {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+.receptionists-page .receptionists-table {
+  overflow: hidden !important;
+}
+
+.receptionists-page .receptionists-thead,
+.receptionists-page .receptionists-row {
+  grid-template-columns: 54px minmax(160px, 1.15fr) minmax(78px, 0.55fr) minmax(210px, 1.45fr) minmax(102px, 0.7fr) 112px 162px !important;
+  column-gap: 4px !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+.receptionists-page .receptionists-thead {
+  font-size: 0.72rem !important;
+  letter-spacing: 0.04em !important;
+}
+
+.receptionists-page .receptionists-row {
+  min-height: 72px !important;
+}
+
+.receptionists-page .receptionists-cell,
+.receptionists-page .receptionists-name-highlight b {
+  font-size: 12px !important;
+}
+
+.receptionists-page .receptionists-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  flex-basis: 36px !important;
+  font-size: 12px !important;
+}
+
+.receptionists-page .receptionists-name-cell {
+  gap: 8px !important;
+}
+
+.receptionists-page .receptionists-name-highlight {
+  padding: 3px 10px !important;
+  max-width: 92px !important;
+}
+
+.receptionists-page .receptionists-status {
+  min-width: 92px !important;
+  height: 28px !important;
+  padding: 0 22px 0 10px !important;
+  font-size: 11px !important;
+}
+
+.receptionists-page .receptionists-actions-head,
+.receptionists-page .receptionists-actions {
+  width: 162px !important;
+  min-width: 162px !important;
+  max-width: 162px !important;
+}
+
+.receptionists-page .receptionists-actions .actions-group {
+  width: 162px !important;
+  min-width: 162px !important;
+  max-width: 162px !important;
+  gap: 4px !important;
+  padding: 0 !important;
+}
+
+.receptionists-page .receptionists-actions .action-btn.medical-instrument-btn,
+.receptionists-page .receptionists-actions .action-btn {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  border-radius: 10px !important;
+}
+
+.receptionists-page .receptionists-actions .action-btn svg,
+.receptionists-page .receptionists-actions .instrument-icon {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+/* Shared single-screen dashboard density for all clinical roles. */
+:is(.content,.dr-layout-content,.rc-content,.lab-main,.nurse-content,.pharmacy-main,.pp-main):has(.role-single-screen) { min-height: 0 !important; overflow: hidden !important; scrollbar-gutter: auto; padding: 10px !important; }
+:is(.main,.dr-layout-main,.rc-main,.nurse-main,.pharmacy-main,.lab-main,.pp-main):has(.role-single-screen) { min-height: 0 !important; }
+html body .role-single-screen { display: flex !important; flex-direction: column !important; gap: 8px !important; width: 100%; height: var(--role-dashboard-height) !important; min-height: 0 !important; max-height: var(--role-dashboard-height) !important; padding: 0 !important; overflow: hidden !important; }
+html body .role-single-screen > * { min-width: 0; flex-shrink: 0; margin-top: 0 !important; margin-bottom: 0 !important; }
+html body .role-single-screen > :is(.db-3d-bg-overlay,.db-3d-floating-particle,.db-3d-ecg-wave) { display: none !important; }
+html body .role-single-screen :is(.dd-header-banner,.nd-hero-banner,.rc-dash-header,.pd-header,.pharmacy-dashboard-heading) { min-height: 0 !important; padding: 8px 4px !important; gap: 10px !important; background: transparent !important; box-shadow: none !important; border: 0 !important; border-radius: 0 !important; }
+html body .role-single-screen :is(.dd-header-title,.nd-hero-title,.rc-dash-title,.pd-greeting-title,.pharmacy-dashboard-heading h2) { font-size: 21px !important; margin: 0 !important; line-height: 1.25; }
+html body .role-single-screen :is(.dd-header-subtitle,.nd-hero-subtitle,.rc-dash-subtitle,.pd-greeting-subtitle) { font-size: 11px !important; margin: 4px 0 0 !important; }
+html body .role-single-screen :is(.dd-header-badge,.nd-hero-pill-row,.dd-stat-badge,.dd-stat-trend,.nd-stat-pill,.nd-stat-hint,.rc-stat-period-pill,.db-kpi-trend) { display: none !important; }
+html body .role-single-screen :is(.dd-stats,.nd-stat-grid,.rc-dash-kpi-grid,.pharmacy-count-grid) { display: grid !important; grid-template-columns: repeat(auto-fit,minmax(0,1fr)) !important; gap: 8px !important; margin: 0 !important; padding: 0 !important; background: transparent !important; box-shadow: none !important; border: 0 !important; height: 82px !important; }
+html body .role-single-screen :is(.dd-stat-card,.nd-stat-card,.rc-dash-kpi-card,.pharmacy-count-card) { position: relative; height: 82px !important; min-height: 0 !important; padding: 10px 10px 18px !important; border: 0 !important; border-radius: 9px !important; background: #fff !important; box-shadow: 0 2px 8px #0f172a08 !important; transform: none !important; overflow: hidden; }
+html body .role-single-screen :is(.dd-stat-card,.nd-stat-card,.rc-dash-kpi-card,.pharmacy-count-card)::before { display: none !important; }
+html body .role-single-screen :is(.dd-stat-card,.nd-stat-card,.rc-dash-kpi-card,.pharmacy-count-card)::after { content: ''; position: absolute; inset: auto 0 0; height: 12px; background: var(--theme-primary-soft); border-bottom: 4px solid var(--theme-primary); }
+html body .role-single-screen :is(.dd-stat-top,.nd-stat-head,.db-kpi-header,.pharmacy-count-card-top) { position: static !important; margin: 0 !important; padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+html body .role-single-screen :is(.dd-stat-icon-bezel,.nd-stat-icon-box,.db-kpi-icon-box,.pharmacy-count-icon) { position: absolute !important; top: 15px; left: 10px; display: grid !important; place-items: center; width: 32px !important; height: 32px !important; min-width: 32px !important; border-radius: 8px !important; color: #fff !important; background: var(--theme-primary-dark) !important; box-shadow: none !important; }
+html body .role-single-screen :is(.dd-stat-body,.nd-stat-body,.db-kpi-content-wrap) { padding: 0 0 0 42px !important; margin: 0 !important; background: transparent !important; box-shadow: none !important; }
+html body .role-single-screen :is(.dd-stat-label,.nd-stat-label,.db-kpi-title,.pharmacy-count-title) { font-size: 11px !important; line-height: 1.2 !important; margin: 0 0 4px !important; color: #64748b !important; font-weight: 500 !important; }
+html body .role-single-screen :is(.dd-stat-value,.nd-stat-count,.db-kpi-num,.pharmacy-count-value) { font-size: 23px !important; line-height: 1.1 !important; color: var(--theme-primary-dark) !important; margin: 0 !important; }
+html body .role-single-screen :is(.dd-stat-sub,.pharmacy-count-description,.pharmacy-count-link,.pharmacy-count-arrow) { display: none !important; }
+html body .role-single-screen .pharmacy-count-title, html body .role-single-screen .pharmacy-count-value { margin-left: 42px !important; }
+html body .role-single-screen :is(.nd-action-grid,.rc-dash-action-grid) { display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 8px !important; padding: 0 !important; }
+html body .role-single-screen :is(.nd-action-card,.rc-dash-action-tile) { min-height: 52px !important; height: 52px !important; padding: 8px 10px !important; border-radius: 8px !important; background: #fff !important; border: 1px solid var(--theme-primary-glow) !important; box-shadow: none !important; gap: 8px !important; }
+html body .role-single-screen :is(.nd-action-text p,.rc-dash-action-desc,.rc-dash-action-tag,.nd-action-section-title) { display: none !important; }
+html body .role-single-screen :is(.nd-action-icon-box,.rc-dash-action-icon-wrap) { width: 28px !important; height: 28px !important; min-width: 28px !important; border-radius: 7px !important; background: var(--theme-primary-soft) !important; color: var(--theme-primary-dark) !important; }
+html body .role-single-screen :is(.nd-action-text h3,.rc-dash-action-title) { font-size: 12px !important; }
+html body .role-single-screen :is(.dd-queue-card,.nd-table-card,.rc-dash-table-card) { flex: 1 1 0 !important; min-height: 0 !important; height: auto !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; padding: 10px !important; margin: 0 !important; background: #fff !important; border: 1px solid #e2e8f0 !important; border-top: 3px solid var(--theme-primary) !important; border-radius: 12px !important; box-shadow: none !important; }
+html body .role-single-screen :is(.dd-queue-header,.nd-table-header,.rc-dash-table-head) { padding: 0 0 8px !important; min-height: 0 !important; gap: 6px !important; margin: 0 !important; flex-shrink: 0; background: transparent !important; border: 0 !important; box-shadow: none !important; }
+html body .role-single-screen :is(.dd-queue-title,.nd-table-title-wrap h3,.rc-dash-table-head h3) { font-size: 15px !important; margin: 0 !important; }
+html body .role-single-screen :is(.dd-table,.rc-dash-table-container,.rc-dash-table-body) { min-height: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; flex: 1; }
+html body .role-single-screen :is(.dd-thead,.rc-dash-table-header) { min-height: 32px !important; height: auto !important; padding-top: 5px !important; padding-bottom: 5px !important; }
+html body .role-single-screen :is(.dd-row,.rc-dash-table-row) { min-height: 44px !important; height: auto !important; padding-top: 5px !important; padding-bottom: 5px !important; }
+html body .role-single-screen :is(.dd-queue-filters,.dd-queue-footer) { padding: 5px 0 !important; gap: 6px !important; margin: 0 !important; flex-shrink: 0; }
+html body .role-single-screen :is(.dd-filter-capsule,.dd-refresh-btn,.dd-search,.nd-btn-manage,.rc-dash-manage-btn) { min-height: 29px !important; height: 29px !important; font-size: 11px !important; }
+html body .role-single-screen .nd-clinical-table :is(th,td) { padding: 7px !important; font-size: 11px !important; }
+html body .role-single-screen .nd-patient-avatar, html body .role-single-screen .rc-dash-patient-avatar { width: 27px !important; height: 27px !important; }
+html body .role-single-screen .role-dashboard-pager { display: flex; justify-content: flex-end; align-items: center; gap: 8px; height: 25px; font-size: 10px; }
+html body .role-single-screen .role-dashboard-pager > span:first-child { margin-right: auto; color: #64748b; }
+html body .role-single-screen .role-dashboard-pager button { min-height: 24px !important; height: 24px !important; padding: 2px 8px !important; border: 1px solid var(--theme-primary-glow); border-radius: 5px; color: var(--theme-primary-dark); background: #fff; font-size: 10px; cursor: pointer; }
+html body .role-single-screen .role-dashboard-pager button:disabled { opacity: .45; cursor: default; }
+/* Patient overview retains token, appointment and payment details in compact cards. */
+html body .pd-reference-dashboard.role-single-screen .pd-overview-grid { display: grid !important; grid-template-columns: repeat(4,minmax(0,1fr)) !important; gap: 8px !important; flex-shrink: 0; height: 160px !important; padding: 0 !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-overview-grid > .pd-card { min-height: 0 !important; height: 160px !important; padding: 9px !important; gap: 5px !important; border-radius: 9px !important; border: 1px solid #e2e8f0 !important; border-bottom: 4px solid var(--theme-primary) !important; background: #fff !important; box-shadow: none !important; }
+html body .pd-reference-dashboard.role-single-screen :is(.pd-token-panel-header h2,.pd-section-header h2) { font-size: 13px !important; margin: 0 !important; }
+html body .pd-reference-dashboard.role-single-screen :is(.pd-current-token-group,.pd-appointment-summary) { gap: 7px !important; margin: 0 !important; }
+html body .pd-reference-dashboard.role-single-screen :is(.pd-token-icon,.pd-summary-card-icon) { width: 26px !important; height: 26px !important; flex: 0 0 26px !important; border-radius: 6px !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-current-token { font-size: 23px !important; }
+html body .pd-reference-dashboard.role-single-screen :is(.pd-token-notice,.pd-token-stat,.pd-appointment-doctor,.pd-summary-card-copy p,.pd-appointment-summary p) { font-size: 9px !important; margin: 0 !important; padding: 3px !important; line-height: 1.25 !important; }
+html body .pd-reference-dashboard.role-single-screen :is(.pd-summary-card-copy strong,.pd-appointment-summary strong) { font-size: 12px !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-card-footer-button { height: 25px !important; min-height: 25px !important; font-size: 10px !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-dashboard-row { display: grid !important; grid-template-columns: repeat(3,minmax(0,1fr)) !important; gap: 8px !important; flex: 1; min-height: 0; padding: 0 !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-dashboard-row > .pd-card { min-height: 0 !important; height: auto !important; padding: 10px !important; overflow: hidden; border-radius: 12px !important; border-top: 1px solid var(--theme-primary); box-shadow: none !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-section-header { padding: 0 !important; margin: 0 0 8px !important; background: transparent !important; box-shadow: none !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-notification-list { height: auto !important; max-height: none !important; overflow: visible !important; gap: 5px; }
+html body .pd-reference-dashboard.role-single-screen .pd-notification-item { padding: 6px !important; min-height: 0 !important; font-size: 10px !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-quick-action-list button { min-height: 32px !important; padding: 6px !important; font-size: 10px !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-queue-track { display: flex; flex-wrap: wrap; padding: 8px 0 !important; margin: 0 !important; overflow: visible !important; gap: 6px !important; }
+html body .pd-reference-dashboard.role-single-screen .pd-queue-step { min-width: 30px !important; font-size: 10px !important; }
+@media(max-width: 800px) { html body .role-single-screen :is(.dd-stat-label,.nd-stat-label,.db-kpi-title,.pharmacy-count-title) { font-size: 9px !important; } html body .role-single-screen :is(.dd-stats,.nd-stat-grid,.rc-dash-kpi-grid,.pharmacy-count-grid) { gap: 4px !important; } html body .role-single-screen :is(.dd-stat-icon-bezel,.nd-stat-icon-box,.db-kpi-icon-box,.pharmacy-count-icon) { width: 24px !important; min-width: 24px !important; left: 5px; } html body .role-single-screen :is(.dd-stat-body,.nd-stat-body,.db-kpi-content-wrap) { padding-left: 25px !important; } }
+
+/* Compact greetings replace the legacy role banners. */
+html body .role-single-screen .role-dashboard-greeting { display: flex !important; align-items: center; gap: 12px; min-width: 0; min-height: 54px; padding: 5px 3px !important; margin: 0 !important; border: 0 !important; background: transparent !important; box-shadow: none !important; }
+html body .role-single-screen .role-greeting-icon { display: grid; place-items: center; flex: 0 0 42px; width: 42px; height: 42px; border-radius: 50%; background: var(--theme-primary-soft); color: var(--theme-primary-dark); }
+html body .role-single-screen .role-dashboard-greeting h1 { display: block !important; margin: 0 !important; font-size: clamp(18px, 1.65vw, 24px) !important; line-height: 1.2; font-weight: 800; color: #0f172a; }
+html body .role-single-screen .role-dashboard-greeting p { margin: 5px 0 0 !important; font-size: 11px !important; line-height: 1.3; color: #64748b; }
+html body .role-single-screen :is(.rc-dash-header,.pharmacy-dashboard-heading,.pd-header) { align-items: center !important; padding: 0 !important; gap: 10px !important; margin: 0 !important; }
+html body .role-single-screen .pd-header > .role-dashboard-greeting { flex: 1; }
+
+/* Consistent compact spacing throughout the Nurse workspace. */
+html body :is(.nurse-module,.reception-module) .rc-content { padding: 10px !important; }
+html body :is(.nurse-module,.reception-module) .rc-content .rc-page:not(.role-single-screen) { display: flex; flex-direction: column; width: 100%; max-width: none; padding: 0 !important; gap: 10px !important; }
+html body :is(.nurse-module,.reception-module) .rc-page:not(.role-single-screen) > :is(.booking-hero,.booking-metrics-grid,.booking-card,.med-history-hero,.med-metrics-grid,.med-search-bar-wrap,.med-history-card,.rc-dash-header,.rc-patient-kpi-grid,.rc-patients-table-card,.rc-patients-toolbar) { margin: 0 !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-hero,.med-history-hero,.rc-patients-page .rc-dash-header,.rc-appointments-page .rc-dash-header) { padding: 12px 14px !important; min-height: 0 !important; gap: 10px !important; border-radius: 12px !important; box-shadow: none !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-hero,.med-history-hero) h2 { margin: 5px 0 !important; font-size: 23px !important; line-height: 1.25; gap: 8px !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-hero,.med-history-hero) p { margin: 0 !important; font-size: 12px !important; line-height: 1.4; }
+html body :is(.nurse-module,.reception-module) :is(.booking-badge,.med-history-badge) { padding: 3px 8px !important; font-size: 10px !important; margin: 0 !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-head-actions,.med-head-actions,.rc-dash-head-actions) { gap: 8px !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-btn,.med-btn,.rc-head-action-btn) { min-height: 34px !important; height: 34px !important; padding: 0 10px !important; font-size: 12px !important; border-radius: 7px !important; gap: 6px !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-metrics-grid,.med-metrics-grid,.rc-patient-kpi-grid) { display: grid !important; grid-template-columns: repeat(4,minmax(0,1fr)) !important; width: 100% !important; max-width: none !important; padding: 0 !important; gap: 8px !important; margin: 0 !important; }
+html body :is(.nurse-module,.reception-module) .rc-patients-page .rc-patient-kpi-grid { grid-template-columns: repeat(3,minmax(0,1fr)) !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-metric-card,.med-metric-card,.rc-patient-kpi-card) { display: flex !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; min-width: 0 !important; height: 82px !important; min-height: 82px !important; padding: 10px 12px 17px !important; gap: 10px !important; margin: 0 !important; border-radius: 9px !important; box-shadow: 0 2px 6px #0f172a08 !important; background: linear-gradient(to bottom,#fff 0,#fff calc(100% - 12px),var(--theme-primary-soft) calc(100% - 12px),var(--theme-primary-soft) calc(100% - 4px),var(--theme-primary) calc(100% - 4px),var(--theme-primary) 100%) !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-metric-card,.med-metric-card,.rc-patient-kpi-card)::before, html body :is(.nurse-module,.reception-module) :is(.booking-metric-card,.med-metric-card,.rc-patient-kpi-card)::after { display: none !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-metric-icon,.med-metric-icon,.rc-pkpi-icon-box) { position: static !important; width: 32px !important; height: 32px !important; min-width: 32px !important; flex: 0 0 32px !important; border-radius: 8px !important; box-shadow: none !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-metric-info,.med-metric-info,.rc-pkpi-content) { padding: 0 !important; margin: 0 !important; gap: 3px !important; min-width: 0; }
+html body :is(.nurse-module,.reception-module) :is(.booking-metric-info,.med-metric-info) strong, html body :is(.nurse-module,.reception-module) .rc-pkpi-val { font-size: 23px !important; line-height: 1.1 !important; margin: 0 !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-metric-info,.med-metric-info) span, html body :is(.nurse-module,.reception-module) .rc-pkpi-label { font-size: 11px !important; line-height: 1.25 !important; }
+html body :is(.nurse-module,.reception-module) .rc-pkpi-badge { display: none !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-card,.med-history-card) { display: block !important; width: 100% !important; max-width: none !important; min-height: 0 !important; height: auto !important; margin: 0 !important; padding: 12px !important; border-radius: 12px !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-card-head,.med-card-header) { padding: 0 0 10px !important; margin: 0 !important; gap: 8px !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-card-title,.med-card-title) { gap: 8px !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-card-title,.med-card-title) h3 { font-size: 17px !important; margin: 0 !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-card-title,.med-card-title) p { font-size: 11px !important; margin: 3px 0 0 !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-card-icon,.med-card-icon) { width: 32px !important; min-width: 32px !important; height: 32px !important; border-radius: 8px !important; }
+html body :is(.nurse-module,.reception-module) .booking-filter-grid { gap: 8px !important; padding: 10px 0 !important; margin: 0 !important; }
+html body :is(.nurse-module,.reception-module) .booking-filter-field { gap: 4px !important; }
+html body :is(.nurse-module,.reception-module) .booking-filter-label { font-size: 11px !important; }
+html body :is(.nurse-module,.reception-module) :is(.booking-filter-field input,.booking-filter-field select,.med-search-bar,.rc-patients-page .rc-search) { min-height: 36px !important; height: 36px !important; font-size: 12px !important; }
+html body :is(.nurse-module,.reception-module) .booking-tabs { padding: 3px !important; gap: 4px !important; }
+html body :is(.nurse-module,.reception-module) .booking-tab-btn { min-height: 30px !important; padding: 4px 8px !important; font-size: 11px !important; }
+html body :is(.nurse-module,.reception-module) :is(.rc-table-data,.med-history-table) :is(th,td) { padding: 9px 10px !important; font-size: 12px !important; }
+@media(max-width: 900px) { html body :is(.nurse-module,.reception-module) :is(.booking-metrics-grid,.med-metrics-grid,.rc-patient-kpi-grid) { grid-template-columns: repeat(2,minmax(0,1fr)) !important; } html body :is(.nurse-module,.reception-module) :is(.booking-hero,.med-history-hero) { flex-wrap: wrap; } }
+@media(max-width: 480px) { html body :is(.nurse-module,.reception-module) :is(.booking-metric-card,.med-metric-card,.rc-patient-kpi-card) { padding-left: 8px !important; gap: 6px !important; } html body :is(.nurse-module,.reception-module) .rc-patients-page .rc-patient-kpi-grid { grid-template-columns: minmax(0,1fr) !important; } }
+
+/* Shared table rhythm: header and body always use identical horizontal spacing. */
+@media screen {
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) :is(.sa-table-head,.sa-table-row,.branches-thead,.branches-row,.receptionists-thead,.receptionists-row,.admin-users-table-head,.admin-users-row,.admin-pharmacists-thead,.admin-pharmacists-row,.lab-files-head,.lab-files-row,.rc-table-head,.rc-table-row,.rc-patient-table-header,.rc-patient-table-row,.rc-latest-bills-table-head,.rc-latest-bill-row) { box-sizing: border-box !important; padding-left: 12px !important; padding-right: 12px !important; column-gap: 10px !important; align-items: center !important; }
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) :is(.sa-table-head,.sa-table-row,.branches-thead,.branches-row,.receptionists-thead,.receptionists-row,.admin-users-table-head,.admin-users-row,.admin-pharmacists-thead,.admin-pharmacists-row,.lab-files-head,.lab-files-row,.rc-table-head,.rc-table-row,.rc-patient-table-header,.rc-patient-table-row,.rc-latest-bills-table-head,.rc-latest-bill-row) > * { min-width: 0 !important; box-sizing: border-box; overflow-wrap: anywhere; }
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) :is(.sa-align-left,.col-left.text-left) { text-align: left !important; justify-content: flex-start !important; }
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) :is(.sa-align-center,.col-center.text-center) { text-align: center !important; justify-content: center !important; }
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) :is(.sa-align-right,.col-right.text-right) { text-align: right !important; justify-content: flex-end !important; font-variant-numeric: tabular-nums; }
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table { border-collapse: collapse; border-spacing: 0; max-width: none; }
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table :is(th,td) { box-sizing: border-box; vertical-align: middle !important; padding: 9px 12px !important; line-height: 1.35; }
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table :is(th,td):not([class]) { text-align: left; }
+  html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table :is(td,th) :is(input:not([type="checkbox"]):not([type="radio"]),select) { max-width: 100%; min-width: 0; box-sizing: border-box; }
+  html body :is(.phb-table-scroll,.pharmacy-table-scroll,.pharmacy-catalogue-scroll,.rc-table-wrap,.med-history-table-scroll,.admin-pharmacists-table-scroll) { max-width: 100%; overflow-x: auto; }
+  html body :is(.sa-table-cell--actions,.rc-row-actions,.receptionists-actions,.nurses-actions,.admin-pharmacists-actions) { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px !important; }
+  html body .lab-page:not(.role-single-screen) :is(.lab-table-head,.lab-table-row) { padding-left: 12px !important; padding-right: 12px !important; column-gap: 10px !important; box-sizing: border-box; }
+  html body .lab-screen-tests .lab-table-head { border-left: 4px solid transparent !important; }
+}
+
+/* Native tables align each body column with its typed header. */
+@media screen {
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(1)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(1):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(1)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(1):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(2)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(2):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(2)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(2):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(3)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(3):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(3)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(3):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(4)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(4):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(4)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(4):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(5)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(5):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(5)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(5):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(6)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(6):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(6)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(6):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(7)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(7):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(7)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(7):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(8)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(8):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(8)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(8):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(9)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(9):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(9)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(9):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(10)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(10):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(10)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(10):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(11)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(11):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(11)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(11):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(12)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(12):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(12)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(12):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(13)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(13):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(13)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(13):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(14)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(14):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(14)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(14):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(15)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(15):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(15)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(15):not([colspan]) { text-align: center !important; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="number"]:nth-child(16)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(16):not([colspan]) { text-align: right !important; font-variant-numeric: tabular-nums; }
+html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.pp-main) table:has(> thead > tr > th[data-column-kind="center"]:nth-child(16)) > :is(thead,tbody,tfoot) > tr > :is(th,td):nth-child(16):not([colspan]) { text-align: center !important; }
+}
+
+
+/* Shared shell geometry. Explicit specificity also covers lazy-loaded module CSS. */
+:root {
+  --app-topbar-height: 64px;
+  --app-sidebar-width: 232px;
+  --app-sidebar-rail: 72px;
+}
+
+html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) {
+  box-sizing: border-box;
+  height: var(--app-topbar-height) !important;
+  min-height: var(--app-topbar-height) !important;
+  flex-shrink: 0 !important;
+  padding: 8px 16px !important;
+  gap: 12px !important;
+}
+
+html body :is(.topbar-search-box, .dr-topbar-search, .rc-topbar .rc-search, .pharmacy-topbar-search, .pp-topbar-search) {
+  height: 38px !important;
+  min-height: 38px !important;
+  padding: 0 12px !important;
+  border-radius: 10px !important;
+  min-width: 0;
+}
+
+html body :is(.topbar-left, .dr-topbar-left, .rc-topbar-left, .topbar-right, .dr-topbar-right, .rc-top-actions) {
+  gap: 10px !important;
+  min-width: 0;
+}
+
+html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) .user-profile-chip {
+  min-height: 40px !important;
+  height: 40px !important;
+  padding: 3px 8px !important;
+  gap: 8px !important;
+}
+
+html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) .user-profile-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  flex: 0 0 32px !important;
+  font-size: 13px !important;
+}
+
+html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) :is(.notification-trigger, .theme-picker-trigger) {
+  width: 36px !important;
+  height: 36px !important;
+  min-height: 36px !important;
+}
+
+html body .topbar-search-results { top: calc(100% + 6px); }
+
+html body :is(.sidebar, .rc-sidebar, .pharmacy-sidebar, .pp-sidebar) {
+  width: var(--app-sidebar-width) !important;
+  min-width: 0 !important;
+  padding: 12px 10px !important;
+  height: 100dvh !important;
+  max-width: 88vw;
+  overflow-y: auto !important;
+  overflow-x: hidden;
+}
+
+html body :is(.sidebar .nav, .rc-nav, .dr-nav, .pharmacy-nav, .pp-nav) {
+  gap: 3px !important;
+  justify-content: flex-start !important;
+}
+
+html body :is(.sidebar .nav-item, .rc-nav-link, .rc-nav-group-title, .dr-nav-link, .pharmacy-nav-link, .pp-nav-item) {
+  min-height: 40px !important;
+  padding: 4px 8px !important;
+  gap: 9px !important;
+  flex-shrink: 0;
+  border-radius: 10px !important;
+}
+
+html body :is(.sidebar .nav-icon-box, .rc-nav-icon-wrap, .dr-nav-icon-bezel, .pharmacy-nav-icon, .pp-nav-icon-box) {
+  width: 28px !important;
+  height: 28px !important;
+  flex: 0 0 28px !important;
+}
+
+html body :is(.sidebar .nav-label, .rc-nav-label, .dr-nav-label, .pharmacy-nav-label, .pp-nav-label) {
+  font-size: 13px !important;
+  line-height: 1.3 !important;
+}
+
+html body :is(.sidebar-header, .rc-brand, .pharmacy-brand, .pp-brand) {
+  gap: 8px !important;
+  padding: 4px 2px 12px !important;
+  margin-bottom: 6px !important;
+}
+
+html body .layout > .main {
+  margin-left: var(--app-sidebar-width) !important;
+}
+html body .layout.sidebar-collapsed > .main {
+  margin-left: var(--app-sidebar-rail) !important;
+}
+html body .sidebar.collapsed {
+  width: var(--app-sidebar-rail) !important;
+  padding: 12px 6px !important;
+}
+
+@media (min-width: 901px) {
+  html body :is(.rc-main, .pharmacy-main, .pp-main) {
+    margin-left: var(--app-sidebar-width) !important;
+    width: calc(100% - var(--app-sidebar-width)) !important;
+  }
+  html body :is(.rc-sidebar.collapsed, .rc-shell.rc-sidebar-collapsed .rc-sidebar, .pharmacy-shell--collapsed .pharmacy-sidebar, .pp-sidebar.collapsed, .pp-shell.pp-sidebar-collapsed .pp-sidebar) {
+    width: var(--app-sidebar-rail) !important;
+    min-width: var(--app-sidebar-rail) !important;
+    padding-inline: 6px !important;
+  }
+  html body :is(.rc-shell.rc-sidebar-collapsed .rc-main, .pharmacy-shell--collapsed .pharmacy-main, .pp-shell.pp-sidebar-collapsed .pp-main) {
+    margin-left: var(--app-sidebar-rail) !important;
+    width: calc(100% - var(--app-sidebar-rail)) !important;
+  }
+}
+
+@media (min-width: 769px) {
+  html body .dr-sidebar {
+    width: var(--app-sidebar-width) !important;
+    min-width: var(--app-sidebar-width) !important;
+  }
+  html body .dr-layout--collapsed .dr-sidebar {
+    width: var(--app-sidebar-rail) !important;
+    min-width: var(--app-sidebar-rail) !important;
+  }
+  html body .dr-layout--collapsed .dr-brand > div:not(.dr-brand-icon) { display: none; }
+}
+
+@media (max-width: 900px) {
+  html body :is(.rc-sidebar, .pp-sidebar) {
+    min-width: 0 !important;
+  }
+  html body :is(.rc-main, .pharmacy-main, .pp-main) {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 620px) {
+  html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) {
+    height: auto !important;
+    padding: 8px 10px !important;
+    gap: 8px !important;
+  }
+  html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) .user-profile-copy {
+    display: none !important;
+  }
+  html body .topbar-right { margin-left: 8px; }
+  html body .topbar-search-box input { min-width: 0; }
+}
+
+/* Every workspace keeps its page title and module breadcrumb in the top bar. */
+html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) h1 {
+  display: block !important;
+  margin: 0 !important;
+  font-size: 18px !important;
+  font-weight: 750 !important;
+  line-height: 1.2 !important;
+  color: var(--theme-primary-dark) !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html body :is(.topbar-title-wrap, .dr-topbar-title-wrap, .pharmacy-topbar-title, .pp-topbar-title-wrap, .rc-topbar-left > div) {
+  display: flex !important;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+html body :is(.topbar-crumbs, .rc-crumbs, .pp-crumbs) {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  color: #526479;
+  font-size: 12px !important;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+}
+html body .topbar-crumbs span { display: inline !important; font-size: inherit; }
+html body :is(.topbar-crumbs, .rc-crumbs, .pp-crumbs) svg { flex-shrink: 0; }
+html body .topbar-title-wrap { flex: 0 1 250px; }
+html body .topbar-search-box { flex: 1 1 200px; width: auto; margin-left: auto; }
+html body :is(.topbar-menu-btn, .dr-topbar-icon-btn, .rc-topbar-menu, .pharmacy-menu-button, .pp-topbar-menu) {
+  display: grid !important;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  cursor: pointer;
+}
+@media (max-width: 1100px) {
+  html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) .user-profile-copy { display: none !important; }
+}
+@media (max-width: 620px) {
+  html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) h1 { font-size: 15px !important; }
+  html body .topbar-left { flex-wrap: wrap; }
+  html body .topbar-title-wrap { flex: 1 1 140px; }
+  html body .topbar-search-box { flex-basis: 100%; }
+}
+
+/* One compact heading scale for all module pages and dashboard greetings. */
+:root {
+  --app-page-heading-size: 18px;
+  --app-page-subtitle-size: 12px;
+}
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main) :is([data-page-header], .dashboard-header, .branches-header, .receptionists-header, .doctors-header, .patients-header, .appointments-header, .reports-header, .admin-users-header, .admin-settings-header, .sa-page-header, .rc-page-head, .lab-page-head, .doctor-page-header, .page-header, .pd-header, .pharmacy-dashboard-heading) :is(h1, h2),
+html body .role-single-screen .role-dashboard-greeting h1,
+html body .role-single-screen :is(.dd-header-title, .nd-hero-title, .rc-dash-title, .pd-greeting-title, .pharmacy-dashboard-heading h2) {
+  font-size: var(--app-page-heading-size) !important;
+  line-height: 1.25 !important;
+  margin: 0 !important;
+  letter-spacing: 0 !important;
+  overflow-wrap: anywhere;
+}
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main) :is([data-page-header], .dashboard-header, .branches-header, .receptionists-header, .doctors-header, .patients-header, .appointments-header, .reports-header, .admin-users-header, .admin-settings-header, .sa-page-header, .rc-page-head, .lab-page-head, .doctor-page-header, .page-header, .pd-header, .pharmacy-dashboard-heading) p,
+html body .role-single-screen .role-dashboard-greeting p,
+html body .role-single-screen :is(.dd-header-subtitle, .nd-hero-subtitle, .rc-dash-subtitle, .pd-greeting-subtitle) {
+  font-size: var(--app-page-subtitle-size) !important;
+  line-height: 1.35 !important;
+  margin: 3px 0 0 !important;
+}
+html body :is(.admin-overview-heading .admin-greeting-icon, .role-single-screen .role-greeting-icon, .sa-dashboard-page .sa-dashboard-greeting-icon) {
+  width: 36px !important;
+  height: 36px !important;
+  flex: 0 0 36px !important;
+}
+html body :is(.admin-greeting-icon, .role-greeting-icon, .sa-dashboard-greeting-icon) svg {
+  width: 21px;
+  height: 21px;
+}
+
+/* Shared table density across native tables and grid-based record lists. */
+:root {
+  --app-table-row-min-height: 56px;
+  --app-table-header-height: 36px;
+  --app-table-row-y: 8px;
+  --app-table-row-x: 12px;
+  --app-table-avatar-size: 32px;
+}
+@media screen {
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) table {
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+  }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) table > tbody > tr {
+    height: var(--app-table-row-min-height) !important;
+  }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) table :is(th, td) {
+    padding: var(--app-table-row-y) var(--app-table-row-x) !important;
+    vertical-align: middle !important;
+    line-height: 1.35 !important;
+  }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row, .daily-detail-row, .pb-invoice-table-row, .op-table-body-row) {
+    box-sizing: border-box !important;
+    min-height: var(--app-table-row-min-height) !important;
+    height: auto !important;
+    padding: var(--app-table-row-y) var(--app-table-row-x) !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    align-items: center !important;
+    row-gap: 0 !important;
+    flex-grow: 0 !important;
+    line-height: 1.35 !important;
+  }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead, .pb-invoice-table-head, .op-table-header-row) {
+    min-height: var(--app-table-header-height) !important;
+    height: auto !important;
+    padding: var(--app-table-row-y) var(--app-table-row-x) !important;
+    margin-block: 0 !important;
+    align-items: center !important;
+    line-height: 1.35 !important;
+  }
+  /* Scope avatars and controls to records so profile and sidebar sizing stays independent. */
+  html body :is(table tbody, .sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row) :is(.patients-avatar, .patient-avatar, .appointments-avatar, .receptionists-avatar, .nurses-avatar, .branches-avatar, .admin-users-avatar, .admin-pharmacists-avatar, .sa-admin-avatar, .sa-audit-avatar, .rc-avatar, .rc-dash-patient-avatar, .lab-patient-avatar, .nd-patient-avatar, .med-patient-avatar, .lab-tech-avatar, .db-apt-avatar) {
+    width: var(--app-table-avatar-size) !important;
+    height: var(--app-table-avatar-size) !important;
+    min-width: var(--app-table-avatar-size) !important;
+    flex: 0 0 var(--app-table-avatar-size) !important;
+    font-size: 12px !important;
+    border-radius: 8px !important;
+  }
+  html body .content:not(.superadmin-content) .sa-audit-logs-page .sa-table-row .sa-audit-avatar {
+    width: 18px !important;
+    height: 18px !important;
+    min-width: 18px !important;
+    flex: 0 0 18px !important;
+    font-size: 8px !important;
+  }
+  html body :is(table tbody, .sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row) p {
+    margin-top: 2px !important;
+    margin-bottom: 0 !important;
+    line-height: 1.35 !important;
+  }
+  html body .patients-row .patients-view-btn {
+    min-height: 32px !important;
+    height: 32px !important;
+    padding: 4px 12px !important;
+  }
+}
+
+/* Content-aware tracks stretch across the viewport; headers and records share widths. */
+@supports (grid-template-columns: subgrid) {
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)) {
+    display: grid !important;
+    grid-template-columns: repeat(var(--record-column-count, 1), minmax(min-content, auto)) !important;
+    column-gap: 12px !important;
+    row-gap: 0 !important;
+    justify-content: stretch !important;
+    align-content: start !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+  }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)) > :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead, .sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row) {
+    display: grid !important;
+    grid-template-columns: subgrid !important;
+    grid-column: 1 / -1 !important;
+    column-gap: 12px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
+    justify-content: normal !important;
+  }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)) > :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead, .sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row) > * {
+    min-width: 0 !important;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)) > :not(:is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead, .sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)) { grid-column: 1 / -1; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(1):last-child) { --record-column-count: 1; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(2):last-child) { --record-column-count: 2; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(3):last-child) { --record-column-count: 3; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(4):last-child) { --record-column-count: 4; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(5):last-child) { --record-column-count: 5; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(6):last-child) { --record-column-count: 6; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(7):last-child) { --record-column-count: 7; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(8):last-child) { --record-column-count: 8; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(9):last-child) { --record-column-count: 9; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(10):last-child) { --record-column-count: 10; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(11):last-child) { --record-column-count: 11; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(12):last-child) { --record-column-count: 12; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(13):last-child) { --record-column-count: 13; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(14):last-child) { --record-column-count: 14; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(15):last-child) { --record-column-count: 15; }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) :has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead)):has(> :is(.sa-table-row, .branches-row, .receptionists-row, .doctors-row, .patients-row, .appointments-row, .nurses-row, .lab-files-row, .admin-users-row, .admin-pharmacists-row, .rc-table-row, .rc-patient-table-row, .rc-latest-bill-row, .rc-dash-table-row, .lab-table-row, .nd-table-row, .dd-row, .da-row)):has(> :is(.sa-table-head, .branches-thead, .branches-table-head, .receptionists-thead, .receptionists-table-head, .doctors-table-head, .patients-thead, .patients-table-head, .appointments-thead, .appointments-table-head, .nurses-thead, .lab-files-head, .admin-users-table-head, .admin-pharmacists-thead, .rc-table-head, .rc-patient-table-header, .rc-patient-table-head, .rc-latest-bills-table-head, .rc-dash-table-head, .lab-table-head, .nd-table-head, .dd-thead, .da-thead) > :nth-child(16):last-child) { --record-column-count: 16; }
+}
+
+@media screen {
+  /* Native tables use their actual cell content when allocating column widths. */
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) table {
+    table-layout: auto !important;
+    width: 100% !important;
+  }
+  html body :is(.content, .rc-content, .dr-layout-content, .lab-main, .nurse-content, .pharmacy-content, .pp-main, .pp-content) table :is(th, td) {
+    padding-left: var(--app-table-row-x) !important;
+    padding-right: var(--app-table-row-x) !important;
+  }
+}
+
+/* A single compact inset and heading rhythm immediately below every top bar. */
+:root { --app-page-padding: 8px; --app-page-heading-gap: 8px; }
+@media screen {
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) {
+    padding: var(--app-page-padding) !important;
+  }
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main) > :has(> [data-page-header]) {
+    padding-top: 0 !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    margin-top: 0 !important;
+    row-gap: var(--app-page-heading-gap) !important;
+  }
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main) [data-page-header] {
+    min-height: 44px !important;
+    height: auto !important;
+    padding-block: 4px !important;
+    margin-top: 0 !important;
+    margin-bottom: var(--app-page-heading-gap) !important;
+    gap: 6px 12px !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+  }
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main) [data-page-header] :is(.sa-search-filter, .admin-heading-search) {
+    margin-block: 0 !important;
+    padding-block: 0 !important;
+    min-height: 0 !important;
+  }
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main) [data-page-header] :is(input:not([type="checkbox"]):not([type="radio"]), select, .sa-search-box, .branches-search, .admin-users-search) {
+    height: 34px !important;
+    min-height: 34px !important;
+  }
+  html body .content .sa-audit-logs-page .sa-page-header__copy {
+    flex: 1 1 380px;
+  }
+  html body .content .sa-audit-logs-page .sa-page-header > .admin-heading-search {
+    flex: 1 1 280px;
+    max-width: 520px;
   }
 }

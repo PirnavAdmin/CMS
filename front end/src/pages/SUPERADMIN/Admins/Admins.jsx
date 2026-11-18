@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Eye, Pencil, Phone, Plus, ToggleLeft, ToggleRight, Trash2 } from "lucide-react";
+import PendingAdminCreations from "./PendingAdminCreations";
 import Header from "../../../components/superadmin/Header";
 import DataTable from "../../../components/superadmin/DataTable";
 import SearchFilter from "../../../components/superadmin/SearchFilter";
+import { ActionsGroup } from "../../../components/ActionsGroup";
 import {
   deleteAdmin,
   fetchAdmins,
@@ -22,8 +24,7 @@ import {
   validateMobile,
 } from "../../../utils/validation";
 import { validateUniqueMobileNumber } from "../../../utils/mobileUniqueness";
-import { assetUrl } from "../../../config/api";
-import { getDefaultClinicLogo, getPublicClinicLogoUrl } from "../../../utils/clinicBranding";
+import { getDefaultClinicLogo, loadPublicClinicLogo } from "../../../utils/clinicBranding";
 
 const emptyAdmin = {
   fullName: "",
@@ -124,21 +125,6 @@ const getInitials = (value = "") => {
   return (parts.length > 1 ? `${parts[0][0]}${parts[1][0]}` : parts[0]?.slice(0, 2) || "A").toUpperCase();
 };
 
-const readLogoValue = (data = {}) => {
-  const source = data?.data && typeof data.data === "object" ? data.data : data || {};
-  return (
-    source.logoDataUrl ||
-    source.LogoDataUrl ||
-    source.logoUrl ||
-    source.LogoUrl ||
-    source.logoPath ||
-    source.LogoPath ||
-    source.logoFilePath ||
-    source.LogoFilePath ||
-    ""
-  );
-};
-
 function AssignedClinicLogo({ clinicId, clinicName }) {
   const fallbackLogo = getDefaultClinicLogo(clinicName, clinicId);
   const [logoUrl, setLogoUrl] = useState(fallbackLogo);
@@ -146,20 +132,8 @@ function AssignedClinicLogo({ clinicId, clinicName }) {
   useEffect(() => {
     let isCurrent = true;
     const loadLogo = async () => {
-      const publicLogoUrl = getPublicClinicLogoUrl(clinicId);
-      if (!publicLogoUrl) {
-        setLogoUrl(fallbackLogo);
-        return;
-      }
-      const response = await fetch(publicLogoUrl, {
-        headers: { "ngrok-skip-browser-warning": "true" },
-      }).catch(() => null);
-      if (!isCurrent || !response?.ok) return;
-      const contentType = String(response.headers.get("content-type") || "").toLowerCase();
-      const nextLogo = contentType.startsWith("image/")
-        ? publicLogoUrl
-        : assetUrl(readLogoValue(await response.json().catch(() => ({}))));
-      if (nextLogo) setLogoUrl(`${nextLogo}${nextLogo.includes("?") ? "&" : "?"}v=${Date.now()}`);
+      const nextLogo = await loadPublicClinicLogo(clinicId);
+      if (isCurrent) setLogoUrl(nextLogo || fallbackLogo);
     };
 
     loadLogo();
@@ -186,6 +160,7 @@ function Admins() {
   const [showForm, setShowForm] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [admins, setAdmins] = useState([]);
+  const [activeActionState, setActiveActionState] = useState(null);
   const [clinics, setClinics] = useState([]);
   const [form, setForm] = useState(emptyAdmin);
   const [originalAdminClinic, setOriginalAdminClinic] = useState(emptyAdminClinic);
@@ -282,6 +257,7 @@ function Admins() {
     setEditingAdminId("");
     setForm(emptyAdmin);
     setOriginalAdminClinic(emptyAdminClinic);
+    setFieldErrors({});
     setShowForm(true);
     setError("");
   };
@@ -291,7 +267,7 @@ function Admins() {
     setEditingAdminId(admin.id);
     const secrets = getAdminSecret(admin.email) || {};
     setForm({
-      fullName: admin.name || "",
+      fullName: formatTitleCase(admin.name || ""),
       email: admin.email || "",
         phone:
         admin.phone ||
@@ -308,6 +284,7 @@ function Admins() {
       id: getAdminClinicId(admin, clinics) || "",
       name: getAdminClinicName(admin, clinics) || "",
     });
+    setFieldErrors({});
     setShowForm(true);
     setError("");
   };
@@ -317,6 +294,8 @@ function Admins() {
     setEditingAdminId("");
     setForm(emptyAdmin);
     setOriginalAdminClinic(emptyAdminClinic);
+    setFieldErrors({});
+    setError("");
   };
 
   const handleChange = (event) => {
@@ -348,8 +327,7 @@ function Admins() {
       email: validateGmail(form.email),
       phone: validateMobile(form.phone, "Phone"),
       role: validateAlpha(form.role, "Role"),
-      assignedClinicId: form.assignedClinicId ? "" : "Assigned clinic is required.",
-    };
+          };
 
     Object.keys(nextErrors).forEach((key) => {
       if (!nextErrors[key]) delete nextErrors[key];
@@ -362,8 +340,8 @@ function Admins() {
   const handleCreateAdmin = async (event) => {
     event.preventDefault();
     if (!validateForm()) {
-      setError("Please fix the highlighted fields.");
-      toast.error("Please fix the highlighted fields.");
+      setError("Please fill the highlighted fields.");
+      toast.error("Please fill the highlighted fields.");
       return;
     }
 
@@ -372,7 +350,7 @@ function Admins() {
 
     try {
       const selectedClinic = clinics.find((clinic) => String(clinic.id) === String(form.assignedClinicId));
-      const clinicId = Number(form.assignedClinicId) || form.assignedClinicId;
+      const clinicId = form.assignedClinicId ? Number(form.assignedClinicId) || form.assignedClinicId : null;
       const previousAdmin = admins.find((admin) => String(admin.id) === String(editingAdminId));
       const previousClinicId =
         originalAdminClinic.id ||
@@ -382,14 +360,25 @@ function Admins() {
         originalAdminClinic.name ||
         getAdminClinicName(previousAdmin, clinics) ||
         (isCurrentAdmin(previousAdmin) ? localStorage.getItem("clinicName") : "");
-      const adminName = form.fullName.trim();
+      const adminName = formatTitleCase(form.fullName.trim());
       const adminEmail = form.email.trim();
       const adminPhone = form.phone.trim();
-      const duplicateMobileMessage = await validateUniqueMobileNumber(adminPhone, {
-        current: editingAdminId ? { id: editingAdminId, source: "admins" } : {},
-        localRecords: admins,
-        localSource: "admins",
-      });
+      const previousPhone = String(
+        previousAdmin?.phone ||
+        previousAdmin?.mobileNumber ||
+        previousAdmin?.raw?.phone ||
+        previousAdmin?.raw?.mobileNumber ||
+        getAdminSecret(previousAdmin?.email)?.phone ||
+        ""
+      ).replace(/\D/g, "");
+      const phoneChanged = !editingAdminId || previousPhone !== adminPhone.replace(/\D/g, "");
+      const duplicateMobileMessage = phoneChanged
+        ? await validateUniqueMobileNumber(adminPhone, {
+            current: editingAdminId ? { id: editingAdminId, source: "admins" } : {},
+            localRecords: admins,
+            localSource: "admins",
+          })
+        : "";
       if (duplicateMobileMessage) {
         setFieldErrors((current) => ({ ...current, phone: duplicateMobileMessage }));
         setError(duplicateMobileMessage);
@@ -452,7 +441,7 @@ function Admins() {
     const query = search.trim().toLowerCase();
     return admins.map((admin) => ({
       ...admin,
-      assignedClinic: getAdminClinicName(admin, clinics),
+      assignedClinic: getAdminClinicName(admin, clinics) || "Clinic pending",
       phone:
         admin.phone || admin.mobileNumber || admin.raw?.phone || admin.raw?.mobileNumber || "",
     }))
@@ -537,97 +526,98 @@ function Admins() {
       key: "serial",
       label: "S.No.",
       width: "44px",
+      align: "center",
       render: (_admin, index) => index + 1,
     },
     {
       key: "name",
       label: "Name",
-      width: "minmax(170px, 0.95fr)",
+      width: "minmax(0, 1fr)",
       render: (admin) => (
         <span className="sa-admin-name-cell">
           <span className={`sa-admin-avatar sa-admin-avatar--${getInitials(admin.name || admin.email).charCodeAt(0) % 4}`}>
             {getInitials(admin.name || admin.email)}
           </span>
-          <b>{admin.name || "-"}</b>
+          <span className="sa-admin-name-highlight">
+            <b>{admin.name || "-"}</b>
+          </span>
         </span>
       ),
     },
     {
       key: "email",
       label: "Email",
-      width: "minmax(210px, 1fr)",
-      cellClassName: "sa-table-cell--nowrap",
+      width: "minmax(0, 1.35fr)",
       render: (admin) => (
-        <span title={admin.email || ""} className="sa-table-text-overflow">
+        <span title={admin.email || ""} className="sa-table-text-overflow sa-admin-email">
           {admin.email || "-"}
         </span>
       ),
     },
-            {
-              key: "assignedClinic",
-              label: "Assigned Clinic",
-              width: "minmax(160px, 0.8fr)",
-              render: (admin) => {
-                const clinicId = getAdminClinicId(admin, clinics);
-                const clinicName = getAdminClinicName(admin, clinics);
-                return (
-                  <span className="sa-admin-clinic-cell">
-                    <span className="sa-admin-clinic-logo sa-admin-clinic-logo--emerald">
-                      <AssignedClinicLogo clinicId={clinicId} clinicName={clinicName || admin.assignedClinic || "Clinic"} />
-                    </span>
-                    <span>{admin.assignedClinic || "-"}</span>
-                  </span>
-                );
-              },
-            },
-            {
-              key: "phone",
-              label: "Mobile Number",
-              width: "minmax(126px, 0.6fr)",
-              render: (admin) => (
-                <span className="sa-admin-icon-text sa-admin-icon-text--phone">
-                  <Phone size={15} />
-                  <span>{admin.phone || admin.raw?.phone || admin.raw?.mobileNumber || "-"}</span>
-                </span>
-              ),
-            },
-            {
-              key: "status",
-              label: "Status",
-              width: "100px",
-              render: (admin) => (
-                <span className={`sa-badge ${admin.status === "Active" ? "is-active" : "is-danger"}`}>
-                  {admin.status}
-                </span>
-              ),
-            },
+    {
+      key: "assignedClinic",
+      label: "Assigned Clinic",
+      width: "minmax(0, 0.9fr)",
+      render: (admin) => {
+        const clinicId = getAdminClinicId(admin, clinics);
+        const clinicName = getAdminClinicName(admin, clinics);
+        return (
+          <span className="sa-admin-clinic-cell">
+            <span className="sa-admin-clinic-logo sa-admin-clinic-logo--emerald">
+              <AssignedClinicLogo clinicId={clinicId} clinicName={clinicName || admin.assignedClinic || "Clinic"} />
+            </span>
+            <span>{admin.assignedClinic || "-"}</span>
+          </span>
+        );
+      },
+    },
+    {
+      key: "phone",
+      label: "Mobile Number",
+      width: "128px",
+      render: (admin) => (
+        <span className="sa-admin-icon-text sa-admin-icon-text--phone">
+          <Phone size={15} />
+          <span>{admin.phone || admin.raw?.phone || admin.raw?.mobileNumber || "-"}</span>
+        </span>
+      ),
+    },
+    {
+      key: "status",
+      label: "Status",
+      width: "88px",
+      align: "center",
+      render: (admin) => (
+        <span className={`sa-badge ${admin.status === "Active" ? "is-active" : "is-danger"}`}>
+          {admin.status}
+        </span>
+      ),
+    },
     {
       key: "actions",
       label: "Actions",
-      width: "152px",
+      width: "104px",
+      align: "center",
+      cellClassName: "sa-table-cell--actions",
       render: (admin) => {
         const isActive = String(admin.status || "").trim().toLowerCase() === "active";
-        const disabledTitle = "Record inactive — only status toggle is available";
 
         return (
-          <div className="sa-actions">
-            <button className="sa-icon-btn sa-icon-btn--view" onClick={() => setSelectedAdmin(admin)} disabled={!isActive} title={isActive ? "View admin" : disabledTitle}>
-              <Eye size={15} />
-            </button>
-            <button className="sa-icon-btn sa-icon-btn--edit" onClick={() => openEditForm(admin)} disabled={!isActive} title={isActive ? "Edit admin" : disabledTitle}>
-              <Pencil size={15} />
-            </button>
-            <button
-              className="sa-icon-btn sa-icon-btn--status"
-              onClick={() => toggleAdminStatus(admin)}
-              title={admin.status === "Active" ? "Deactivate admin" : "Activate admin"}
-            >
-              {admin.status === "Active" ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
-            </button>
-            <button className="sa-icon-btn sa-icon-btn--delete" onClick={() => handleDelete(admin)} disabled={!isActive} title={isActive ? "Delete admin" : disabledTitle}>
-              <Trash2 size={15} />
-            </button>
-          </div>
+          <ActionsGroup
+            rowId={admin.id}
+            activeActionState={activeActionState}
+            setActiveActionState={setActiveActionState}
+            canView={true}
+            canEdit={isActive}
+            canStatus={true}
+            canDelete={false}
+            statusChecked={isActive}
+            statusTitle={admin.status === "Active" ? "Deactivate admin" : "Activate admin"}
+            onView={() => setSelectedAdmin(admin)}
+            onEdit={() => openEditForm(admin)}
+            onStatus={() => toggleAdminStatus(admin)}
+            onDelete={() => handleDelete(admin)}
+          />
         );
       },
     },
@@ -650,6 +640,7 @@ function Admins() {
       />
 
       <SearchFilter
+        className="sa-admin-search-filter"
         value={search}
         onChange={setSearch}
         placeholder="Search admins by name, email, clinic, or role..."
@@ -659,9 +650,9 @@ function Admins() {
       />
 
       {showForm ? (
-        <form className="sa-form-card" style={{ marginBottom: 16 }} onSubmit={handleCreateAdmin} noValidate>
+        <form className="sa-form-card sa-admin-form" style={{ marginBottom: 16 }} onSubmit={handleCreateAdmin} noValidate>
           <h3>{editingAdminId ? "Edit admin" : "Create new admin"}</h3>
-          <p className="sa-form-subtitle">Manage administrator access for a clinic.</p>
+          <p className="sa-form-subtitle">Create an Admin first. The Admin can create and own the clinic after login.</p>
           {error ? <div className="sa-state sa-state--error">{error}</div> : null}
           <div className="sa-form-grid">
             <div className="sa-form-field">
@@ -730,16 +721,15 @@ function Admins() {
               ) : null}
             </div>
             <div className="sa-form-field sa-form-field-full">
-              <label htmlFor="admin-assigned-clinic">Assigned clinic</label>
+              <label htmlFor="admin-assigned-clinic">Assigned clinic <small>(optional)</small></label>
               <select
                 id="admin-assigned-clinic"
                 name="assignedClinicId"
                 value={form.assignedClinicId}
                 onChange={handleChange}
                 className={fieldErrors.assignedClinicId ? "is-invalid" : ""}
-                required
               >
-                <option value="">Select clinic</option>
+                <option value="">No clinic yet - Admin will create after login</option>
                 {clinics.map((clinic) => (
                   <option key={clinic.id || clinic.name} value={clinic.id || ""}>
                     {clinic.name}
@@ -762,6 +752,7 @@ function Admins() {
                 name="sendWelcomeEmail"
                 checked={form.sendWelcomeEmail}
                 onChange={handleChange}
+                style={{ width: 20, height: 20, flex: "0 0 20px" }}
               />
             </label>
           </div>
@@ -770,7 +761,7 @@ function Admins() {
               Cancel
             </button>
             <button className="sa-btn sa-btn-primary" disabled={saving}>
-              {saving ? "Saving..." : editingAdminId ? "Save admin" : "Create admin"}
+              {saving ? "Saving..." : editingAdminId ? "Update Admin" : "Create admin"}
             </button>
           </div>
         </form>
@@ -787,9 +778,9 @@ function Admins() {
             }
           />
           <div className="sa-form-grid">
-            {["name", "email", "assignedClinic", "role", "status"].map((key) => (
+            { ["name", "email", "assignedClinic", "phone", "role", "status"].map((key) => (
               <div className="sa-form-field" key={key}>
-                <label>{key === "assignedClinic" ? "Assigned Clinic" : key.replace(/^\w/, (letter) => letter.toUpperCase())}</label>
+                <label>{key === "assignedClinic" ? "Assigned Clinic" : key === "phone" ? "Mobile Number" : key.replace(/^\w/, (letter) => letter.toUpperCase())}</label>
                 <input value={selectedAdmin?.[key] || ""} readOnly />
               </div>
             ))}
@@ -807,6 +798,8 @@ function Admins() {
         emptyMessage="No admins match your filters."
         preserveColumnFractions
       />
+
+      <PendingAdminCreations onCreated={loadAdmins} />
 
       <div className="sa-table-footer">
         <div className="sa-table-summary">

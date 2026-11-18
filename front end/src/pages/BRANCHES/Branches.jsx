@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Building2,
   CheckCircle,
+  Eye,
   MapPin,
   Pencil,
   Plus,
@@ -12,6 +13,8 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { ActionsGroup } from "../../components/ActionsGroup";
+import { apiUrl } from "../../config/api";
 import "./Branches.css";
 import { useToast } from "../../components/ToastProvider";
 import { formatTitleCase } from "../../utils/format";
@@ -139,10 +142,15 @@ function Branches() {
   const toast = useToast();
   const { canCreate, canEdit, canDelete } = useAdminModulePermissions("Branches");
   const hospitalId = getStoredHospitalId();
-  const clinicName = getStoredClinicName() || localStorage.getItem("hospitalName") || "Clinic";
-  const clinicBranding = getClinicInvoiceBranding({ clinicId: hospitalId, clinicName });
+  const clinicName = getStoredClinicName() || "Clinic";
+  const clinicBranding = getClinicInvoiceBranding({ clinicId: hospitalId, clinicName });
+  const [clinicSetupSaving, setClinicSetupSaving] = useState(false);
+  const [clinicSetupError, setClinicSetupError] = useState("");
+  const [clinicSetupSuccess, setClinicSetupSuccess] = useState("");
 
   const [branches, setBranches] = useState([]);
+  const [viewingBranch, setViewingBranch] = useState(null);
+  const [activeActionState, setActiveActionState] = useState(null);
   const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -169,7 +177,7 @@ function Branches() {
   const [editingBranch, setEditingBranch] = useState(null);
   const [form, setForm] = useState(getEmptyForm(hospitalId));
   const [fieldErrors, setFieldErrors] = useState({});
-  const [areaOptions, setAreaOptions] = useState([]);
+  const [areaOptions, setAreaOptions] = useState([]);
 
   const selectedDistricts = useMemo(
     () =>
@@ -280,6 +288,7 @@ function Branches() {
       active = false;
     };
   }, [form.addressParts?.pincode]);
+
 
   const filteredBranches = useMemo(() => {
     const value = searchText.trim().toLowerCase();
@@ -541,8 +550,6 @@ function Branches() {
 
     const nextIsActive = !getBranchIsActive(branch);
     setUpdatingStatusId(branchId);
-    setError("");
-    setSuccess("");
 
     try {
       const response = await fetch(`${BRANCH_API_URL}/${branchId}/status`, {
@@ -566,14 +573,10 @@ function Branches() {
             : item
         )
       );
-      const message = nextIsActive
-        ? "Branch activated successfully"
-        : "Branch disabled successfully";
-      setSuccess(message);
-      toast.success(message);
+      toast.success(nextIsActive ? "Branch activated successfully" : "Branch disabled successfully");
     } catch (statusError) {
       const message = statusError.message || "Unable to update branch status.";
-      showError(message);
+      toast.error(message);
     } finally {
       setUpdatingStatusId(null);
     }
@@ -623,7 +626,26 @@ function Branches() {
 
   return (
     <div className="branches-page">
-      <div className="branches-header">
+      {/* 3D Hospital Theme Background Animated Overlays */}
+      <div className="branches-bg-overlay" />
+      <div className="branches-floating-particle p1" />
+      <div className="branches-floating-particle p2" />
+      <div className="branches-floating-particle p3" />
+      <div className="branches-ecg-wave">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="branches-ecg-svg">
+          <path
+            d="M0 60 L300 60 L310 40 L320 80 L330 20 L345 100 L355 60 L370 60 L400 60 L700 60 L710 35 L720 85 L730 15 L745 105 L755 60 L770 60 L1200 60"
+            fill="none"
+            stroke="color-mix(in srgb, var(--theme-primary) 22%, transparent)"
+            strokeWidth="2.5"
+            strokeDasharray="1200"
+            strokeDashoffset="1200"
+            className="ecg-path"
+          />
+        </svg>
+      </div>
+
+      <div className="branches-header" data-page-header>
         <div>
           <h2>Branches</h2>
           <p>
@@ -637,7 +659,10 @@ function Branches() {
           <button
             type="button"
             className="branches-icon-button"
-            onClick={fetchBranches}
+            onClick={() => {
+              clearBranchCache(hospitalId);
+              fetchBranches();
+            }}
             disabled={loading || saving}
             title="Refresh branches"
           >
@@ -662,10 +687,8 @@ function Branches() {
         </span>
         <span>Clinic Name</span>
         <b>{clinicName}</b>
-      </div>
-
-      <div className="branches-toolbar">
-        <div className="branches-search">
+      
+        <div className="admin-heading-search branches-search">
           <Search size={16} />
           <input
             value={searchText}
@@ -673,18 +696,20 @@ function Branches() {
             placeholder="Search branch, city, email, phone..."
           />
         </div>
-      </div>
+</div>
+
+      
 
       {success ? <div className="branches-success">{success}</div> : null}
       {error ? <div className="branches-error">{error}</div> : null}
 
       <div className="branches-table">
         <div className="branches-thead">
-          <span>S.No.</span>
-          <span>Branch</span>
-          <span>Contact</span>
-          <span>Location</span>
-          <span>Status</span>
+          <span className="branches-sno-head">S.No.</span>
+          <span className="branches-name-head">Branch</span>
+          <span className="branches-contact-head">Contact</span>
+          <span className="branches-location-head">Location</span>
+          <span className="branches-status-head">Status</span>
           <span className="branches-actions-heading">Actions</span>
         </div>
 
@@ -700,7 +725,7 @@ function Branches() {
 
           return (
             <div className="branches-row" key={branchId || `${getBranchName(branch)}-${index}`}>
-              <span>{index + 1}</span>
+              <span className="branches-sno-cell">{index + 1}</span>
               <div className="branches-name-cell">
                 <div className="branches-avatar">
                   <MapPin size={17} />
@@ -710,12 +735,12 @@ function Branches() {
                   <span>ID: {branchId || "-"}</span>
                 </div>
               </div>
-              <div className="branches-cell">
+              <div className="branches-contact-cell">
                 <b>{readBranchField(branch, "phone", "Phone") || "-"}</b>
                 <span>{readBranchField(branch, "email", "Email") || "-"}</span>
               </div>
-              <span className="branches-cell">{formatBranchAddress(branch)}</span>
-              <span className="branches-cell">
+              <span className="branches-location-cell">{formatBranchAddress(branch)}</span>
+              <div className="branches-status-cell">
                 <span
                   className={`branches-status ${
                     isActive ? "branches-status-active" : "branches-status-inactive"
@@ -723,38 +748,24 @@ function Branches() {
                 >
                   {isUpdating ? "Updating..." : isActive ? "Active" : "Inactive"}
                 </span>
-              </span>
+              </div>
               <div className="branches-actions">
-                <button
-                  type="button"
-                  className="branches-action-button branches-action-edit"
-                  onClick={() => openEditModal(branch)}
-                  disabled={saving || isUpdating || isDeleting || !canEdit}
-                  title="Edit branch"
-                  aria-label={`Edit ${getBranchName(branch) || "branch"}`}
-                >
-                  <Pencil size={14} />
-                </button>
-                <button
-                  type="button"
-                  className="branches-action-button branches-action-toggle"
-                  onClick={() => toggleBranchStatus(branch)}
-                  disabled={saving || isUpdating || isDeleting || !canEdit}
-                  title={isActive ? "Disable branch" : "Activate branch"}
-                  aria-label={`${isActive ? "Disable" : "Activate"} ${getBranchName(branch) || "branch"}`}
-                >
-                  {isActive ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
-                </button>
-                <button
-                  type="button"
-                  className="branches-action-button branches-action-danger"
-                  onClick={() => handleDeleteBranch(branch)}
-                  disabled={saving || isUpdating || isDeleting || !canDelete}
-                  title="Delete branch"
-                  aria-label={`Delete ${getBranchName(branch) || "branch"}`}
-                >
-                  <Trash2 size={14} />
-                </button>
+                <ActionsGroup
+                  rowId={branchId}
+                  activeActionState={activeActionState}
+                  setActiveActionState={setActiveActionState}
+                  canView={true}
+                  canEdit={canEdit}
+                  canStatus={canEdit}
+                  canDelete={canDelete}
+                  statusChecked={isActive}
+                  statusDisabled={saving || isUpdating || isDeleting}
+                  statusTitle={isActive ? "Disable branch" : "Activate branch"}
+                  onView={() => setViewingBranch(branch)}
+                  onEdit={() => openEditModal(branch)}
+                  onStatus={() => toggleBranchStatus(branch)}
+                  onDelete={() => handleDeleteBranch(branch)}
+                />
               </div>
             </div>
           );
@@ -982,6 +993,47 @@ function Branches() {
               </div>
             </form>
           </div>
+        </div>
+      ) : null}
+
+      {viewingBranch ? (
+        <div className="branches-modal-overlay" onClick={() => setViewingBranch(null)}>
+          <section
+            className="branches-modal branches-view-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="branch-details-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="branches-modal-header">
+              <div className="branches-modal-title">
+                <div className="branches-modal-icon">
+                  <Building2 size={20} />
+                </div>
+                <div>
+                  <h3 id="branch-details-title">Branch Details</h3>
+                  <p>{clinicName}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="branches-modal-close"
+                onClick={() => setViewingBranch(null)}
+                aria-label="Close branch details"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="branches-view-grid">
+              <div><span>Branch</span><strong>{getBranchName(viewingBranch) || "-"}</strong></div>
+              <div><span>Branch ID</span><strong>{getBranchId(viewingBranch) || "-"}</strong></div>
+              <div><span>Phone</span><strong>{readBranchField(viewingBranch, "phone", "Phone") || "-"}</strong></div>
+              <div><span>Email</span><strong>{readBranchField(viewingBranch, "email", "Email") || "-"}</strong></div>
+              <div className="branches-view-grid-full"><span>Location</span><strong>{formatBranchAddress(viewingBranch) || "-"}</strong></div>
+              <div><span>Status</span><strong>{getBranchIsActive(viewingBranch) ? "Active" : "Inactive"}</strong></div>
+            </div>
+          </section>
         </div>
       ) : null}
     </div>

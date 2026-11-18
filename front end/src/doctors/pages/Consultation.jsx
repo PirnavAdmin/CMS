@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Printer } from "lucide-react";
+import { Check, Plus, Printer } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Consultation.css";
 import { apiUrl } from "../../config/api";
@@ -18,7 +18,7 @@ import { formatDateMMDDYYYY } from "../../utils/dateFormat";
 import { fetchConsultationVitals, mergeStoredAppointmentVitals } from "../../utils/appointmentVitals";
 import { getClinicDisplayName } from "../../utils/clinicDisplay";
 import { getClinicInvoiceBranding } from "../../utils/clinicBranding";
-import { fetchLabMasterTests, filterLabTestsBySpecialization } from "../../utils/labMaster";
+import { fetchLabMasterTests, filterLabTestsBySpecialization, normalizeLabTest } from "../../utils/labMaster";
 import { savePendingDiagnosticRequest } from "../../utils/diagnosticRequests";
 import { canUseModulePermission, useRolePermissionsSync } from "../../utils/rolePermissions";
 
@@ -144,12 +144,63 @@ const normalizeAppointment = (item, fallback = {}) => {
   };
 };
 
-const normalizeOverview = (data) => ({
-  allergies: data?.allergies || emptyValue,
-  chronicDiseases: data?.chronicDiseases || emptyValue,
-  currentMedications: data?.currentMedications || emptyValue,
-  lastVisit: data?.lastVisit || emptyValue,
-  bloodGroup: data?.bloodGroup || emptyValue,
+const readHistoryField = (record, ...keys) => {
+  const entries = Object.entries(record || {});
+  for (const key of keys) {
+    const entry = entries.find(([name]) => name.toLowerCase() === key.toLowerCase());
+    if (entry?.[1] !== null && entry?.[1] !== undefined && String(entry[1]).trim()) return entry[1];
+  }
+  return "";
+};
+
+const unwrapMedicalHistory = (payload) => {
+  if (Array.isArray(payload)) return payload.filter(Boolean);
+  if (!payload || typeof payload !== "object") return [];
+
+  for (const key of ["data", "result", "medicalHistory", "history", "records", "items"]) {
+    const wrapped = readHistoryField(payload, key);
+    if (Array.isArray(wrapped)) return wrapped.filter(Boolean);
+    if (wrapped && typeof wrapped === "object" && wrapped !== payload) {
+      const nested = unwrapMedicalHistory(wrapped);
+      if (nested.length) return nested;
+    }
+  }
+
+  return [payload];
+};
+
+const fetchPatientMedicalHistory = async (patientId, headers) => {
+  const id = String(patientId || "").trim();
+  if (!id) return null;
+
+  const response = await fetch(apiUrl(`MedicalHistory/${encodeURIComponent(id)}`), {
+    headers,
+    cache: "no-store",
+  });
+  if (!response.ok) {
+    throw new Error(`Unable to load patient medical history (HTTP ${response.status}).`);
+  }
+
+  const records = unwrapMedicalHistory(await response.json());
+  const timestamp = (record) => {
+    const value = readHistoryField(record, "updatedAt", "createdAt", "modifiedAt");
+    const parsed = value ? new Date(value).getTime() : 0;
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  return records.sort((left, right) => timestamp(right) - timestamp(left))[0] || null;
+};
+
+const normalizeOverview = (history, appointment) => ({
+  allergies: readHistoryField(history, "allergies", "allergyList") ||
+    readHistoryField(appointment, "allergies", "allergyList") || emptyValue,
+  chronicDiseases: readHistoryField(history, "chronicDiseases", "chronicConditions", "medicalConditions") ||
+    readHistoryField(appointment, "chronicDiseases", "chronicConditions") || emptyValue,
+  currentMedications: readHistoryField(history, "currentMedications", "currentMedication", "medications") ||
+    readHistoryField(appointment, "currentMedications", "currentMedication", "medications") || emptyValue,
+  lastVisit: readHistoryField(history, "lastVisit") ||
+    readHistoryField(appointment, "lastVisit") || emptyValue,
+  bloodGroup: readHistoryField(history, "bloodGroup") ||
+    readHistoryField(appointment, "bloodGroup") || emptyValue,
 });
 
 const updateAppointmentStatusAPI = async (appointmentId, newStatus, headers = {}) => {
@@ -195,12 +246,14 @@ const getStepFromStatus = (status) => {
   return 1;
 };
 
+const CONSULTATION_QUEUE_STATUSES = ["waiting"];
+
 const getFallbackAppointment = (appointments) =>
   appointments.find((item) =>
-    ["waiting", "inprogress", "in progress"].includes(
+    CONSULTATION_QUEUE_STATUSES.includes(
       String(item.status || "").trim().toLowerCase()
     )
-  ) || appointments[0];
+  ) || null;
 
 const parseList = (data) => {
   if (Array.isArray(data)) return data;
@@ -388,11 +441,18 @@ function Consultation() {
           ...(backendVitals || {}),
           patientId: detailedAppointment.patientId || savedConsultation?.patientId,
         });
+        let medicalHistory = null;
+        try {
+          medicalHistory = await fetchPatientMedicalHistory(hydratedAppointment.patientId, headers);
+        } catch (historyError) {
+          console.warn("Unable to load patient medical history for consultation.", historyError);
+          setError(historyError.message || "Unable to load patient medical history.");
+        }
 
         const appointmentComplaint = hydratedAppointment.chiefComplaints || "";
 
         setAppointment(hydratedAppointment);
-        setOverview(normalizeOverview(hydratedAppointment));
+        setOverview(normalizeOverview(medicalHistory, hydratedAppointment));
         setStep(getStepFromStatus(hydratedAppointment.status));
 
         setForm({
@@ -466,37 +526,46 @@ function Consultation() {
     };
   }, [appointment, overview]);
 
+  const doctorSpecializationForOptions =
+    appointment?.doctorSpecialization ||
+    appointment?.specialization ||
+    sessionDoctor.specialization;
+
+  const scopedLabTests = useMemo(
+    () => filterLabTestsBySpecialization(labTests, doctorSpecializationForOptions),
+    [doctorSpecializationForOptions, labTests]
+  );
+
   const diagnosisSelectOptions = useMemo(() => {
-    const doctorSpecialization =
-      appointment?.doctorSpecialization ||
-      appointment?.specialization ||
-      sessionDoctor.specialization;
     const options = new Set(
       filterDiagnosisOptionsBySpecialization(
         DEFAULT_DIAGNOSIS_OPTIONS,
-        doctorSpecialization
+        doctorSpecializationForOptions
       )
     );
-    filterDiagnosisOptionsBySpecialization(diagnosisOptions, doctorSpecialization).forEach((diagnosis) => {
+
+    filterDiagnosisOptionsBySpecialization(diagnosisOptions, doctorSpecializationForOptions).forEach((diagnosis) => {
       if (diagnosis) options.add(diagnosis);
     });
+
     if (form.diagnosis) options.add(form.diagnosis);
     return Array.from(options).sort((a, b) => a.localeCompare(b));
-  }, [appointment, diagnosisOptions, form.diagnosis, sessionDoctor.specialization]);
-  const diagnosisTestOptions = useMemo(() => {
-    const doctorSpecialization =
-      appointment?.doctorSpecialization ||
-      appointment?.specialization ||
-      sessionDoctor.specialization;
-    const options = new Set(
-      filterLabTestsBySpecialization(labTests, doctorSpecialization).map((test) => test.item)
-    );
-    return Array.from(options).sort((a, b) => a.localeCompare(b));
-  }, [appointment, labTests, sessionDoctor.specialization]);
+  }, [diagnosisOptions, doctorSpecializationForOptions, form.diagnosis]);
+
+  const diagnosisTestOptions = useMemo(
+    () => labTests.map((test) => normalizeLabTest(test)).filter((test) => test.item && test.isActive !== false),
+    [labTests]
+  );
+
   const selectedDiagnosisTests = useMemo(
     () => splitDiagnosisTests(form.diagnosisTests),
     [form.diagnosisTests]
   );
+
+  const selectedDiagnosisTestDetails = useMemo(() => {
+    const selected = new Set(selectedDiagnosisTests.map((test) => test.toLowerCase()));
+    return diagnosisTestOptions.filter((test) => selected.has(String(test.item || test.testName || "").toLowerCase()));
+  }, [diagnosisTestOptions, selectedDiagnosisTests]);
   const hospitalName = getClinicDisplayName(
     {
       hospitalName: appointment?.hospitalName || appointment?.clinicName || localStorage.getItem("hospitalName") || localStorage.getItem("clinicName"),
@@ -560,6 +629,7 @@ function Consultation() {
   };
 
   const saveConsultation = async () => {
+    if (saving) return null;
     if (!canCreateConsultation) {
       setError("You do not have permission to create consultations.");
       return null;
@@ -581,6 +651,7 @@ function Consultation() {
       setMessage("");
 
       const token = getAuthToken();
+      if (!token) throw new Error("Your doctor session is missing. Sign in again before saving the consultation.");
       const headers = {
         "Content-Type": "application/json",
         "ngrok-skip-browser-warning": "true",
@@ -589,6 +660,9 @@ function Consultation() {
 
       const appointmentId = Number(appointment.appointmentId);
       const patientId = Number(appointment.patientId);
+      if (!Number.isInteger(appointmentId) || appointmentId <= 0 || !Number.isInteger(patientId) || patientId <= 0) {
+        throw new Error("The selected appointment has an invalid appointment or patient ID. Reload it from Appointments before saving.");
+      }
       const chiefComplaints = String(form.complaintsChoice || "").trim();
       const diagnosis = String(form.diagnosis || "").trim();
       const diagnosisTests = joinDiagnosisTests(form.diagnosisTests);
@@ -606,46 +680,47 @@ function Consultation() {
 
       const requestBody = {
         appointmentId,
-        AppointmentId: appointmentId,
         patientId,
-        PatientId: patientId,
         diagnosis,
-        Diagnosis: diagnosis,
         // Backend CreateConsultationDto expects List<string>.
         diagnosisTests: diagnosisTestList,
-        DiagnosisTests: diagnosisTestList,
         clinicalNotes,
-        ClinicalNotes: clinicalNotes,
       };
 
-      let response = await fetch(CONSULTATION_API, {
+      const response = await fetch(CONSULTATION_API, {
         method: "POST",
         headers,
         body: JSON.stringify(requestBody),
       });
 
-      let data = await response.json().catch(() => ({}));
-
+      const responseText = await response.text();
+      let payload = null;
+      try { payload = responseText ? JSON.parse(responseText) : null; } catch { payload = responseText; }
+      const data = payload && typeof payload === "object" ? payload.data || payload : {};
       if (!response.ok) {
-        const validationMessage =
-          data?.errors && typeof data.errors === "object"
-            ? Object.values(data.errors).flat().filter(Boolean).join(" ")
-            : "";
-        throw new Error(data.message || validationMessage || data.title || "Unable to save consultation.");
+        const validationMessage = data.errors && typeof data.errors === "object"
+          ? Object.values(data.errors).flat().filter(Boolean).join(" ") : "";
+        const plainMessage = typeof payload === "string" && !/^\s*</.test(payload) ? payload.trim().slice(0, 600) : "";
+        const fallback = response.status === 401 ? "Your doctor session expired. Sign in again."
+          : response.status === 403 ? "Your doctor account is not permitted to save this consultation."
+          : response.status === 404 ? "The consultation endpoint or selected appointment was not found for this doctor."
+          : response.status >= 500 ? "The backend failed while saving the consultation. Check the backend logs for this request."
+          : "The backend rejected the consultation. Check the appointment and required fields.";
+        throw new Error(`Consultation save failed (HTTP ${response.status}): ${data.message || data.Message || validationMessage || data.detail || data.title || plainMessage || fallback}`);
       }
 
-      const updatedStatus = "In Progress";
+      const updatedStatus = "Prescription Added";
       await updateAppointmentStatusAPI(appointment.appointmentId, updatedStatus, headers);
 
       setAppointment((prev) => ({
         ...prev,
         status: updatedStatus,
       }));
-      setStep(1);
+      setStep(2);
       setDiagnosisOptions((prev) =>
         mergeDiagnosisOption(prev, form.diagnosis)
       );
-      setMessage(data.message || "Consultation saved.");
+      setMessage(data.message || "Consultation saved. Continue with prescription.");
 
       if (diagnosisTests) {
         savePendingDiagnosticRequest({
@@ -656,6 +731,7 @@ function Consultation() {
           doctorName,
           diagnosis,
           tests: diagnosisTests,
+          testDetails: selectedDiagnosisTestDetails,
           clinicId: hospitalId,
           clinicName: hospitalName,
           branchId: appointment.branchId,
@@ -685,8 +761,8 @@ function Consultation() {
       state: {
         appointmentId: appointment.appointmentId,
         patientId: appointment.patientId,
-        appointment,
-        patient,
+        appointment: { ...appointment, status: "Prescription Added" },
+        patient: { ...appointment, status: "Prescription Added" },
         consultation: {
           ...result,
           diagnosis: result.diagnosis || form.diagnosis,
@@ -757,7 +833,7 @@ function Consultation() {
             .section-block { min-height: 82px; white-space: pre-wrap; font-size: 14px; line-height: 1.45; }
             .footer { display: flex; justify-content: space-between; gap: 28px; padding-top: 18px; }
             .signature { text-align: right; min-width: 220px; padding-top: 10px; }
-            @media print { .sheet { padding: 0; } }
+            @media print { .sheet { padding: 0; min-height: 0; } }
           </style>
         </head>
         <body>
@@ -861,7 +937,7 @@ function Consultation() {
                 className={`cn-step-circle ${i < step ? "done" : i === step ? "active" : ""
                   }`}
               >
-                {i < step ? "✓" : i + 1}
+                {i < step ? <Check size={20} strokeWidth={3} aria-hidden="true" /> : i + 1}
               </div>
               <span className={`cn-step-label ${i === step ? "active" : ""}`}>
                 {label}
@@ -985,11 +1061,14 @@ function Consultation() {
               <option value="">
                 {diagnosisTestOptions.length ? "Select diagnosis test" : "No lab file tests available"}
               </option>
-              {diagnosisTestOptions.map((test) => (
-                <option value={test} key={test}>
-                  {test}
-                </option>
-              ))}
+              {diagnosisTestOptions.map((test) => {
+                const testName = test.item || test.testName;
+                return (
+                  <option value={testName} key={test.id || testName}>
+                    {testName}
+                  </option>
+                );
+              })}
             </select>
             <div className="cn-test-chips">
               {selectedDiagnosisTests.length ? (
@@ -1010,24 +1089,32 @@ function Consultation() {
               type="button"
               onClick={handleSubmitConsultation}
               disabled={saving || !canCreateConsultation}
+              title="Submit Consultation"
             >
-              {saving ? "Saving..." : "Submit"}
+              <Check size={16} />
+              <span>{saving ? "Saving..." : "Submit"}</span>
             </button>
+
             <button
               className="cn-btn-print"
               type="button"
               onClick={printConsultation}
               disabled={saving || !canCreateConsultation}
+              title="Print Consultation"
             >
-              <Printer size={16} /> Print
+              <Printer size={16} />
+              <span>Print</span>
             </button>
+
             <button
               className="cn-btn-primary"
               type="button"
               onClick={handleAddPrescription}
               disabled={saving || !canCreateConsultation}
+              title="Add Prescription"
             >
-              {saving ? "Saving..." : "Add Prescription →"}
+              <Plus size={16} />
+              <span>{saving ? "Saving..." : "Add Prescription"}</span>
             </button>
           </div>
         </section>

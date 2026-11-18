@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { CheckCircle, Pencil, Plus, RefreshCw, Search, ToggleLeft, ToggleRight, Trash2, X } from "lucide-react";
+import { CheckCircle, Eye, Pencil, Plus, RefreshCw, Search, ToggleLeft, ToggleRight, Trash2, X, Microscope, FlaskConical, TestTube2, Dna } from "lucide-react";
+import { ActionsGroup } from "../../components/ActionsGroup";
 import "../RECEPTIONISTS/Receptionists.css";
 import "./LabTechnicians.css";
 import { apiUrl } from "../../config/api";
@@ -12,6 +13,7 @@ import {
   recordBelongsToClinicScope,
 } from "../../utils/branchApi";
 import { getClinicDisplayName } from "../../utils/clinicDisplay";
+import { formatTitleCase } from "../../utils/format";
 import { useAdminModulePermissions } from "../../utils/rolePermissions";
 import { onlyAlpha, onlyIndianMobileValue, validateAlpha, validateGmail, validateMobile, validateSelected, validateStrongPassword } from "../../utils/validation";
 
@@ -111,10 +113,13 @@ function LabTechnicians() {
   const hospitalId = getStoredHospitalId() || localStorage.getItem("clinicId") || "";
   const clinicName = getClinicDisplayName({ hospitalName: localStorage.getItem("hospitalName"), clinicName: localStorage.getItem("clinicName") }, "Clinic");
   const [technicians, setTechnicians] = useState([]);
+  const [activeActionState, setActiveActionState] = useState(null);
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingBranches, setLoadingBranches] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
+  const [viewingTech, setViewingTech] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const [editingTech, setEditingTech] = useState(null);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState("");
@@ -182,7 +187,11 @@ function LabTechnicians() {
   }, [branchNameById, search, technicians, hospitalId, clinicName, scopedBranchIds]);
 
   const updateField = (field, value) => {
-    const nextValue = field === "name" ? onlyAlpha(value) : field === "phone" ? onlyIndianMobileValue(value) : value;
+    const nextValue = field === "name"
+      ? formatTitleCase(onlyAlpha(value))
+      : field === "phone"
+        ? onlyIndianMobileValue(value)
+        : value;
     setForm((current) => ({ ...current, [field]: nextValue }));
     setFieldErrors((current) => ({ ...current, [field]: "", form: "" }));
   };
@@ -208,7 +217,7 @@ function LabTechnicians() {
     }
     setEditingTech(tech);
     setForm(tech ? {
-      name: getLabTechName(tech),
+      name: formatTitleCase(onlyAlpha(getLabTechName(tech))),
       email: getLabTechEmail(tech),
       phone: getLabTechPhone(tech),
       password: "",
@@ -216,6 +225,7 @@ function LabTechnicians() {
       isActive: !String(getLabTechStatus(tech)).toLowerCase().includes("inactive"),
     } : emptyForm);
     setFieldErrors({});
+    setShowPassword(false);
     setModalOpen(true);
   };
 
@@ -233,7 +243,7 @@ function LabTechnicians() {
     setSaving(true);
     try {
       const payload = {
-        Name: form.name.trim(),
+        Name: formatTitleCase(form.name.trim()),
         Email: form.email.trim(),
         Phone: form.phone.trim(),
         Password: form.password || undefined,
@@ -304,48 +314,82 @@ function LabTechnicians() {
   };
 
   return (
-    <div className="receptionists-page">
-      <div className="receptionists-header">
+    <div className="receptionists-page lab-technicians-page">
+      <div className="lab-bg-overlay" />
+      <div className="lab-equipment-particle lab-part-1" title="Digital Microscope"><Microscope size={28} /></div>
+      <div className="lab-equipment-particle lab-part-2" title="Chemical Reagent Flask"><FlaskConical size={26} /></div>
+      <div className="lab-equipment-particle lab-part-3" title="Diagnostic Test Tubes"><TestTube2 size={26} /></div>
+      <div className="lab-equipment-particle lab-part-4" title="Genetic & Pathology Testing"><Dna size={26} /></div>
+      <div className="receptionists-header" data-page-header>
         <div>
           <h2>Lab Technicians</h2>
           <p>{loading ? "Loading lab technicians..." : `${filteredTechnicians.length} lab technicians registered for ${clinicName}`}</p>
         </div>
+        <label className="admin-heading-search receptionists-search"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search lab technicians..." /></label>
+
         <div className="receptionists-header-actions">
           <button type="button" className="receptionists-icon-button" onClick={loadTechnicians} disabled={loading} title="Refresh lab technicians"><RefreshCw size={16} /></button>
           <button type="button" className="receptionists-primary-button" onClick={() => openModal()} disabled={!canCreate}><Plus size={16} /> Add Lab Technician</button>
         </div>
       </div>
-      <div className="receptionists-toolbar">
-        <label className="receptionists-search"><Search size={17} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search lab technicians..." /></label>
-      </div>
-      {!loading && filteredTechnicians.length === 0 ? <div className="receptionists-empty">No lab technicians found.</div> : null}
-      <div className="lab-tech-card-grid">
-        {filteredTechnicians.map((tech, index) => {
-          const name = getLabTechName(tech);
-          const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "LT";
-          const status = getLabTechStatus(tech);
-          return (
-            <article className="lab-tech-card" key={getLabTechId(tech) || `${name}-${index}`}>
-              <div className="lab-tech-card-head">
-                <div className="lab-tech-avatar">{initials}</div>
-                <h3>{name}</h3>
-                <p>{clinicName}</p>
+
+      <div className="lab-tech-table-card">
+        
+        <div className="receptionists-table">
+          <div className="receptionists-thead">
+            <span>S.No.</span>
+            <span>Name</span>
+            <span>Branch</span>
+            <span>Email</span>
+            <span>Phone</span>
+            <span className="receptionists-status-head">Status</span>
+            <span className="receptionists-actions-head">Actions</span>
+          </div>
+          {!loading && filteredTechnicians.length === 0 ? (
+            <div className="receptionists-empty">No lab technicians found.</div>
+          ) : null}
+          {filteredTechnicians.map((tech, index) => {
+            const name = getLabTechName(tech);
+            const initials = name.split(/\s+/).slice(0, 2).map((part) => part[0]).join("").toUpperCase() || "LT";
+            const status = getLabTechStatus(tech);
+            return (
+              <div className="receptionists-row" key={getLabTechId(tech) || `${name}-${index}`}>
+                <span>{index + 1}</span>
+                <div className="receptionists-name-cell">
+                  <span className="receptionists-avatar"><span>{initials}</span></span>
+                  <span className="lab-tech-name-highlight">
+                    <b>{name}</b>
+                  </span>
+                </div>
+                <span className="receptionists-cell">{getLabTechBranchName(tech, branchNameById)}</span>
+                <span className="receptionists-cell receptionists-email">{getLabTechEmail(tech)}</span>
+                <span className="receptionists-cell">{getLabTechPhone(tech)}</span>
+                <span className="receptionists-cell receptionists-status-cell">
+                  <span className={`receptionists-status ${String(status).toLowerCase().includes("inactive") ? "receptionists-status-inactive" : "receptionists-status-active"}`}>
+                    {status}
+                  </span>
+                </span>
+                <div className="receptionists-actions">
+                  <ActionsGroup
+                    rowId={getLabTechId(tech)}
+                    activeActionState={activeActionState}
+                    setActiveActionState={setActiveActionState}
+                    canView={true}
+                    canEdit={canEdit}
+                    canStatus={canEdit}
+                    canDelete={canDelete}
+                    statusChecked={!String(status).toLowerCase().includes("inactive")}
+                    statusTitle={String(status).toLowerCase().includes("inactive") ? "Activate lab technician" : "Deactivate lab technician"}
+                    onView={() => setViewingTech(tech)}
+                    onEdit={() => openModal(tech)}
+                    onStatus={() => toggleTechnicianStatus(tech)}
+                    onDelete={() => deleteTechnician(tech)}
+                  />
+                </div>
               </div>
-              <div className="lab-tech-card-details">
-                <div><span>Branch</span><strong>{getLabTechBranchName(tech, branchNameById)}</strong></div>
-                <div><span>Email</span><strong>{getLabTechEmail(tech)}</strong></div>
-                <div><span>Phone</span><strong>{getLabTechPhone(tech)}</strong></div>
-                <div><span>Status</span><strong className={`lab-tech-status-pill ${String(status).toLowerCase().includes("inactive") ? "inactive" : "active"}`}>{status}</strong></div>
-                <div><span>Created</span><strong>{readFirst(tech, ["createdAt", "CreatedAt", "createdOn"], "-")}</strong></div>
-              </div>
-              <div className="lab-tech-card-actions receptionists-actions">
-                <button type="button" className="receptionists-action-button" onClick={() => openModal(tech)} disabled={!canEdit} title="Edit lab technician"><Pencil size={16} /></button>
-                <button type="button" className="receptionists-action-button" onClick={() => toggleTechnicianStatus(tech)} disabled={!canEdit} title={String(status).toLowerCase().includes("inactive") ? "Activate lab technician" : "Deactivate lab technician"}>{String(status).toLowerCase().includes("inactive") ? <ToggleLeft size={16} /> : <ToggleRight size={16} />}</button>
-                <button type="button" className="receptionists-action-button receptionists-action-danger" onClick={() => deleteTechnician(tech)} disabled={!canDelete} title="Delete lab technician"><Trash2 size={16} /></button>
-              </div>
-            </article>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
       {modalOpen ? (
         <div className="receptionists-modal-overlay" onClick={closeModal}>
@@ -358,13 +402,82 @@ function LabTechnicians() {
               <div className="receptionists-field"><label htmlFor="lab-name">Name</label><input id="lab-name" value={form.name} onChange={(event) => updateField("name", event.target.value)} className={fieldErrors.name ? "is-invalid" : ""} disabled={saving} autoFocus />{fieldErrors.name ? <span className="receptionists-field-error">{fieldErrors.name}</span> : null}</div>
               <div className="receptionists-field"><label htmlFor="lab-email">Email</label><input id="lab-email" type="email" value={form.email} onChange={(event) => updateField("email", event.target.value)} className={fieldErrors.email ? "is-invalid" : ""} disabled={saving} />{fieldErrors.email ? <span className="receptionists-field-error">{fieldErrors.email}</span> : null}</div>
               <div className="receptionists-field"><label htmlFor="lab-phone">Phone</label><input id="lab-phone" value={form.phone} onChange={(event) => updateField("phone", event.target.value)} inputMode="numeric" maxLength={10} className={fieldErrors.phone ? "is-invalid" : ""} disabled={saving} />{fieldErrors.phone ? <span className="receptionists-field-error">{fieldErrors.phone}</span> : null}</div>
-              <div className="receptionists-field"><label htmlFor="lab-password">Password</label><input id="lab-password" type="password" value={form.password} onChange={(event) => updateField("password", event.target.value)} className={fieldErrors.password ? "is-invalid" : ""} disabled={saving} />{fieldErrors.password ? <span className="receptionists-field-error">{fieldErrors.password}</span> : null}</div>
+              {/* <div className="receptionists-field"><label htmlFor="lab-password">Password</label><input id="lab-password" type="password" value={form.password} onChange={(event) => updateField("password", event.target.value)} className={fieldErrors.password ? "is-invalid" : ""} disabled={saving} />{fieldErrors.password ? <span className="receptionists-field-error">{fieldErrors.password}</span> : null}</div> 
+              */}
+              <div className="receptionists-field">
+  <label htmlFor="lab-password">Password</label>
+
+  <div className="password-input-wrapper">
+    <input
+      id="lab-password"
+      type={showPassword ? "text" : "password"}
+      value={form.password}
+      onChange={(event) => updateField("password", event.target.value)}
+      className={fieldErrors.password ? "is-invalid" : ""}
+      disabled={saving}
+    />
+
+    <button
+      type="button"
+      className="password-toggle-button"
+      onClick={() => setShowPassword((prev) => !prev)}
+      disabled={saving}
+      aria-label={showPassword ? "Hide password" : "Show password"}
+    >
+      <Eye size={18} />
+    </button>
+  </div>
+
+  {fieldErrors.password ? (
+    <span className="receptionists-field-error">
+      {fieldErrors.password}
+    </span>
+  ) : null}
+</div>
               <div className="receptionists-field"><label htmlFor="lab-branch">Branch</label><select id="lab-branch" value={form.branchId} onChange={(event) => updateField("branchId", event.target.value)} className={fieldErrors.branchId ? "is-invalid" : ""} disabled={loadingBranches || saving}><option value="">{loadingBranches ? "Loading branches..." : "Select branch"}</option>{branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}</select>{fieldErrors.branchId ? <span className="receptionists-field-error">{fieldErrors.branchId}</span> : null}</div>
               <div className="receptionists-field"><label htmlFor="lab-is-active">Is Active</label><select id="lab-is-active" value={form.isActive ? "Active" : "Inactive"} onChange={(event) => updateField("isActive", event.target.value === "Active")} disabled={saving}><option value="Active">Active</option><option value="Inactive">Inactive</option></select></div>
               {fieldErrors.form ? <div className="receptionists-error receptionists-form-message">{fieldErrors.form}</div> : null}
               <div className="receptionists-modal-actions"><button type="button" className="receptionists-secondary-button" onClick={closeModal} disabled={saving}>Cancel</button><button type="submit" className="receptionists-save-button" disabled={saving || (editingTech ? !canEdit : !canCreate)}><CheckCircle size={16} />{saving ? "Saving..." : editingTech ? "Update Lab Technician" : "Create Lab Technician"}</button></div>
             </form>
           </div>
+        </div>
+      ) : null}
+
+      {viewingTech ? (
+        <div className="receptionists-modal-overlay" onClick={() => setViewingTech(null)}>
+          <section
+            className="receptionists-modal lab-technician-view-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="lab-technician-details-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="receptionists-modal-header">
+              <div className="receptionists-modal-title">
+                <div className="receptionists-modal-icon"><Microscope size={20} /></div>
+                <div>
+                  <h3 id="lab-technician-details-title">Lab Technician Details</h3>
+                  <p>{clinicName}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="receptionists-modal-close"
+                onClick={() => setViewingTech(null)}
+                aria-label="Close lab technician details"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="lab-technician-view-grid">
+              <div><span>Name</span><strong>{getLabTechName(viewingTech) || "-"}</strong></div>
+              <div><span>Branch</span><strong>{getLabTechBranchName(viewingTech, branchNameById) || "-"}</strong></div>
+              <div><span>Email</span><strong>{getLabTechEmail(viewingTech) || "-"}</strong></div>
+              <div><span>Phone</span><strong>{getLabTechPhone(viewingTech) || "-"}</strong></div>
+              <div><span>Status</span><strong>{getLabTechStatus(viewingTech) || "-"}</strong></div>
+            </div>
+          </section>
         </div>
       ) : null}
     </div>

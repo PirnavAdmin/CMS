@@ -1,40 +1,457 @@
-body {
-  margin: 0;
-  font-family: "Inter", "Segoe UI", Arial, sans-serif;
-  font-size: 14px;
-  color: #071120;
-  caret-color: transparent;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-html,
-body,
-* {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar,
-*::-webkit-scrollbar {
-  width: 0;
-  height: 0;
-  display: none;
-}
-
 :root {
-  --app-bg: #f8fafc;
+  --app-gradient-bg: 
+    radial-gradient(ellipse 70% 55% at 88% 10%, color-mix(in srgb, var(--theme-primary-soft) 75%, transparent) 0%, rgba(209, 250, 229, 0.55) 35%, transparent 72%),
+    radial-gradient(ellipse 55% 45% at 8% 15%, color-mix(in srgb, var(--theme-primary-soft) 65%, transparent) 0%, color-mix(in srgb, var(--theme-primary-soft) 30%, transparent) 40%, transparent 70%),
+    radial-gradient(circle at 82% 88%, color-mix(in srgb, var(--theme-primary-soft) 45%, transparent) 0%, rgba(209, 250, 229, 0.25) 45%, transparent 70%),
+    linear-gradient(140deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 26%, var(--theme-primary-soft) 56%, var(--theme-primary-soft) 100%);
+  --app-bg: var(--theme-primary-soft);
   --app-surface: #ffffff;
   --app-border: #e5e7eb;
-  --app-text: #071120;
+  --app-text: var(--theme-primary-dark);
   --app-muted: #40516a;
-  --app-accent: #0f9d9d;
-  --app-accent-soft: #dff3f3;
+  --app-accent: var(--theme-primary-dark);
+  --app-accent-soft: var(--theme-primary-soft);
   --app-heading-size: 24px;
   --app-title-size: 16px;
   --app-body-size: 14px;
   --app-caption-size: 12px;
+  --theme-primary: #0f9d9d;
+  --theme-primary-dark: #0f5a61;
+  --theme-primary-soft: #dff3f3;
+  --theme-primary-glow: #b8e8e5;
+}
+
+/* Shared palette hooks used by every authenticated dashboard shell. */
+[data-cms-theme] {
+  --app-accent: var(--theme-primary);
+  --app-accent-soft: var(--theme-primary-soft);
+}
+
+[data-cms-theme] body,
+[data-cms-theme] .layout,
+[data-cms-theme] .rc-shell,
+[data-cms-theme] .pp-shell,
+[data-cms-theme] .patient-portal,
+[data-cms-theme] .dr-layout {
+  --theme-shadow: color-mix(in srgb, var(--theme-primary) 16%, transparent);
+}
+
+[data-cms-theme] .topbar,
+[data-cms-theme] .topbar-profile,
+[data-cms-theme] .topbar-dropdown,
+[data-cms-theme] .sidebar,
+[data-cms-theme] .rc-sidebar,
+[data-cms-theme] .pp-sidebar,
+[data-cms-theme] .dr-sidebar {
+  border-color: color-mix(in srgb, var(--theme-primary) 22%, #dbe3ed) !important;
+}
+
+[data-cms-theme] .sidebar,
+[data-cms-theme] .rc-sidebar,
+[data-cms-theme] .pp-sidebar,
+[data-cms-theme] .dr-sidebar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--theme-primary-soft) 74%, #ffffff) 0%, #ffffff 100%) !important;
+}
+
+[data-cms-theme] .sidebar-brand-icon,
+[data-cms-theme] .topbar-avatar,
+[data-cms-theme] .nav-item.active,
+[data-cms-theme] .theme-picker-trigger:hover,
+[data-cms-theme] .theme-picker-trigger:focus-visible {
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+[data-cms-theme] .topbar-search-box:focus-within,
+[data-cms-theme] input:focus,
+[data-cms-theme] select:focus,
+[data-cms-theme] textarea:focus {
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 20%, transparent) !important;
+}
+
+[data-cms-theme] button:not(.theme-option):not(.theme-picker-close):not(.theme-picker-done):not(.topbar-menu-btn):hover {
+  border-color: color-mix(in srgb, var(--theme-primary) 42%, #dbe3ed);
+}
+
+/* High-specificity shared overrides ensure palettes win over module-specific defaults. */
+html[data-cms-theme] .sidebar,
+html[data-cms-theme] .rc-sidebar,
+html[data-cms-theme] .pp-sidebar,
+html[data-cms-theme] .dr-sidebar {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--theme-primary-soft) 74%, #ffffff) 0%, #ffffff 100%) !important;
+  border-right-color: color-mix(in srgb, var(--theme-primary) 24%, #dbe3ed) !important;
+}
+
+html[data-cms-theme] .sidebar .sidebar-brand-icon,
+html[data-cms-theme] .topbar .topbar-avatar {
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+html[data-cms-theme] .sidebar .nav-item.active {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 28%, transparent) !important;
+}
+
+html[data-cms-theme] .sidebar .nav-item.active .nav-icon-box {
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+html[data-cms-theme] .topbar .topbar-profile {
+  background: var(--theme-primary-soft) !important;
+  border-color: color-mix(in srgb, var(--theme-primary) 36%, #dbe3ed) !important;
+}
+
+/* Apply the selected palette to KPI cards and their accent/icon surfaces. */
+html[data-cms-theme] :is(
+  .sa-stat-card,
+  .db-kpi-card,
+  .rc-dash-kpi-card,
+  .rc-patient-kpi-card,
+  .billing-kpi-card,
+  .sa-subscription-kpi,
+  .sa-audit-summary-card
+) {
+  border-color: var(--theme-primary-glow) !important;
+  box-shadow: 0 8px 26px color-mix(in srgb, var(--theme-primary) 16%, transparent) !important;
+}
+
+html[data-cms-theme] :is(
+  .sa-stat-icon,
+  .db-kpi-icon-box,
+  .rc-pkpi-icon-box,
+  .billing-kpi-icon-wrap,
+  .sa-subscription-kpi > svg,
+  .sa-audit-summary-icon
+) {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  border-color: var(--theme-primary-glow) !important;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 18%, transparent) !important;
+}
+
+html[data-cms-theme] .sa-audit-summary-card::after,
+html[data-cms-theme] .sa-subscription-kpi::after {
+  background: var(--theme-primary-soft) !important;
+  border-bottom-color: var(--theme-primary) !important;
+}
+
+html[data-cms-theme] :is(.sa-stat-card h2, .db-kpi-num, .rc-dash-kpi-card .db-kpi-num, .sa-subscription-kpi b) {
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Super Admin dashboard card strips and section rules use the active palette too. */
+html[data-cms-theme] .sa-dashboard-page .sa-card-grid .sa-stat-card {
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0,
+    #ffffff calc(100% - 18px),
+    var(--theme-primary-soft) calc(100% - 18px),
+    var(--theme-primary-soft) 100%
+  ) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-dashboard-page .sa-card-grid .sa-stat-card::after {
+  background: var(--theme-primary) !important;
+}
+
+html[data-cms-theme] .sa-dashboard-page .sa-card-grid .sa-stat-icon {
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+html[data-cms-theme] .sa-dashboard-page :is(.sa-panel--highlighted, .sa-panel--activity) {
+  border-top-color: var(--theme-primary) !important;
+}
+
+html[data-cms-theme] :is(.sa-chart-card, .sa-chart-panel, .sa-panel) {
+  border-color: color-mix(in srgb, var(--theme-primary) 20%, #dbe3ed) !important;
+}
+
+/* Override the legacy Super Admin selectors that otherwise force teal accents. */
+html[data-cms-theme] .layout:has(.superadmin-main) .sidebar .nav-item.active,
+html[data-cms-theme] .layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .nav-item.active,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .sidebar .nav-item.active {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary) 22%, transparent) !important;
+}
+
+html[data-cms-theme] .layout:has(.superadmin-main) .sidebar .nav-item.active .nav-label,
+html[data-cms-theme] .layout:has(.superadmin-main) .sidebar .nav-item.active .nav-icon-box,
+html[data-cms-theme] .layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .nav-item.active .nav-label,
+html[data-cms-theme] .layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .nav-item.active .nav-icon-box,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .sidebar .nav-item.active .nav-label,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .sidebar .nav-item.active .nav-icon-box {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .layout:has(.superadmin-main) .sidebar .nav-item.active .nav-icon-box,
+html[data-cms-theme] .layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .nav-item.active .nav-icon-box,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .sidebar .nav-item.active .nav-icon-box {
+  background: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+html[data-cms-theme] .layout:has(.superadmin-main) .user-profile-chip,
+html[data-cms-theme] .layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .user-profile-chip {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 16%, transparent) !important;
+}
+
+/* Roles & Permissions screen: keep the permission matrix on the selected palette. */
+html[data-cms-theme] .sa-roles-permissions-page .sa-page-header h1 {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-card {
+  border-top-color: var(--theme-primary) !important;
+  background: linear-gradient(135deg, #ffffff 0%, var(--theme-primary-soft) 100%) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-matrix {
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-head {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-row,
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-row:nth-child(odd),
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-row:nth-child(even) {
+  background: color-mix(in srgb, var(--theme-primary-soft) 44%, #ffffff) !important;
+  border-top-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-row:hover {
+  background: var(--theme-primary-soft) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-matrix input[type="checkbox"] {
+  accent-color: var(--theme-primary) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-matrix .sa-checkbox:has(input[type="checkbox"]:checked) {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-permission-head .sa-btn.sa-btn-primary,
+html[data-cms-theme] .sa-roles-permissions-page .sa-form-actions .sa-btn.sa-btn-primary {
+  background: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+  color: #ffffff !important;
+}
+
+html[data-cms-theme] .layout:has(.superadmin-main) .user-profile-avatar,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .user-profile-avatar {
+  background: var(--theme-primary) !important;
+}
+
+/* Profile button details use the active theme as well. */
+html[data-cms-theme] .layout:has(.superadmin-main) .user-profile-chip:hover,
+html[data-cms-theme] .layout:has(.superadmin-main) .user-profile-chip.is-open,
+html[data-cms-theme] .layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip:hover,
+html[data-cms-theme] .layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-chip.is-open,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .user-profile-chip:hover,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .user-profile-chip.is-open {
+  background: #ffffff !important;
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-primary) 20%, transparent) !important;
+}
+
+html[data-cms-theme] .layout:has(.superadmin-main) .user-profile-online-dot,
+html[data-cms-theme] .layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-online-dot,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .user-profile-online-dot {
+  background: var(--theme-primary) !important;
+  box-shadow: 0 0 4px var(--theme-primary) !important;
+}
+
+html[data-cms-theme] .layout:has(.superadmin-main) .user-profile-copy strong,
+html[data-cms-theme] .layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-copy strong,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .user-profile-copy strong {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .layout:has(.superadmin-main) .user-profile-copy em,
+html[data-cms-theme] .layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-copy em,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .user-profile-copy em,
+html[data-cms-theme] .layout:has(.superadmin-main) .user-profile-dropdown-arrow,
+html[data-cms-theme] .layout:has(.profile-page):has(.sidebar h3[title="Super Admin"]) .user-profile-dropdown-arrow,
+html[data-cms-theme] .layout:has(.sidebar a[href="/dashboard"]) .user-profile-dropdown-arrow {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .layout:has(.superadmin-main) .sidebar .sidebar-brand-icon,
+html[data-cms-theme] .layout:has(.sidebar a[href="/superadmin/dashboard"]) .sidebar .sidebar-brand-icon {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  border: 1px solid var(--theme-primary-glow) !important;
+  box-shadow: none !important;
+}
+
+html[data-cms-theme] .content.superadmin-content .sa-subscription-kpi::after,
+html[data-cms-theme] .content.superadmin-content .sa-subscription-kpi svg {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .content.superadmin-content .sa-subscription-kpi::after {
+  border-bottom-color: var(--theme-primary) !important;
+}
+
+/* Use the active theme for primary actions and reusable action-icon controls. */
+html[data-cms-theme] :is(
+  .sa-btn-primary,
+  .sa-btn--primary,
+  .rc-btn.primary,
+  .db-no-clinic-button,
+  .nd-btn-manage
+) {
+  background: var(--theme-primary) !important;
+  border-color: var(--theme-primary) !important;
+  color: #ffffff !important;
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-primary) 22%, transparent) !important;
+}
+
+html[data-cms-theme] :is(
+  .sa-btn:not(.sa-btn-primary):not(.sa-btn--primary),
+  .sa-icon-btn:not(.sa-icon-btn--delete):not(.sa-icon-btn--danger),
+  .app-action-button:not(.app-action-button--danger),
+  .app-action-icon:not(.app-action-icon--danger),
+  .app-icon-button:not(.app-icon-button--danger),
+  .app-action-btn:not(.app-action-btn--danger),
+  .branches-action-button:not(.branches-action-danger),
+  .receptionists-action-button:not(.receptionists-action-danger),
+  .action-btn:not(.delete-btn):not(.delete-instrument-btn),
+  .lab-action-btn,
+  .da-act-btn
+) {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] :is(
+  .sa-icon-btn:not(.sa-icon-btn--delete):not(.sa-icon-btn--danger),
+  .app-action-button:not(.app-action-button--danger),
+  .app-action-icon:not(.app-action-icon--danger),
+  .app-icon-button:not(.app-icon-button--danger),
+  .app-action-btn:not(.app-action-btn--danger),
+  .branches-action-button:not(.branches-action-danger),
+  .receptionists-action-button:not(.receptionists-action-danger),
+  .action-btn:not(.delete-btn):not(.delete-instrument-btn),
+  .lab-action-btn,
+  .da-act-btn
+) svg {
+  color: var(--theme-primary-dark) !important;
+  stroke: currentColor;
+}
+
+html[data-cms-theme] :is(
+  .db-panel-icon,
+  .db-sum-icon,
+  .db-mini-icon,
+  .db-clinic-badge-icon,
+  .db-apt-avatar,
+  .db-noti-icon,
+  .nd-stat-icon-box,
+  .nd-action-icon-box,
+  .rc-dash-action-icon-wrap,
+  .rc-dash-panel-icon
+) {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Recent Activities uses the same selected light shade and accent icon color. */
+html[data-cms-theme] .sa-dashboard-page .sa-panel--activity .sa-activity-icon,
+html[data-cms-theme] .sa-dashboard-page .sa-panel--activity .sa-activity-icon--login,
+html[data-cms-theme] .sa-dashboard-page .sa-panel--activity .sa-activity-icon--logout {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: inset 0 0 0 1px var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-dashboard-page .sa-panel--activity .sa-panel__header .sa-btn {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Keep all scrolling functional while hiding vertical and horizontal scrollbars. */
+* {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+*::-webkit-scrollbar,
+*::-webkit-scrollbar-track,
+*::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-corner {
+  width: 0 !important;
+  height: 0 !important;
+  display: none !important;
+  background: transparent !important;
+}
+/* Keep each app shell fixed while its sidebar and content scroll independently. */
+:where(.layout, .rc-shell, .pp-shell, .patient-portal, .dr-layout) {
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+
+:where(
+  .layout > .main,
+  .rc-shell > .rc-main,
+  .pp-shell > .pp-main,
+  .dr-layout > .dr-layout-body
+) {
+  height: 100% !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+:where(.content, .rc-content, .pp-content, .dr-layout-content) {
+  flex: 1 1 auto;
+  min-height: 0 !important;
+  overflow-x: auto;
+  overflow-y: auto !important;
+  overscroll-behavior: contain;
+}
+
+:where(.sidebar, .rc-sidebar, .pp-sidebar, .dr-sidebar) {
+  max-height: 100dvh;
+  overscroll-behavior: contain;
+}
+html,
+body {
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: var(--app-gradient-bg) !important;
+  background-attachment: fixed !important;
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  font-size: 14px;
+  color: var(--theme-primary-dark);
+  caret-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 .app-action-button,
@@ -52,7 +469,7 @@ body::-webkit-scrollbar,
   border: 1px solid #dbe3ed;
   border-radius: 10px;
   background: #ffffff;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -852,8 +1269,10 @@ code {
   .sa-table-row,
   .admin-users-table-head,
   .admin-users-row,
+  .branches-thead,
   .branches-table-head,
   .branches-row,
+  .receptionists-thead,
   .receptionists-table-head,
   .receptionists-row,
   .doctors-table-head,
@@ -926,5 +1345,739 @@ code {
     --app-page-padding: var(--space-3);
     --app-card-padding: var(--space-3);
     --app-section-gap: var(--space-3);
+  }
+}
+
+/* ==========================================================================
+   GLOBAL MEDICAL SYRINGE & BLOOD DROP DROPDOWN THEME FOR COMPLETE APPLICATION
+   ========================================================================== */
+
+/* 1. Global <select> Surgical Syringe Dropdown Styling for Complete Application */
+select,
+select:not([multiple]),
+select.form-control,
+select.form-select,
+select.op-form-select,
+.da-filter-select,
+.ds-card select,
+.filter-card select,
+.field select,
+.sa-search-filter select,
+.sa-audit-scope-filter select,
+.sa-form-field select,
+.admin-users-toolbar select,
+.admin-settings-select,
+.admin-roles-select,
+.receptionists-field select,
+.nurses-field select,
+.branches-field select,
+.branches-toolbar select,
+.doctors-toolbar select,
+.doctor-edit-field select,
+.patients-field select,
+.patients-toolbar select,
+.lab-files-field select,
+.lab-tech-field select,
+.rc-filter-field select,
+.rc-service-grid select,
+.rc-form-grid select,
+.rc-booking-form select,
+.rc-billing-form select,
+.hc-branch-select-input,
+.hc-branch-selector select,
+.doctor-settings-card select,
+.add-patient-field select,
+.add-doctor-field select,
+.add-doctor-input-group select,
+.input-group select,
+.pd-profile-input-label select,
+.pd-notification-sort select {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: calc(100% - 12px) center !important;
+  background-size: 16px 16px !important;
+  padding-right: 36px !important;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-image 0.2s ease;
+}
+
+select:hover,
+select:focus,
+select:not([multiple]):hover,
+select:not([multiple]):focus,
+select.form-control:hover,
+select.form-control:focus,
+select.form-select:hover,
+select.form-select:focus,
+select.op-form-select:hover,
+select.op-form-select:focus,
+.da-filter-select:hover,
+.da-filter-select:focus,
+.ds-card select:hover,
+.ds-card select:focus,
+.filter-card select:hover,
+.filter-card select:focus,
+.field select:hover,
+.field select:focus,
+.sa-search-filter select:hover,
+.sa-search-filter select:focus,
+.sa-audit-scope-filter select:hover,
+.sa-audit-scope-filter select:focus,
+.sa-form-field select:hover,
+.sa-form-field select:focus,
+.admin-users-toolbar select:hover,
+.admin-users-toolbar select:focus,
+.admin-settings-select:hover,
+.admin-settings-select:focus,
+.admin-roles-select:hover,
+.admin-roles-select:focus,
+.receptionists-field select:hover,
+.receptionists-field select:focus,
+.nurses-field select:hover,
+.nurses-field select:focus,
+.branches-field select:hover,
+.branches-field select:focus,
+.branches-toolbar select:hover,
+.branches-toolbar select:focus,
+.doctors-toolbar select:hover,
+.doctors-toolbar select:focus,
+.doctor-edit-field select:hover,
+.doctor-edit-field select:focus,
+.patients-field select:hover,
+.patients-field select:focus,
+.patients-toolbar select:hover,
+.patients-toolbar select:focus,
+.lab-files-field select:hover,
+.lab-files-field select:focus,
+.lab-tech-field select:hover,
+.lab-tech-field select:focus,
+.rc-filter-field select:hover,
+.rc-filter-field select:focus,
+.rc-service-grid select:hover,
+.rc-service-grid select:focus,
+.rc-form-grid select:hover,
+.rc-form-grid select:focus,
+.rc-booking-form select:hover,
+.rc-booking-form select:focus,
+.rc-billing-form select:hover,
+.rc-billing-form select:focus,
+.hc-branch-select-input:hover,
+.hc-branch-select-input:focus,
+.hc-branch-selector select:hover,
+.hc-branch-selector select:focus,
+.doctor-settings-card select:hover,
+.doctor-settings-card select:focus,
+.add-patient-field select:hover,
+.add-patient-field select:focus,
+.add-doctor-field select:hover,
+.add-doctor-field select:focus,
+.add-doctor-input-group select:hover,
+.add-doctor-input-group select:focus,
+.input-group select:hover,
+.input-group select:focus,
+.pd-profile-input-label select:hover,
+.pd-profile-input-label select:focus,
+.pd-notification-sort select:hover,
+.pd-notification-sort select:focus {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230284c7' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+  border-color: var(--theme-primary) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 15%, transparent) !important;
+}
+
+/* Prevent double syringe on select elements that have custom adjacent syringe overlays */
+.db-filter-select {
+  background-image: none !important;
+}
+
+/* 2. Syringe Dropdown Trigger Elements */
+.rc-syringe-trigger,
+.user-profile-syringe-trigger,
+.pp-syringe-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 55%, #be123c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #ffffff;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.45);
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.rc-syringe-trigger:hover,
+.user-profile-syringe-trigger:hover,
+.pp-syringe-trigger:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.6);
+}
+
+.rc-syringe-icon {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  transform: rotate(135deg); /* Needle points UPWARDS when closed */
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rc-syringe-trigger.rc-syringe--active,
+.user-profile-syringe-trigger.rc-syringe--active,
+.pp-syringe-trigger.rc-syringe--active,
+.rc-syringe-trigger:active,
+.user-profile-syringe-trigger:active,
+.pp-syringe-trigger:active {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 55%, #9f1239 100%);
+  border-color: #fda4af;
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.65);
+  animation: syringeInject 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rc-syringe-trigger.rc-syringe--active .rc-syringe-icon,
+.user-profile-syringe-trigger.rc-syringe--active .rc-syringe-icon,
+.pp-syringe-trigger.rc-syringe--active .rc-syringe-icon,
+.rc-syringe-trigger:active .rc-syringe-icon,
+.user-profile-syringe-trigger:active .rc-syringe-icon,
+.pp-syringe-trigger:active .rc-syringe-icon {
+  transform: rotate(-45deg) scale(1.08); /* Needle points straight DOWN to inject blood */
+}
+
+@keyframes syringeInject {
+  0% { transform: scale(1) translateY(0); }
+  40% { transform: scale(0.9) translateY(2px); }
+  75% { transform: scale(1.06) translateY(-1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* Ruby Blood Drip from the Needle */
+.rc-syringe-drip-bead {
+  position: absolute;
+  bottom: -7px;
+  left: calc(50% - 3.5px);
+  width: 7px;
+  height: 7px;
+  background: radial-gradient(circle at 35% 35%, #ff809b 0%, #e11d48 60%, #9f1239 100%);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.7);
+  animation: syringeNeedleDrip 1.4s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Falling Blood Drop that drips down from syringe needle */
+.rc-syringe-falling-drop {
+  position: absolute;
+  width: 8px;
+  height: 10px;
+  background: radial-gradient(circle at 35% 30%, #ff4d6d 0%, #e11d48 60%, #991b1b 100%);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  bottom: -8px;
+  left: calc(50% - 4px);
+  box-shadow: 0 0 10px rgba(225, 29, 72, 0.85);
+  pointer-events: none;
+  z-index: 10;
+  animation: syringeDropFall 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes syringeDropFall {
+  0% {
+    transform: translateY(0) rotate(-45deg) scale(0.6);
+    opacity: 0;
+  }
+  25% {
+    transform: translateY(4px) rotate(-45deg) scale(1.25);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(28px) rotate(-45deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(55px) rotate(-45deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes syringeNeedleDrip {
+  0% { transform: translateY(0) rotate(-45deg) scale(0.5); opacity: 0; }
+  30% { transform: translateY(2px) rotate(-45deg) scale(1.2); opacity: 1; }
+  65% { transform: translateY(10px) rotate(-45deg) scale(1); opacity: 0.9; }
+  100% { transform: translateY(20px) rotate(-45deg) scale(0.4); opacity: 0; }
+}
+
+/* Capillary Blood Stream Connecting Syringe to Droplet Cards */
+.rc-blood-capillary-stream {
+  position: absolute;
+  left: 6px;
+  top: -6px;
+  bottom: 8px;
+  width: 2.5px;
+  background: linear-gradient(180deg, #e11d48 0%, rgba(244, 63, 94, 0.5) 60%, rgba(244, 63, 94, 0.1) 100%);
+  border-radius: 999px;
+  box-shadow: 0 0 6px rgba(225, 29, 72, 0.35);
+  pointer-events: none;
+  z-index: 1;
+  transform-origin: top;
+  animation: capillaryStreamDraw 0.4s ease-out forwards, bloodCapillaryPulse 2s infinite ease-in-out 0.4s;
+}
+
+@keyframes capillaryStreamDraw {
+  0% {
+    transform: scaleY(0);
+    opacity: 0;
+  }
+  100% {
+    transform: scaleY(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bloodCapillaryPulse {
+  0%, 100% { opacity: 0.65; }
+  50% { opacity: 1; box-shadow: 0 0 10px rgba(225, 29, 72, 0.7); }
+}
+
+.rc-blood-capillary-drop-1,
+.rc-blood-capillary-drop-2 {
+  position: absolute;
+  left: -1.25px;
+  width: 5px;
+  height: 5px;
+  background: #e11d48;
+  border-radius: 50%;
+  box-shadow: 0 0 6px #f43f5e;
+}
+
+.rc-blood-capillary-drop-1 {
+  top: 25%;
+  animation: capillaryDropFlow 2.2s infinite ease-in-out;
+}
+
+.rc-blood-capillary-drop-2 {
+  top: 65%;
+  animation: capillaryDropFlow 2.2s infinite ease-in-out 1.1s;
+}
+
+@keyframes capillaryDropFlow {
+  0% { transform: translateY(-8px) scale(0.7); opacity: 0.3; }
+  50% { transform: translateY(8px) scale(1.1); opacity: 1; }
+  100% { transform: translateY(20px) scale(0.6); opacity: 0.2; }
+}
+
+/* Blood Droplet Cards (Capsule Pills Matching Screenshot) */
+.rc-blood-drop-item {
+  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 6px 14px 6px 6px !important;
+  border-radius: 999px !important;
+  min-height: 48px !important;
+  background: linear-gradient(90deg, #fff0f3 0%, #ffe4e6 100%) !important;
+  border: 1.5px solid #ffccd5 !important;
+  box-shadow: 0 3px 12px rgba(225, 29, 72, 0.08) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  animation: bloodCardCascade 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  z-index: 2;
+}
+
+.rc-blood-drop-item:nth-child(2) { animation-delay: 0.05s; }
+.rc-blood-drop-item:nth-child(3) { animation-delay: 0.14s; }
+.rc-blood-drop-item:nth-child(4) { animation-delay: 0.23s; }
+.rc-blood-drop-item:nth-child(5) { animation-delay: 0.32s; }
+
+@keyframes bloodCardCascade {
+  0% {
+    opacity: 0;
+    transform: translateY(-22px) scale(0.85);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.02);
+    filter: blur(0);
+  }
+  85% {
+    transform: translateY(-2px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.rc-blood-drop-item:hover {
+  background: linear-gradient(90deg, #ffe4e6 0%, #fecdd3 100%) !important;
+  border-color: #f43f5e !important;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.22) !important;
+  transform: translateX(6px) scale(1.02) !important;
+}
+
+/* ACTIVE STATE: Rich, Luminous Orange Gradient (EXACT MATCH to Screenshot) */
+.rc-blood-drop-item.active {
+  background: linear-gradient(90deg, #ea580c 0%, #f97316 60%, #fb923c 100%) !important;
+  border: 1.5px solid #f97316 !important;
+  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.45) !important;
+  transform: translateX(4px) !important;
+}
+
+.rc-blood-drop-item.active:hover {
+  background: linear-gradient(90deg, #c2410c 0%, #ea580c 60%, #f97316 100%) !important;
+  box-shadow: 0 10px 28px rgba(234, 88, 12, 0.55) !important;
+  transform: translateX(6px) scale(1.02) !important;
+}
+
+.rc-blood-drop-item.active .rc-blood-drop-text,
+.rc-blood-drop-item.active .rc-blood-drop-text b,
+.rc-blood-drop-item.active .rc-blood-drop-text small {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+.rc-blood-drop-item.danger {
+  background: linear-gradient(90deg, #fff1f2 0%, #ffe4e6 100%) !important;
+  border-color: #fca5a5 !important;
+}
+
+.rc-blood-drop-item.danger:hover {
+  background: linear-gradient(90deg, #dc2626 0%, #ef4444 60%, #f87171 100%) !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.45) !important;
+  color: #ffffff !important;
+}
+
+.rc-blood-drop-item.danger:hover .rc-blood-drop-text b,
+.rc-blood-drop-item.danger:hover .rc-blood-drop-text small {
+  color: #ffffff !important;
+}
+
+/* 3D Ruby Droplet Badge with Point Pointing Straight Down & Specular Highlight */
+.rc-blood-drop-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: radial-gradient(circle at 35% 30%, #ff4d6d 0%, #e11d48 55%, #9f1239 100%) !important;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.45), inset 0 2px 3px rgba(255, 255, 255, 0.4) !important;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  animation: dropletPlop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes dropletPlop {
+  0% {
+    transform: rotate(-45deg) scale(0.25);
+    opacity: 0;
+  }
+  65% {
+    transform: rotate(-45deg) scale(1.2);
+  }
+  85% {
+    transform: rotate(-45deg) scale(0.95);
+  }
+  100% {
+    transform: rotate(-45deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.rc-blood-drop-item:hover .rc-blood-drop-badge {
+  transform: rotate(-45deg) scale(1.12);
+  box-shadow: 0 6px 14px rgba(225, 29, 72, 0.6) !important;
+}
+
+/* Active State Droplet Badge (Frosted White-Pink with Specular Shine) */
+.rc-blood-drop-item.active .rc-blood-drop-badge {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #ffe4e6 55%, #fecdd3 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16), inset 0 2px 3px rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Specular light reflection on droplet */
+.rc-blood-drop-badge::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4.5px;
+  width: 7px;
+  height: 4.5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  transform: rotate(15deg);
+  filter: blur(0.2px);
+  pointer-events: none;
+}
+
+.rc-blood-drop-badge--logout {
+  background: radial-gradient(circle at 35% 30%, #ff4d6d 0%, #dc2626 55%, #991b1b 100%) !important;
+}
+
+.rc-blood-drop-svg {
+  display: none;
+}
+
+/* Upright icon inside rotated droplet */
+.rc-blood-drop-inner-icon {
+  transform: rotate(45deg);
+  color: #ffffff !important;
+  stroke-width: 2.4;
+  z-index: 1;
+}
+
+.rc-blood-drop-item.active .rc-blood-drop-inner-icon {
+  color: #e11d48 !important;
+}
+
+/* Clear, High-Contrast Typography */
+.rc-blood-drop-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-align: left;
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  color: #701a31 !important;
+  letter-spacing: -0.01em;
+}
+
+.rc-blood-drop-text b {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #701a31;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rc-blood-drop-text small {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #9f1239;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Status Pill ("ONLINE" / "DESK") */
+.rc-blood-drop-pill {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding: 3px 12px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid #fda4af !important;
+  background: rgba(255, 228, 230, 0.7) !important;
+  color: #be123c !important;
+  transition: all 0.2s ease;
+}
+
+.rc-blood-drop-item.active .rc-blood-drop-pill {
+  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+/* Roles & Permissions: keep the role list and permission matrix on the active theme. */
+html[data-cms-theme] .sa-roles-permissions-page .sa-table--roles {
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-table--roles .sa-table-head {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  border-bottom-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-table--roles .sa-table-row,
+html[data-cms-theme] .sa-roles-permissions-page .sa-table--roles .sa-table-row:nth-child(odd),
+html[data-cms-theme] .sa-roles-permissions-page .sa-table--roles .sa-table-row:nth-child(even) {
+  background: color-mix(in srgb, var(--theme-primary-soft) 30%, #ffffff) !important;
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-table--roles .sa-table-row:hover {
+  background: color-mix(in srgb, var(--theme-primary-soft) 58%, #ffffff) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-role-logo {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: inset 0 0 0 1px var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-role-main em {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-role-permission-chip {
+  background: color-mix(in srgb, var(--theme-primary-soft) 72%, #ffffff) !important;
+  border: 1px solid var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-role-permission-chip > b,
+html[data-cms-theme] .sa-roles-permissions-page .sa-role-permission-chip > .sa-role-permission-count {
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-role-permission-chip > .sa-role-permission-count {
+  background: color-mix(in srgb, var(--theme-primary-soft) 45%, #ffffff) !important;
+  border-color: var(--theme-primary-glow) !important;
+}
+
+html[data-cms-theme] .sa-roles-permissions-page .sa-role-admin-list > b svg {
+  color: var(--theme-primary-dark) !important;
+}
+
+/* Audit Logs view buttons: use the active theme for both states. */
+html[data-cms-theme] .sa-audit-logs-page .sa-tabs .sa-tab {
+  background: #ffffff !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-tabs .sa-tab:hover,
+html[data-cms-theme] .sa-audit-logs-page .sa-tabs .sa-tab:focus-visible {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-audit-logs-page .sa-tabs .sa-tab.active {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 5px 14px var(--theme-primary-glow) !important;
+}
+
+/* System Settings tabs: use the active theme instead of per-tab accent colors. */
+html[data-cms-theme] .sa-settings-form .sa-tabs .sa-tab,
+html[data-cms-theme] .sa-settings-form .sa-tabs .sa-tab:nth-child(2),
+html[data-cms-theme] .sa-settings-form .sa-tabs .sa-tab:nth-child(3),
+html[data-cms-theme] .sa-settings-form .sa-tabs .sa-tab:nth-child(4) {
+  background: #ffffff !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-settings-form .sa-tabs .sa-tab:hover,
+html[data-cms-theme] .sa-settings-form .sa-tabs .sa-tab:focus-visible {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+html[data-cms-theme] .sa-settings-form .sa-tabs .sa-tab.active {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 5px 14px var(--theme-primary-glow) !important;
+}
+
+/* Admin Management field surfaces stay white after all theme styles load. */
+.sa-table--admins,
+.sa-table--admins .sa-table-head,
+.sa-table--admins .sa-table-head > *,
+.sa-table--admins .sa-table-row,
+.sa-table--admins .sa-table-row > *,
+.sa-table--admins .sa-table-cell,
+.sa-table--admins .sa-admin-name-cell,
+.sa-table--admins .sa-admin-name-highlight {
+  background: #ffffff !important;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-head,
+.content.superadmin-content .sa-table--admins .sa-table-head > :nth-child(1),
+.content.superadmin-content .sa-table--admins .sa-table-head > :nth-child(2),
+.content.superadmin-content .sa-table--admins .sa-table-row > :nth-child(1),
+.content.superadmin-content .sa-table--admins .sa-table-row > :nth-child(2),
+.content.superadmin-content .sa-table--admins .sa-table-cell--sno,
+.content.superadmin-content .sa-table--admins .sa-table-cell--name,
+.content.superadmin-content .sa-table--admins .sa-admin-name-cell,
+.content.superadmin-content .sa-table--admins .sa-admin-name-highlight {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+/* Remove the sticky-header shadow and separators that show through the Admin table. */
+.content.superadmin-content .sa-table--admins .sa-table-head {
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+.content.superadmin-content .sa-table--admins .sa-table-row,
+.content.superadmin-content .sa-table--admins .sa-table-row > *,
+.content.superadmin-content .sa-table--admins .sa-table-cell {
+  border: 0 !important;
+  box-shadow: none !important;
+  outline: 0 !important;
+}
+
+/* Final Admin Management override: the full table header is always white. */
+html[data-cms-theme] body .content.superadmin-content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head,
+html[data-cms-theme] body .content.superadmin-content.superadmin-content:has(.sa-table--admins) .sa-table--admins .sa-table-head > * {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+
+/* Shared module accents use the saved palette on every authenticated page. */
+html[data-cms-theme] :is(.content,.dr-layout-content,.rc-content,.lab-main,.nurse-content,.pharmacy-main,.pp-main) :is(.branches-primary-button,.patients-add-button,.doctors-add-button,.receptionists-add-button,.nurses-add-button,.lab-tech-add-button,.sa-btn-primary,.admin-users-btn-primary,.pharmacy-primary-button) { background: var(--theme-primary) !important; border-color: var(--theme-primary) !important; color: #fff !important; }
+html[data-cms-theme] :is(.content,.dr-layout-content,.rc-content,.lab-main,.nurse-content,.pharmacy-main,.pp-main) :is(.db-kpi-icon-box,.rc-dash-kpi-icon,.dd-stat-icon-bezel,.nd-stat-icon-box,.pharmacy-count-icon,.pd-summary-card-icon) { background: var(--theme-primary-soft) !important; color: var(--theme-primary-dark) !important; border-color: var(--theme-primary-glow) !important; }
+html[data-cms-theme] :is(.content,.dr-layout-content,.rc-content,.lab-main,.nurse-content,.pharmacy-main,.pp-main) :is(.sa-stat-card,.dd-stat-card,.nd-stat-card,.pharmacy-count-card,.rc-dash-kpi-card) { border-color: var(--theme-primary-glow) !important; }
+html[data-cms-theme] :is(.content,.dr-layout-content,.rc-content,.lab-main,.nurse-content,.pharmacy-main,.pp-main) :is(.dd-stat-value,.nd-stat-count,.pharmacy-count-value,.db-kpi-num) { color: var(--theme-primary-dark) !important; }
+
+/* One palette source for page, section, card and dialog headings across modules.
+   Screen-only rules preserve the colours in clinical report and invoice prints. */
+@media screen {
+  html[data-cms-theme] body #root :is(
+    h1, h2, h3, h4, h5, h6,
+    [role="heading"],
+    [class$="-title"], [class*="-title "],
+    [class$="__title"], [class*="__title "]
+  ) {
+    color: var(--theme-primary-dark) !important;
+    -webkit-text-fill-color: currentColor !important;
+  }
+
+  html[data-cms-theme] body #root :is(
+    [class*="subtitle"], [class*="sub-title"],
+    [class*="subheading"], [class*="sub-heading"],
+    .sa-page-header__copy > p,
+    .admin-overview-heading > div > p,
+    [class$="-header"] > p,
+    [class$="-head"] > p
+  ) {
+    color: var(--theme-primary-dark) !important;
+    -webkit-text-fill-color: currentColor !important;
+  }
+
+  /* Nested emphasis must not retain a hard-coded colour from a module. */
+  html[data-cms-theme] body #root :is(
+    h1, h2, h3, h4, h5, h6, [role="heading"],
+    [class*="subtitle"], [class*="sub-title"],
+    [class*="subheading"], [class*="sub-heading"]
+  ) > :is(span, strong, b, em, small) {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
   }
 }

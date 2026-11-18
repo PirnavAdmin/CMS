@@ -1,0 +1,28 @@
+# Visual Studio temporary files
+.vs/
+bin/
+obj/
+*.user
+*.suo
+
+# Private configuration
+appsettings.json
+appsettings.Development.json
+appsettings.*.local.json
+
+# Sensitive data and uploaded files
+private-data/
+uploads/
+
+# Local databases
+*.db
+*.sqlite
+*.bak
+
+# Secrets
+.env
+.env.*
+wwwroot/images/
+wwwroot/documents/
+wwwroot/downloads/Lab_Test_Master_Dump.xlsx
+/wwwroot/*.png

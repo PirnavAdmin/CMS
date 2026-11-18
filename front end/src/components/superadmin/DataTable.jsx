@@ -1,4 +1,11 @@
 import React from "react";
+
+const getColumnAlignment = (column) => {
+  if (["left", "center", "right"].includes(column.align)) return column.align;
+  if (/^(actions?|status|sno|index|serial)$/i.test(column.key) || /^(actions?|status|s\.?\s?no\.?)$/i.test(String(column.label || "").trim())) return "center";
+  if (/(amount|revenue|price|salary|balance|fee|quantity|subtotal|totalAmount)$/i.test(column.key)) return "right";
+  return "left";
+};
 function DataTable({
   columns = [],
   rows = [],
@@ -10,8 +17,8 @@ function DataTable({
   className = "",
   preserveColumnFractions = false,
 }) {
-  const normalizeColumnWidth = (width = "minmax(96px, max-content)") =>
-    preserveColumnFractions ? String(width) : String(width).replace(/,\s*[\d.]+fr\)/g, ", max-content)");
+  const normalizeColumnWidth = (width = "minmax(96px, 1fr)") =>
+    String(width);
 
   const gridTemplateColumns = columns
     .map((column) => normalizeColumnWidth(column.width))
@@ -24,9 +31,50 @@ function DataTable({
   return (
     <div className={`sa-table${className ? ` ${className}` : ""}`}>
       <div className="sa-table-head" style={{ gridTemplateColumns }}>
-        {columns.map((column) => (
-          <span key={column.key}>{column.label}</span>
-        ))}
+        {columns.map((column) => {
+          const isActionCol =
+            column.key === "actions" ||
+            String(column.cellClassName || "").includes("actions") ||
+            String(column.label || "").toLowerCase() === "actions";
+          const isStatusCol =
+            column.key === "status" ||
+            String(column.cellClassName || "").includes("status") ||
+            String(column.label || "").toLowerCase() === "status";
+          const isSnoCol =
+            column.key === "sno" ||
+            column.key === "index" ||
+            column.key === "serial" ||
+            String(column.label || "").toLowerCase() === "s.no." ||
+            String(column.label || "").toLowerCase() === "s.no" ||
+            String(column.label || "").toLowerCase() === "s. no.";
+          const isNameCol =
+            column.key === "name" ||
+            String(column.cellClassName || "").includes("name") ||
+            String(column.label || "").toLowerCase() === "name" ||
+            String(column.label || "").toLowerCase() === "admin name" ||
+            String(column.label || "").toLowerCase() === "clinic name";
+
+          const isCentered =
+            getColumnAlignment(column) === "center";
+          const isRight = getColumnAlignment(column) === "right";
+
+          const headClasses = [
+            isActionCol ? "sa-actions-header" : "",
+            isStatusCol ? "sa-status-head" : "",
+            isSnoCol ? "sa-sno-head" : "",
+            isNameCol ? "sa-name-head" : "",
+            column.headerClassName || "",
+            isCentered ? "sa-align-center" : isRight ? "sa-align-right" : "sa-align-left",
+          ]
+            .filter(Boolean)
+            .join(" ");
+
+          return (
+            <span key={column.key} className={headClasses}>
+              {column.label}
+            </span>
+          );
+        })}
       </div>
 
       {loading ? <div className="sa-state">Loading records...</div> : null}
@@ -42,14 +90,51 @@ function DataTable({
             style={{ gridTemplateColumns }}
             key={getRowKey ? getRowKey(row) : row.id || index}
           >
-            {columns.map((column) => (
-              <div
-                className={`sa-table-cell${column.cellClassName ? ` ${column.cellClassName}` : ""}`}
-                key={column.key}
-              >
-                {column.render ? column.render(row, rowIndexOffset + index) : row[column.key] || "-"}
-              </div>
-            ))}
+            {columns.map((column) => {
+              const isActionCol =
+                column.key === "actions" ||
+                String(column.cellClassName || "").includes("actions") ||
+                String(column.label || "").toLowerCase() === "actions";
+              const isStatusCol =
+                column.key === "status" ||
+                String(column.cellClassName || "").includes("status") ||
+                String(column.label || "").toLowerCase() === "status";
+              const isSnoCol =
+                column.key === "sno" ||
+                column.key === "index" ||
+                column.key === "serial" ||
+                String(column.label || "").toLowerCase() === "s.no." ||
+                String(column.label || "").toLowerCase() === "s.no" ||
+                String(column.label || "").toLowerCase() === "s. no.";
+              const isNameCol =
+                column.key === "name" ||
+                String(column.cellClassName || "").includes("name") ||
+                String(column.label || "").toLowerCase() === "name" ||
+                String(column.label || "").toLowerCase() === "admin name" ||
+                String(column.label || "").toLowerCase() === "clinic name";
+
+              const isCentered =
+                getColumnAlignment(column) === "center";
+              const isRight = getColumnAlignment(column) === "right";
+
+              const cellClasses = [
+                "sa-table-cell",
+                column.cellClassName || "",
+                isActionCol ? "sa-table-cell--actions" : "",
+                isStatusCol ? "sa-table-cell--status" : "",
+                isSnoCol ? "sa-table-cell--sno" : "",
+                isNameCol ? "sa-table-cell--name" : "",
+                isCentered ? "sa-align-center" : isRight ? "sa-align-right" : "sa-align-left",
+              ]
+                .filter(Boolean)
+                .join(" ");
+
+              return (
+                <div className={cellClasses} key={column.key}>
+                  {column.render ? column.render(row, rowIndexOffset + index) : row[column.key] ?? "-"}
+                </div>
+              );
+            })}
           </div>
         ))}
     </div>

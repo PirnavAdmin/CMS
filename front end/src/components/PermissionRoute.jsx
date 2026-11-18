@@ -1,4 +1,5 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { fetchMySubscription, isLabModule } from "../utils/subscriptionFlow";
 import { Navigate } from "react-router-dom";
 import { getRoleProfile } from "../profile/sessionProfile";
 import { getLabProfile } from "../Lab/labSession";
@@ -80,17 +81,34 @@ const getPermissionProfile = (roleType = "admin") => {
   return getRoleProfile(roleType);
 };
 
-const getFallbackPath = (roleType = "admin", profile = {}) => {
+const getFallbackPath = (roleType = "admin", profile = {}, currentModule = "") => {
   const routes = ROLE_FALLBACK_ROUTES[roleType] || ROLE_FALLBACK_ROUTES.admin;
-  return routes.find((route) => hasAnyModulePermission(profile, route.module, "View"))?.to || null;
+  const match = routes.find(
+    (route) =>
+      String(route.module) !== String(currentModule) &&
+      hasAnyModulePermission(profile, route.module, "View")
+  );
+  return match?.to || null;
 };
 
 function PermissionRoute({ roleType, module, children }) {
   const profile = useMemo(() => getPermissionProfile(roleType), [roleType]);
   const { loading: permissionsLoading } = useRolePermissionsSync(profile);
+  const needsLab = roleType === "admin" && isLabModule(module);
+  const [labAccess, setLabAccess] = useState(null);
+  useEffect(() => {
+    let active = true;
+    setLabAccess(null);
+    if (needsLab) fetchMySubscription().then((subscription) => {
+      if (active) setLabAccess(subscription?.includesLab === true && String(subscription.status).toLowerCase() === "active");
+    }).catch(() => { if (active) setLabAccess(false); });
+    return () => { active = false; };
+  }, [needsLab, module]);
+  if (needsLab && labAccess === null) return <div className="app-route-loading">Loading...</div>;
+  if (needsLab && !labAccess) return <Navigate to="/subscription" replace />;
 
   const hasSavedPermissions = hasAnySavedModulePermissions(profile);
-  if (roleType === "admin" && !hasSavedPermissions) return children;
+  if (roleType === "admin" && (module === "Dashboard" || !hasSavedPermissions)) return children;
 
   if (permissionsLoading && !hasSavedPermissions) {
     return <div className="app-route-loading">Loading...</div>;
@@ -100,7 +118,9 @@ function PermissionRoute({ roleType, module, children }) {
     : !shouldFailClosedForPermissions(profile);
 
   if (!allowed) {
-    return <Navigate to={getFallbackPath(roleType, profile) || "/dashboard"} replace />;
+    const fallback = getFallbackPath(roleType, profile, module);
+    if (!fallback || fallback === "/dashboard") return children;
+    return <Navigate to={fallback} replace />;
   }
 
   return children;

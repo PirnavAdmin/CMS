@@ -1,0 +1,4105 @@
+/* ============================================================
+   NURSE MODULE - UNIQUE MEDICAL DESIGNS & VECTOR INSTRUMENT THEMES
+   ============================================================ */
+
+/* Nurse patient summary cards follow the Super Admin light card treatment. */
+html body .nurse-module .rc-patients-page.rc-patients-page .rc-patient-kpi-grid {
+  width: 100% !important;
+  max-width: none !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+html body .nurse-module .rc-patients-page.rc-patients-page .rc-patient-kpi-card {
+  box-sizing: border-box;
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  height: 80px !important;
+  min-height: 80px !important;
+  padding: 8px 16px 24px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(to bottom, #ffffff 0, #ffffff calc(100% - 18px), var(--theme-primary-soft) calc(100% - 18px), var(--theme-primary-soft) calc(100% - 4px), var(--theme-primary) calc(100% - 4px), var(--theme-primary) 100%) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent) !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-kpi-card .rc-pkpi-icon-box {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  flex: 0 0 32px;
+  border-radius: 9px !important;
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent) !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-pkpi-label {
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-pkpi-val {
+  color: var(--theme-primary-dark) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-pkpi-badge {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+@media (max-width: 640px) {
+  html body .nurse-module .rc-patients-page.rc-patients-page .rc-patient-kpi-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Nurse medical history summaries match the dashboard card surfaces. */
+html body .nurse-module .med-history-page .med-metrics-grid {
+  width: 100% !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+html body .nurse-module .med-history-page .med-metric-card {
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 80px !important;
+  min-height: 80px !important;
+  padding: 8px 16px 24px !important;
+  gap: 10px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(to bottom, #ffffff 0, #ffffff calc(100% - 18px), var(--theme-primary-soft) calc(100% - 18px), var(--theme-primary-soft) calc(100% - 4px), var(--theme-primary) calc(100% - 4px), var(--theme-primary) 100%) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent) !important;
+}
+
+html body .nurse-module .med-history-page .med-metric-icon {
+  width: 32px !important;
+  height: 32px !important;
+  flex: 0 0 32px;
+  border-radius: 9px !important;
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent) !important;
+}
+
+html body .nurse-module .med-history-page .med-metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+html body .nurse-module .med-history-page .med-metric-info span {
+  order: 0;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  color: #64748b !important;
+}
+
+html body .nurse-module .med-history-page .med-metric-info strong {
+  order: 1;
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+@media (max-width: 900px) {
+  html body .nurse-module .med-history-page .med-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html body .nurse-module .med-history-page .med-metrics-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Online and offline nurse booking summaries share dashboard styling. */
+html body .nurse-module :is(.nurse-online-bookings, .nurse-offline-bookings) .booking-metrics-grid {
+  width: 100% !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 16px !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+html body .nurse-module :is(.nurse-online-bookings, .nurse-offline-bookings) .booking-metric-card {
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 80px !important;
+  min-height: 80px !important;
+  padding: 8px 16px 24px !important;
+  gap: 10px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(to bottom, #ffffff 0, #ffffff calc(100% - 18px), var(--theme-primary-soft) calc(100% - 18px), var(--theme-primary-soft) calc(100% - 4px), var(--theme-primary) calc(100% - 4px), var(--theme-primary) 100%) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent) !important;
+}
+
+html body .nurse-module :is(.nurse-online-bookings, .nurse-offline-bookings) .booking-metric-icon {
+  width: 32px !important;
+  height: 32px !important;
+  flex: 0 0 32px;
+  border-radius: 9px !important;
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent) !important;
+}
+
+html body .nurse-module :is(.nurse-online-bookings, .nurse-offline-bookings) .booking-metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+html body .nurse-module :is(.nurse-online-bookings, .nurse-offline-bookings) .booking-metric-info span {
+  order: 0;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  color: #64748b !important;
+}
+
+html body .nurse-module :is(.nurse-online-bookings, .nurse-offline-bookings) .booking-metric-info strong {
+  order: 1;
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+@media (max-width: 900px) {
+  html body .nurse-module :is(.nurse-online-bookings, .nurse-offline-bookings) .booking-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 480px) {
+  html body .nurse-module :is(.nurse-online-bookings, .nurse-offline-bookings) .booking-metrics-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+/* Page Container with Clean Medical Ambient Gradients (No 3D BG) */
+.nurse-dashboard-page {
+  position: relative;
+  min-height: calc(100vh - 86px);
+  padding: 24px 28px 48px;
+  background: transparent !important;
+  overflow-x: hidden;
+}
+
+/* Ensure sticky topbar does not move on scroll */
+.rc-topbar {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1002 !important;
+}
+
+/* Ensure nurse sidebar is fixed to viewport and nurse details card remains permanently sticky & docked */
+@media (min-width: 901px) {
+  .rc-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 280px !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    z-index: 1001 !important;
+  }
+
+  .rc-main {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    margin-left: 280px !important;
+    width: calc(100% - 280px) !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+}
+
+.rc-sidebar-footer {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 10 !important;
+  margin-top: auto !important;
+  flex-shrink: 0 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  background: transparent !important;
+  border-top: 1px solid color-mix(in srgb, var(--theme-primary-soft) 80%, transparent) !important;
+}
+
+/* ============================================================
+   HERO / CARE STATION BANNER
+   ============================================================ */
+.nd-hero-banner {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 28px;
+  margin-bottom: 24px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.78);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent), 0 1px 3px rgba(0, 0, 0, 0.02);
+  overflow: hidden;
+}
+
+.nd-hero-banner::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--theme-primary) 0%, var(--theme-primary) 100%);
+  border-radius: 4px 0 0 4px;
+}
+
+.nd-hero-left {
+  position: relative;
+  z-index: 2;
+}
+
+.nd-hero-pill-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.nd-station-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e0f2f1;
+  border: 1px solid #b9d8d6;
+  color: #367f82;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.nd-live-pulse-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #e0f2f1;
+  border: 1px solid #b9d8d6;
+  color: #367f82;
+  font-size: 11px;
+  font-weight: 750;
+}
+
+.nd-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--theme-primary-dark);
+  box-shadow: 0 0 8px var(--theme-primary-dark);
+  animation: ndPulse 1.8s infinite;
+}
+
+@keyframes ndPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.35); opacity: 0.65; }
+}
+
+.nd-hero-title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 850;
+  color: var(--theme-primary-dark);
+  letter-spacing: -0.4px;
+}
+
+.nd-hero-subtitle {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+.nd-hero-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+  z-index: 2;
+}
+
+.nd-hero-date-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  color: #1e293b;
+  font-size: 12.5px;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+/* ============================================================
+   ADMIN-STYLE VECTOR MEDICAL STAT CARDS (NO 3D IMAGES)
+   ============================================================ */
+.nd-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 265px));
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 26px;
+  position: relative;
+  z-index: 1;
+}
+
+.nd-stat-card {
+  position: relative;
+  padding: 20px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 148px;
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.nd-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 36px color-mix(in srgb, var(--theme-primary-dark) 10%, transparent);
+  border-color: rgba(255, 255, 255, 1);
+}
+
+.nd-stat-card-glow {
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(32px);
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+
+.nd-stat-card:hover .nd-stat-card-glow {
+  opacity: 0.55;
+}
+
+/* Vector Icon Head */
+.nd-stat-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.nd-stat-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 0.26s ease;
+}
+
+.nd-stat-card:hover .nd-stat-icon-box {
+  transform: scale(1.08);
+}
+
+.nd-stat-icon-box.cyan {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.nd-stat-icon-box.amber {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.nd-stat-icon-box.indigo {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.nd-stat-icon-box.emerald {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.nd-stat-pill {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  padding: 3px 8px;
+  border-radius: 99px;
+}
+
+.nd-stat-body {
+  margin-top: 14px;
+}
+
+.nd-stat-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 650;
+  color: #475569;
+  line-height: 1.2;
+}
+
+.nd-stat-count {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.nd-stat-count strong {
+  font-size: 32px;
+  font-weight: 900;
+  color: var(--theme-primary-dark);
+  line-height: 1;
+  letter-spacing: -0.5px;
+}
+
+.nd-stat-hint {
+  font-size: 11px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* Color Themes for Stat Cards */
+.nd-card--cyan {
+  border-bottom: 3.5px solid var(--theme-primary);
+}
+.nd-card--cyan .nd-stat-card-glow {
+  background: var(--theme-primary);
+}
+.nd-card--cyan .nd-stat-pill {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-glow);
+}
+
+.nd-card--amber {
+  border-bottom: 3.5px solid var(--theme-primary);
+}
+.nd-card--amber .nd-stat-card-glow {
+  background: #fcd34d;
+}
+.nd-card--amber .nd-stat-pill {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-glow);
+}
+
+.nd-card--indigo {
+  border-bottom: 3.5px solid var(--theme-primary);
+}
+.nd-card--indigo .nd-stat-card-glow {
+  background: var(--theme-primary-glow);
+}
+.nd-card--indigo .nd-stat-pill {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-glow);
+}
+
+.nd-card--emerald {
+  border-bottom: 3.5px solid var(--theme-primary);
+}
+.nd-card--emerald .nd-stat-card-glow {
+  background: #6ee7b7;
+}
+.nd-card--emerald .nd-stat-pill {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-glow);
+}
+
+/* ============================================================
+   ADMIN-STYLE VECTOR QUICK ACTION CARDS (NO 3D IMAGES)
+   ============================================================ */
+.nd-action-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0 0 14px 2px;
+  position: relative;
+  z-index: 1;
+}
+
+.nd-action-section-title h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nd-action-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 28px;
+  position: relative;
+  z-index: 1;
+}
+
+.nd-action-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 18px 20px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.26s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.nd-action-card:hover {
+  transform: translateY(-3px) translateX(2px);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--theme-primary-dark) 12%, transparent);
+}
+
+.nd-action-card.nd-act--cyan:hover {
+  border-color: color-mix(in srgb, var(--theme-primary) 50%, transparent);
+}
+.nd-action-card.nd-act--rose:hover {
+  border-color: rgba(225, 29, 72, 0.5);
+}
+.nd-action-card.nd-act--indigo:hover {
+  border-color: color-mix(in srgb, var(--theme-primary) 50%, transparent);
+}
+
+.nd-action-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  position: relative;
+  transition: transform 0.22s ease;
+}
+
+.nd-action-card:hover .nd-action-icon-box {
+  transform: scale(1.08);
+}
+
+.nd-action-icon-box.cyan {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-glow);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.nd-action-icon-box.rose {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-glow);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.nd-action-icon-box.indigo {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+  border: 1px solid var(--theme-primary-glow);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 18%, transparent);
+}
+
+.nd-action-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.nd-action-text strong {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 800;
+  color: var(--theme-primary-dark);
+  line-height: 1.2;
+}
+
+.nd-action-text p {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nd-action-arrow {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  transition: all 0.22s ease;
+}
+
+.nd-action-card:hover .nd-action-arrow {
+  background: var(--theme-primary-dark);
+  color: #ffffff;
+  transform: translateX(3px);
+}
+
+/* ============================================================
+   APPOINTMENT QUEUE CLINICAL TABLE CARD
+   ============================================================ */
+.nd-table-card {
+  position: relative;
+  z-index: 1;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
+  padding: 24px;
+}
+
+.nd-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.nd-table-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nd-table-title-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary) 18%, transparent);
+}
+
+.nd-table-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 850;
+  color: var(--theme-primary-dark);
+}
+
+.nd-table-header p {
+  margin: 3px 0 0;
+  color: #64748b;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.nd-btn-manage {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  color: #ffffff;
+  border: 0;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 25%, transparent);
+  transition: all 0.22s ease;
+}
+
+.nd-btn-manage:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px color-mix(in srgb, var(--theme-primary-dark) 35%, transparent);
+}
+
+/* Clinical Table Layout */
+.nd-clinical-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.nd-table-row-head {
+  background: rgba(241, 245, 249, 0.85);
+  border-bottom: 1.5px solid rgba(226, 232, 240, 0.9);
+}
+
+.nd-table-row-head th {
+  padding: 12px 16px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  text-align: left;
+}
+
+.nd-table-row-body {
+  background: rgba(255, 255, 255, 0.6);
+  transition: background 0.18s ease;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.6);
+}
+
+.nd-table-row-body:hover {
+  background: color-mix(in srgb, var(--theme-primary-soft) 85%, transparent);
+}
+
+.nd-table-row-body td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #1e293b;
+  vertical-align: middle;
+}
+
+.nd-patient-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nd-patient-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary-dark);
+  font-size: 11px;
+  font-weight: 850;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.nd-patient-name {
+  font-weight: 700;
+  color: var(--theme-primary-dark);
+}
+
+.nd-doctor-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #334155;
+  font-weight: 600;
+  font-size: 12.5px;
+}
+
+.nd-time-capsule {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Status Badges */
+.nd-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+}
+
+.nd-status-pill.status-waiting {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.nd-status-pill.status-in-consultation {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4338ca;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.nd-status-pill.status-completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.nd-status-pill.status-cancelled {
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+}
+
+.nd-empty-state {
+  padding: 42px 20px;
+  text-align: center;
+  color: #64748b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.nd-empty-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: #f1f5f9;
+  color: #94a3b8;
+  display: grid;
+  place-items: center;
+}
+
+.nurse-dashboard-page .nd-empty-state {
+  gap: 8px;
+}
+
+.nurse-dashboard-page .nd-empty-state p {
+  margin: 0;
+}
+
+.nurse-dashboard-page .nd-empty-icon {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary-dark);
+}
+
+/* ============================================================
+   NURSE SIDEBAR OVERRIDES
+   ============================================================ */
+
+/* ============================================================
+   MEDICAL SYRINGE & BLOOD DROP DROPDOWN THEME
+   ============================================================ */
+
+/* Syringe Dropdown Trigger Button */
+.rc-syringe-dropdown-btn {
+  width: 100%;
+  border: 1.5px solid #ffccd5;
+  background: linear-gradient(135deg, #fff5f7 0%, #fff0f3 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px 6px 12px;
+  border-radius: 999px !important;
+  box-shadow: 0 4px 16px rgba(225, 29, 72, 0.08);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+}
+
+.rc-syringe-dropdown-btn:hover {
+  background: linear-gradient(135deg, #fff0f3 0%, #ffe4e6 100%);
+  border-color: #f43f5e;
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.16);
+  transform: translateY(-1px);
+}
+
+.rc-syringe-dropdown-btn.rc-syringe-group--open {
+  background: linear-gradient(135deg, #fff0f3 0%, #ffe4e6 100%);
+  border-color: #f43f5e;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.18);
+}
+
+.rc-syringe-dropdown-btn .rc-nav-icon-wrap {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  border-radius: 50% !important;
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary) 15%, transparent) !important;
+}
+
+.rc-syringe-dropdown-btn .rc-nav-label {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  color: var(--theme-primary-dark) !important;
+  letter-spacing: -0.01em;
+}
+
+/* Nurse Dropdown Arrow */
+.rc-dropdown-arrow {
+  color: #64748b;
+  margin-left: auto;
+  margin-right: 4px;
+  flex-shrink: 0;
+  transform-origin: center;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+}
+
+.rc-nav-group-title:hover .rc-dropdown-arrow {
+  color: var(--theme-primary);
+}
+
+.rc-dropdown-arrow.is-open {
+  transform: rotate(180deg);
+  color: var(--theme-primary);
+}
+
+/* Syringe Toggle Icon Container (Square Pill with Solid Ruby Red Gradient & White Syringe) */
+.rc-syringe-trigger {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f43f5e 0%, #e11d48 55%, #be123c 100%);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.45);
+  flex-shrink: 0;
+}
+
+.rc-syringe-trigger:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 16px rgba(225, 29, 72, 0.6);
+}
+
+.rc-syringe-icon {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform: rotate(135deg); /* Needle points UPWARDS when closed */
+}
+
+/* Active Injection State: Turns DOWNWARDS towards content */
+.rc-syringe-trigger.rc-syringe--active {
+  background: linear-gradient(135deg, #e11d48 0%, #be123c 55%, #9f1239 100%);
+  border-color: #fda4af;
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.65);
+  animation: syringeInject 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.rc-syringe-trigger.rc-syringe--active .rc-syringe-icon {
+  transform: rotate(-45deg) scale(1.08); /* Needle points straight DOWN to inject blood */
+}
+
+@keyframes syringeInject {
+  0% { transform: scale(1) translateY(0); }
+  40% { transform: scale(0.9) translateY(2px); }
+  75% { transform: scale(1.06) translateY(-1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* Dripping Blood Bead at Needle Tip */
+.rc-syringe-drip-bead {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background: radial-gradient(circle at 35% 35%, #ff809b 0%, #e11d48 60%, #9f1239 100%);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  bottom: -7px;
+  left: calc(50% - 3.5px);
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.7);
+  animation: syringeNeedleDrip 1.4s infinite ease-in-out;
+  pointer-events: none;
+  z-index: 5;
+}
+
+/* Falling Blood Drop that drips down from syringe needle */
+.rc-syringe-falling-drop {
+  position: absolute;
+  width: 8px;
+  height: 10px;
+  background: radial-gradient(circle at 35% 30%, #ff4d6d 0%, #e11d48 60%, #991b1b 100%);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  bottom: -8px;
+  left: calc(50% - 4px);
+  box-shadow: 0 0 10px rgba(225, 29, 72, 0.85);
+  pointer-events: none;
+  z-index: 10;
+  animation: syringeDropFall 0.55s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes syringeDropFall {
+  0% {
+    transform: translateY(0) rotate(-45deg) scale(0.6);
+    opacity: 0;
+  }
+  25% {
+    transform: translateY(4px) rotate(-45deg) scale(1.25);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(28px) rotate(-45deg) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(55px) rotate(-45deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes syringeNeedleDrip {
+  0% {
+    transform: translateY(0) rotate(-45deg) scale(0.5);
+    opacity: 0;
+  }
+  30% {
+    transform: translateY(2px) rotate(-45deg) scale(1.2);
+    opacity: 1;
+  }
+  65% {
+    transform: translateY(10px) rotate(-45deg) scale(1);
+    opacity: 0.9;
+  }
+  100% {
+    transform: translateY(20px) rotate(-45deg) scale(0.4);
+    opacity: 0;
+  }
+}
+
+/* Blood Drops Container & Capillary Flow */
+.rc-blood-drops-flow {
+  position: relative;
+  padding-left: 10px;
+  margin-top: 8px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Blood Drop Card Container (Child Item) — Capsule Pill Matching Screenshot */
+.rc-blood-drop-item {
+  position: relative;
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 6px 14px 6px 6px !important;
+  border-radius: 999px !important;
+  min-height: 48px !important;
+  background: linear-gradient(90deg, #fff0f3 0%, #ffe4e6 100%) !important;
+  border: 1.5px solid #ffccd5 !important;
+  box-shadow: 0 3px 12px rgba(225, 29, 72, 0.08) !important;
+  text-decoration: none !important;
+  cursor: pointer !important;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+  animation: bloodCardCascade 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Staggered Liquid Cascade Animation */
+.rc-blood-drop-item:nth-child(2) { animation-delay: 0.05s; }
+.rc-blood-drop-item:nth-child(3) { animation-delay: 0.14s; }
+.rc-blood-drop-item:nth-child(4) { animation-delay: 0.23s; }
+.rc-blood-drop-item:nth-child(5) { animation-delay: 0.32s; }
+
+@keyframes bloodCardCascade {
+  0% {
+    opacity: 0;
+    transform: translateY(-22px) scale(0.85);
+    filter: blur(2px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(4px) scale(1.02);
+    filter: blur(0);
+  }
+  85% {
+    transform: translateY(-2px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.rc-blood-drop-item:hover {
+  background: linear-gradient(90deg, #ffe4e6 0%, #fecdd3 100%) !important;
+  border-color: #f43f5e !important;
+  box-shadow: 0 6px 20px rgba(225, 29, 72, 0.22) !important;
+  transform: translateX(6px) scale(1.02) !important;
+}
+
+/* ACTIVE STATE: Rich, Luminous Orange Gradient (EXACT MATCH to Screenshot) */
+.rc-blood-drop-item.active {
+  background: linear-gradient(90deg, #ea580c 0%, #f97316 60%, #fb923c 100%) !important;
+  border: 1.5px solid #f97316 !important;
+  box-shadow: 0 8px 24px rgba(234, 88, 12, 0.45) !important;
+  transform: translateX(4px) !important;
+}
+
+.rc-blood-drop-item.active:hover {
+  background: linear-gradient(90deg, #c2410c 0%, #ea580c 60%, #f97316 100%) !important;
+  box-shadow: 0 10px 28px rgba(234, 88, 12, 0.55) !important;
+  transform: translateX(6px) scale(1.02) !important;
+}
+
+/* 3D Blood Droplet Badge with Point Pointing Straight Down & Specular Highlight */
+.rc-blood-drop-badge {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  background: radial-gradient(circle at 35% 30%, #ff4d6d 0%, #e11d48 55%, #9f1239 100%) !important;
+  box-shadow: 0 4px 10px rgba(225, 29, 72, 0.45), inset 0 2px 3px rgba(255, 255, 255, 0.4) !important;
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+  animation: dropletPlop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@keyframes dropletPlop {
+  0% {
+    transform: rotate(-45deg) scale(0.25);
+    opacity: 0;
+  }
+  65% {
+    transform: rotate(-45deg) scale(1.2);
+  }
+  85% {
+    transform: rotate(-45deg) scale(0.95);
+  }
+  100% {
+    transform: rotate(-45deg) scale(1);
+    opacity: 1;
+  }
+}
+
+.rc-blood-drop-item:hover .rc-blood-drop-badge {
+  transform: rotate(-45deg) scale(1.12);
+  box-shadow: 0 6px 14px rgba(225, 29, 72, 0.6) !important;
+}
+
+/* Active State Droplet Badge (Frosted White-Pink with Specular Shine) */
+.rc-blood-drop-item.active .rc-blood-drop-badge {
+  background: radial-gradient(circle at 35% 30%, #ffffff 0%, #ffe4e6 55%, #fecdd3 100%) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.16), inset 0 2px 3px rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Specular light reflection on droplet */
+.rc-blood-drop-badge::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4.5px;
+  width: 7px;
+  height: 4.5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  transform: rotate(15deg);
+  filter: blur(0.2px);
+  pointer-events: none;
+}
+
+.rc-blood-drop-svg {
+  display: none;
+}
+
+/* Upright icon inside rotated droplet */
+.rc-blood-drop-inner-icon {
+  transform: rotate(45deg);
+  color: #ffffff !important;
+  stroke-width: 2.4;
+  z-index: 1;
+}
+
+.rc-blood-drop-item.active .rc-blood-drop-inner-icon {
+  color: #e11d48 !important;
+}
+
+/* Text Typography (Burgundy when inactive, Pure White when active) */
+.rc-blood-drop-text {
+  font-size: 14.5px !important;
+  font-weight: 800 !important;
+  color: #701a31 !important;
+  flex: 1 !important;
+  white-space: nowrap !important;
+  letter-spacing: -0.01em;
+}
+
+.rc-blood-drop-item.active .rc-blood-drop-text {
+  color: #ffffff !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+}
+
+/* Status Pill ("ONLINE" / "DESK") */
+.rc-blood-drop-pill {
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  padding: 3px 12px !important;
+  border-radius: 999px !important;
+  border: 1.5px solid #fda4af !important;
+  background: rgba(255, 228, 230, 0.7) !important;
+  color: #be123c !important;
+  transition: all 0.2s ease;
+}
+
+.rc-blood-drop-item.active .rc-blood-drop-pill {
+  border: 1.5px solid rgba(255, 255, 255, 0.85) !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  color: #ffffff !important;
+}
+
+/* Compact appointment submodules */
+.rc-blood-drops-flow {
+  padding: 2px 0 2px 34px !important;
+  margin: 2px 0 8px !important;
+  gap: 4px !important;
+}
+
+.rc-blood-drop-item {
+  min-height: 36px !important;
+  padding: 3px 8px 3px 5px !important;
+  gap: 8px !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.06) !important;
+}
+
+.rc-blood-drop-item:hover {
+  transform: translateX(3px) scale(1.01) !important;
+}
+
+.rc-blood-drop-item.active {
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.2) !important;
+  transform: translateX(2px) !important;
+}
+
+.nurse-module .rc-sidebar .rc-nav-child.rc-blood-drop-item.active,
+.nurse-module .rc-sidebar .rc-nav-child.rc-blood-drop-item.active:hover {
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--theme-primary-dark) 10%, transparent) !important;
+  transform: none !important;
+}
+
+.nurse-module .rc-sidebar .rc-nav-child.rc-blood-drop-item.active .rc-blood-drop-text {
+  color: var(--theme-primary-dark) !important;
+  text-shadow: none !important;
+}
+
+.rc-blood-drop-badge {
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 6px rgba(225, 29, 72, 0.22) !important;
+}
+
+.rc-blood-drop-badge::before {
+  top: 3px;
+  left: 3px;
+  width: 5px;
+  height: 3px;
+}
+
+.rc-blood-drop-inner-icon {
+  width: 12px !important;
+  height: 12px !important;
+  transform: rotate(45deg) !important;
+}
+
+.rc-blood-drop-text {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.rc-blood-drop-pill {
+  font-size: 9px !important;
+  padding: 2px 7px !important;
+}
+
+/* Remove cross symbol beside clinic name completely on desktop */
+@media (min-width: 901px) {
+  .rc-sidebar-close,
+  button.rc-sidebar-close,
+  .rc-sidebar > .rc-sidebar-close,
+  .rc-brand .rc-sidebar-close,
+  .rc-sidebar .rc-brand button.rc-sidebar-close {
+    display: none !important;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .nd-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .nurse-dashboard-page {
+    padding: 16px;
+  }
+  .nd-hero-banner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 18px;
+  }
+  .nd-stat-grid {
+    grid-template-columns: 1fr;
+  }
+  .nd-action-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   MEDICAL HISTORY THEME & MEDICAL INSTRUMENT BUTTONS
+   ============================================================ */
+
+/* Atmospheric Medical History Theme Background */
+.med-history-page {
+  position: relative;
+  min-height: calc(100vh - 120px);
+  padding: 4px 0 24px;
+}
+
+.med-history-bg-overlay {
+  display: none !important;
+}
+
+/* Hero Header with Medical History Theme */
+.med-history-hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 28px;
+  margin-bottom: 22px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+  overflow: hidden;
+}
+
+.med-history-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, #e11d48 0%, var(--theme-primary) 100%);
+  border-radius: 4px 0 0 4px;
+}
+
+.med-history-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(225, 29, 72, 0.1);
+  border: 1px solid rgba(225, 29, 72, 0.25);
+  color: #e11d48;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.med-history-hero h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--theme-primary-dark);
+  letter-spacing: -0.4px;
+}
+
+.med-history-hero p {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Medical Instrument Action Buttons */
+.med-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.med-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  box-sizing: border-box;
+  text-decoration: none;
+}
+
+.med-btn-icon-wrap {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* Primary Medical Instrument Button (Add History) */
+.med-btn--add {
+  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary) 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 35%, transparent);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.med-btn--add:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 45%, transparent);
+  color: #ffffff !important;
+}
+
+/* Sync Telemetry Instrument Button (Refresh) */
+.med-btn--refresh {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: var(--theme-primary-dark) !important;
+  border: 1.5px solid color-mix(in srgb, var(--theme-primary-dark) 30%, transparent) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+}
+
+.med-btn--refresh:hover:not(:disabled) {
+  background: #ffffff !important;
+  color: var(--theme-primary) !important;
+  border-color: color-mix(in srgb, var(--theme-primary) 45%, transparent) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-primary) 18%, transparent);
+}
+
+/* Dashboard / Station Instrument Button */
+.med-btn--dash {
+  background: rgba(255, 255, 255, 0.85) !important;
+  color: #334155 !important;
+  border: 1.5px solid rgba(203, 213, 225, 0.9) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 4%, transparent);
+}
+
+.med-btn--dash:hover {
+  background: #ffffff !important;
+  color: var(--theme-primary-dark) !important;
+  border-color: #94a3b8 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+}
+
+/* Summary Metrics Row */
+.med-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+.med-metric-card {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.22s ease;
+}
+
+.med-metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.med-metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.med-metric-card.total {
+  border-bottom: 3px solid var(--theme-primary);
+}
+.med-metric-card.total .med-metric-icon {
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+}
+
+.med-metric-card.allergies {
+  border-bottom: 3px solid #f59e0b;
+}
+.med-metric-card.allergies .med-metric-icon {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+}
+
+.med-metric-card.chronic {
+  border-bottom: 3px solid var(--theme-primary);
+}
+.med-metric-card.chronic .med-metric-icon {
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+}
+
+.med-metric-card.surgeries {
+  border-bottom: 3px solid #e11d48;
+}
+.med-metric-card.surgeries .med-metric-icon {
+  background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+  color: #e11d48;
+}
+
+.med-metric-info strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--theme-primary-dark);
+  line-height: 1.1;
+}
+
+.med-metric-info span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Filter Bar */
+.med-search-bar-wrap {
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.med-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 16px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 4%, transparent);
+  max-width: 440px;
+}
+
+.med-search-bar input {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  width: 100%;
+  font-size: 13px;
+  color: var(--theme-primary-dark);
+  font-family: inherit;
+}
+
+/* Medical History Card & Table */
+.med-history-card {
+  position: relative;
+  z-index: 1;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
+  padding: 22px;
+  overflow: hidden;
+}
+
+.med-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+}
+
+.med-history-page .med-card-header {
+  gap: 12px;
+}
+
+.med-history-page .med-card-header .med-search-bar-wrap {
+  flex: 0 1 440px;
+  width: 100%;
+  max-width: 440px;
+  margin: 0;
+}
+
+.med-history-page .med-card-header .med-search-bar {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+.med-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.med-card-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+  color: #e11d48;
+  display: grid;
+  place-items: center;
+}
+
+.med-card-header h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--theme-primary-dark);
+}
+
+.med-card-header p {
+  margin: 2px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Keep clinical-history headers and record cells on the same column tracks. */
+.med-history-card .rc-table {
+  /* Desktop layout deliberately has no horizontal overflow. */
+  overflow-x: hidden;
+}
+
+.med-history-card .rc-table-head.six,
+.med-history-card .rc-table-row.six {
+  /* Named tracks prevent shared table rules from re-ordering or collapsing cells. */
+  grid-template-columns: 64px 180px minmax(190px, 1.1fr) minmax(190px, 1.15fr) minmax(175px, 1fr) 120px 156px;
+  grid-template-areas: "serial patient allergies chronic medications surgeries actions";
+  column-gap: 0;
+  min-width: 0;
+  width: 100%;
+  padding: 0 !important;
+  box-sizing: border-box;
+}
+
+.med-history-card .rc-table-head.six > span,
+.med-history-card .rc-table-row.six > span {
+  min-width: 0;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.med-history-card .rc-table-head.six > :nth-child(1),
+.med-history-card .rc-table-row.six > :nth-child(1) { grid-area: serial; }
+.med-history-card .rc-table-head.six > :nth-child(2),
+.med-history-card .rc-table-row.six > :nth-child(2) { grid-area: patient; }
+.med-history-card .rc-table-head.six > :nth-child(3),
+.med-history-card .rc-table-row.six > :nth-child(3) { grid-area: allergies; }
+.med-history-card .rc-table-head.six > :nth-child(4),
+.med-history-card .rc-table-row.six > :nth-child(4) { grid-area: chronic; }
+.med-history-card .rc-table-head.six > :nth-child(5),
+.med-history-card .rc-table-row.six > :nth-child(5) { grid-area: medications; }
+.med-history-card .rc-table-head.six > :nth-child(6),
+.med-history-card .rc-table-row.six > :nth-child(6) { grid-area: surgeries; }
+.med-history-card .rc-table-head.six > :nth-child(7),
+.med-history-card .rc-table-row.six > :nth-child(7) { grid-area: actions; }
+
+.med-history-card .rc-table-head.six > :first-child,
+.med-history-card .rc-table-row.six > :first-child,
+.med-history-card .rc-table-head.six > :last-child {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: auto !important;
+  margin: 0 !important;
+}
+
+.med-history-card .med-row-actions {
+  width: 100%;
+  min-width: 0;
+  gap: 4px;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.med-history-card .med-action-btn {
+  flex: 0 0 30px;
+  margin: 0;
+}
+
+/* This page uses a real table: one colgroup governs both the header and every record. */
+.med-history-table-scroll {
+  width: 100%;
+  overflow-x: hidden;
+  border: 1px solid #dbe5f1;
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.med-history-table {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed !important;
+}
+
+.med-history-table .med-col-number { width: 6%; }
+.med-history-table .med-col-patient { width: 16%; }
+.med-history-table .med-col-allergies { width: 18%; }
+.med-history-table .med-col-chronic { width: 19%; }
+.med-history-table .med-col-medications { width: 17%; }
+.med-history-table .med-col-surgeries { width: 10%; }
+.med-history-table .med-col-actions { width: 14%; }
+
+.med-history-table th,
+.med-history-table td {
+  padding: 14px 10px !important;
+  box-sizing: border-box;
+  vertical-align: middle !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.med-history-table th {
+  height: 72px;
+  color: var(--theme-primary-dark);
+  background: #f8fafc;
+  border-bottom: 1px solid #dbe5f1;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.med-history-table td {
+  border-bottom: 1px solid #eef2f7;
+  color: var(--theme-primary-dark);
+  font-size: 13px;
+  text-align: center;
+}
+
+.med-history-table td:nth-child(2) {
+  text-align: left;
+}
+
+.med-history-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.med-history-table .med-row-actions {
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+@media (max-width: 1050px) {
+  .med-history-table-scroll {
+    overflow-x: auto;
+  }
+
+  .med-history-table {
+    min-width: 1050px !important;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1050px) {
+  .med-history-card .rc-table {
+    overflow-x: auto;
+  }
+
+  .med-history-card .rc-table-head.six,
+  .med-history-card .rc-table-row.six {
+    grid-template-columns: 64px 180px 205px 205px 180px 120px 156px;
+    min-width: 1110px;
+  }
+}
+
+/* Patient Chip */
+.med-patient-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.med-patient-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary-dark);
+  font-size: 11px;
+  font-weight: 850;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.med-patient-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--theme-primary-dark);
+  line-height: 1.2;
+}
+
+.med-patient-pid {
+  display: block;
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+/* Diagnostic Badges in Table */
+.med-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1.2;
+  max-width: 160px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.med-badge--allergy {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.med-badge--chronic {
+  background: rgba(99, 102, 241, 0.12);
+  color: #4338ca;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.med-badge--meds {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0369a1;
+  border: 1px solid rgba(14, 165, 233, 0.3);
+}
+
+.med-badge--surg {
+  background: rgba(225, 29, 72, 0.12);
+  color: #be123c;
+  border: 1px solid rgba(225, 29, 72, 0.3);
+}
+
+.med-badge--none {
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 2px 7px;
+}
+
+/* Medical Instrument Action Pills */
+.med-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.med-action-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.med-action-btn--view {
+  background: var(--theme-primary-soft);
+  color: var(--theme-primary);
+  border-color: color-mix(in srgb, var(--theme-primary) 25%, transparent);
+}
+.med-action-btn--view:hover {
+  background: var(--theme-primary);
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.med-action-btn--edit {
+  background: #fef3c7;
+  color: #d97706;
+  border-color: rgba(245, 158, 11, 0.3);
+}
+.med-action-btn--edit:hover {
+  background: #f59e0b;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+.med-action-btn--delete {
+  background: #ffe4e6;
+  color: #e11d48;
+  border-color: rgba(225, 29, 72, 0.25);
+}
+.med-action-btn--delete:hover {
+  background: #e11d48;
+  color: #ffffff;
+  transform: scale(1.08);
+}
+
+/* Empty History State */
+.med-empty-history {
+  padding: 48px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.med-empty-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%);
+  color: #e11d48;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 18px rgba(225, 29, 72, 0.18);
+}
+
+.med-empty-history h4 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.med-empty-history p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  max-width: 420px;
+  line-height: 1.4;
+}
+
+.spin-icon {
+  animation: medSpin 1s linear infinite;
+}
+
+@keyframes medSpin {
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 1100px) {
+  .med-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .med-history-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+  }
+  .med-head-actions {
+    flex-wrap: wrap;
+  }
+  .med-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .med-history-page .med-card-header {
+    align-items: stretch;
+    flex-wrap: wrap;
+  }
+
+  .med-history-page .med-card-header .med-search-bar-wrap {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}
+
+/* ============================================================
+   APPOINTMENT BOOKING THEME (ONLINE & OFFLINE)
+   ============================================================ */
+
+/* Main Container with Appointment Theme Background */
+.booking-page {
+  position: relative;
+  min-height: calc(100vh - 120px);
+  padding: 4px 0 28px;
+}
+
+.booking-bg-overlay {
+  display: none !important;
+}
+
+/* Hero Header */
+.booking-hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 28px;
+  margin-bottom: 22px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--theme-primary-dark) 7%, transparent);
+  overflow: hidden;
+}
+
+.booking-hero::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 5px;
+  height: 100%;
+  background: linear-gradient(180deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  border-radius: 4px 0 0 4px;
+}
+
+.booking-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  margin-bottom: 8px;
+}
+
+.booking-badge--online {
+  background: rgba(14, 165, 233, 0.12);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  color: #0284c7;
+}
+
+.booking-badge--offline {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  color: #d97706;
+}
+
+.booking-hero h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--theme-primary-dark);
+  letter-spacing: -0.4px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.booking-hero p {
+  margin: 6px 0 0;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* Medical Instrument Action Buttons */
+.booking-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.booking-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.24s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.booking-btn--sync {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: var(--theme-primary-dark) !important;
+  border: 1.5px solid color-mix(in srgb, var(--theme-primary-dark) 30%, transparent) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+}
+
+.booking-btn--sync:hover:not(:disabled) {
+  background: #ffffff !important;
+  color: var(--theme-primary) !important;
+  border-color: color-mix(in srgb, var(--theme-primary) 45%, transparent) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-primary) 20%, transparent);
+}
+
+.booking-btn--back {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #334155 !important;
+  border: 1.5px solid rgba(203, 213, 225, 0.9) !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 4%, transparent);
+}
+
+.booking-btn--back:hover {
+  background: #ffffff !important;
+  color: var(--theme-primary-dark) !important;
+  border-color: #94a3b8 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+}
+
+/* Booking Metrics Row */
+.booking-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 22px;
+  position: relative;
+  z-index: 1;
+}
+
+.booking-metric-card {
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: transform 0.22s ease;
+}
+
+.booking-metric-card:hover {
+  transform: translateY(-2px);
+}
+
+.booking-metric-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.booking-metric-card.total {
+  border-bottom: 3px solid var(--theme-primary);
+}
+.booking-metric-card.total .booking-metric-icon {
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+}
+
+.booking-metric-card.today {
+  border-bottom: 3px solid var(--theme-primary-dark);
+}
+.booking-metric-card.today .booking-metric-icon {
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-glow) 100%);
+  color: var(--theme-primary-dark);
+}
+
+.booking-metric-card.waiting {
+  border-bottom: 3px solid #f59e0b;
+}
+.booking-metric-card.waiting .booking-metric-icon {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+}
+
+.booking-metric-card.completed {
+  border-bottom: 3px solid #10b981;
+}
+.booking-metric-card.completed .booking-metric-icon {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #059669;
+}
+
+.booking-metric-info strong {
+  display: block;
+  font-size: 22px;
+  font-weight: 850;
+  color: var(--theme-primary-dark);
+  line-height: 1.1;
+}
+
+.booking-metric-info span {
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* Glass Card & Table Styling */
+.booking-card {
+  position: relative;
+  z-index: 1;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 10px 32px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent);
+  padding: 22px;
+  overflow: hidden;
+}
+
+.booking-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.booking-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.booking-card-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+  display: grid;
+  place-items: center;
+}
+
+.booking-card-title h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: var(--theme-primary-dark);
+}
+
+.booking-card-title p {
+  margin: 2px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Booking Instrument Segmented Tabs */
+.booking-tabs {
+  display: flex;
+  align-items: center;
+  background: rgba(241, 245, 249, 0.9);
+  padding: 4px;
+  border-radius: 14px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  gap: 4px;
+}
+
+.booking-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+.booking-tab-btn.active {
+  background: #ffffff;
+  color: var(--theme-primary-dark);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent);
+}
+
+.booking-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.booking-tab-btn.active .booking-tab-count {
+  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary) 100%);
+  color: #ffffff;
+}
+
+/* Filter Fields */
+.booking-filter-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.booking-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.booking-filter-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.booking-filter-field input {
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0 12px;
+  font-size: 12.5px;
+  color: var(--theme-primary-dark);
+  outline: 0;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.booking-filter-field select {
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(226, 232, 240, 0.9);
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0 38px 0 12px;
+  font-size: 12.5px;
+  color: var(--theme-primary-dark);
+  outline: 0;
+  font-family: inherit;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.booking-filter-field input:focus {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 15%, transparent);
+  background: #ffffff;
+}
+
+.booking-filter-field select:focus,
+.booking-filter-field select:hover {
+  border-color: #f43f5e;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.16);
+  background-color: #ffffff;
+}
+
+/* Tokens, Badges, & Chips */
+.booking-token-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  color: #0284c7;
+  font-size: 11.5px;
+  font-weight: 850;
+  letter-spacing: 0.3px;
+  border: 1px solid rgba(2, 132, 199, 0.25);
+}
+
+.booking-patient-cell {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.booking-patient-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary-dark);
+  font-size: 11px;
+  font-weight: 850;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+}
+
+.booking-patient-name {
+  display: block;
+  font-size: 13px;
+  font-weight: 750;
+  color: var(--theme-primary-dark);
+  line-height: 1.2;
+}
+
+.booking-patient-code {
+  display: block;
+  font-size: 10.5px;
+  color: #64748b;
+  font-weight: 700;
+}
+
+.booking-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.booking-type-badge--online {
+  background: rgba(14, 165, 233, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(14, 165, 233, 0.25);
+}
+
+.booking-type-badge--offline {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.booking-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.booking-status--waiting {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.booking-status--confirmed,
+.booking-status--completed {
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.booking-status--cancelled {
+  background: rgba(239, 68, 68, 0.12);
+  color: #b91c1c;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+/* Vitals Action Button (Medical Instrument Stethoscope Capsule) */
+.booking-vitals-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  color: #ffffff;
+  border: 0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 3px 10px color-mix(in srgb, var(--theme-primary-dark) 30%, transparent);
+}
+
+.booking-vitals-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 5px 14px color-mix(in srgb, var(--theme-primary-dark) 45%, transparent);
+}
+
+/* Table Column Alignment for Booking Appointments */
+.rc-table-data th.booking-token-head,
+.rc-table-data td.booking-token-cell,
+.rc-table-data th:nth-child(1),
+.rc-table-data td:nth-child(1),
+.rc-table-data th.booking-payment-head,
+.rc-table-data td.booking-payment-cell,
+.rc-table-data th:nth-child(7),
+.rc-table-data td:nth-child(7),
+.rc-table-data th.booking-type-head,
+.rc-table-data td.booking-type-cell,
+.rc-table-data th:nth-child(8),
+.rc-table-data td:nth-child(8),
+.rc-table-data th.booking-status-head,
+.rc-table-data td.booking-status-cell,
+.rc-table-data th:nth-child(9),
+.rc-table-data td:nth-child(9),
+.rc-table-data th.booking-vitals-head,
+.rc-table-data td.booking-vitals-cell,
+.rc-table-data th:nth-child(10),
+.rc-table-data td:nth-child(10) {
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.rc-table-data td.booking-token-cell .booking-token-badge,
+.rc-table-data td:nth-child(1) .booking-token-badge,
+.rc-table-data td.booking-payment-cell > span,
+.rc-table-data td:nth-child(7) > span,
+.rc-table-data td.booking-type-cell .booking-type-badge,
+.rc-table-data td:nth-child(8) .booking-type-badge,
+.rc-table-data td.booking-status-cell .booking-status-badge,
+.rc-table-data td:nth-child(9) .booking-status-badge,
+.rc-table-data td.booking-vitals-cell .booking-vitals-btn,
+.rc-table-data td:nth-child(10) .booking-vitals-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  margin: 0 auto !important;
+  text-align: center !important;
+}
+
+/* Keep the receptionist appointment table aligned within its card at every width. */
+.booking-page .rc-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.booking-page .rc-table-data {
+  width: 100%;
+  min-width: 1180px;
+  table-layout: fixed;
+}
+
+.booking-page .rc-table-data th,
+.booking-page .rc-table-data td {
+  width: auto !important;
+  max-width: none;
+  padding: 10px 8px;
+  vertical-align: middle;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.booking-page .rc-table-data th > *,
+.booking-page .rc-table-data td > * {
+  max-width: 100%;
+}
+
+.booking-page .booking-patient-cell,
+.booking-page .booking-patient-cell > div:last-child {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.booking-page .rc-table-data th:nth-child(1),
+.booking-page .rc-table-data td:nth-child(1) { width: 7% !important; }
+.booking-page .rc-table-data th:nth-child(2),
+.booking-page .rc-table-data td:nth-child(2) { width: 14% !important; }
+.booking-page .rc-table-data th:nth-child(3),
+.booking-page .rc-table-data td:nth-child(3) { width: 14% !important; }
+.booking-page .rc-table-data th:nth-child(4),
+.booking-page .rc-table-data td:nth-child(4) { width: 12% !important; }
+.booking-page .rc-table-data th:nth-child(5),
+.booking-page .rc-table-data td:nth-child(5) { width: 12% !important; }
+.booking-page .rc-table-data th:nth-child(6),
+.booking-page .rc-table-data td:nth-child(6) { width: 8% !important; }
+.booking-page .rc-table-data th:nth-child(7),
+.booking-page .rc-table-data td:nth-child(7) { width: 8% !important; }
+.booking-page .rc-table-data th:nth-child(8),
+.booking-page .rc-table-data td:nth-child(8) { width: 10% !important; }
+.booking-page .rc-table-data th:nth-child(9),
+.booking-page .rc-table-data td:nth-child(9) { width: 9% !important; }
+.booking-page .rc-table-data th:nth-child(10),
+.booking-page .rc-table-data td:nth-child(10) { width: 6% !important; }
+
+/* Hide Phone only on the nurse offline bookings table. */
+.nurse-offline-bookings .booking-page .rc-table-data th:nth-child(6),
+.nurse-offline-bookings .booking-page .rc-table-data td:nth-child(6) {
+  display: none !important;
+}
+
+.nurse-offline-bookings .booking-page .rc-table-data th:nth-child(5),
+.nurse-offline-bookings .booking-page .rc-table-data td:nth-child(5) { width: 18% !important; }
+.nurse-offline-bookings .booking-page .rc-table-data th:nth-child(7),
+.nurse-offline-bookings .booking-page .rc-table-data td:nth-child(7) { width: 9% !important; }
+.nurse-offline-bookings .booking-page .rc-table-data th:nth-child(9),
+.nurse-offline-bookings .booking-page .rc-table-data td:nth-child(9) { width: 10% !important; }
+
+.nurse-offline-bookings .booking-page .rc-table-data {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.nurse-offline-bookings .booking-page .rc-table-data th,
+.nurse-offline-bookings .booking-page .rc-table-data td {
+  padding: 8px 4px !important;
+}
+
+.nurse-offline-bookings .booking-page .rc-table-data th {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  text-align: center !important;
+  font-size: 10px !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.2;
+}
+
+.nurse-offline-bookings .booking-page .rc-table-data th:nth-child(3),
+.nurse-offline-bookings .booking-page .rc-table-data th:nth-child(8) {
+  font-size: 9px !important;
+  letter-spacing: 0.02em !important;
+}
+
+.nurse-offline-bookings .booking-page .rc-table-data th:nth-child(2),
+.nurse-offline-bookings .booking-page .rc-table-data td:nth-child(2) {
+  text-align: center !important;
+}
+
+.nurse-offline-bookings .booking-page .rc-table-data td:nth-child(2) .booking-patient-cell {
+  justify-content: center;
+  width: 100%;
+}
+
+.nurse-offline-bookings .booking-page .rc-table-data td:nth-child(5) {
+  text-align: center !important;
+}
+
+/* Keep the nurse online table within the card after removing Phone. */
+.nurse-online-bookings .booking-page .rc-table-data {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+.nurse-online-bookings .booking-page .rc-table-data th,
+.nurse-online-bookings .booking-page .rc-table-data td {
+  padding: 8px 4px !important;
+}
+
+.nurse-online-bookings .booking-page .rc-table-data th {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+  text-overflow: clip;
+  text-align: center !important;
+  font-size: 10px !important;
+  letter-spacing: 0.04em !important;
+  line-height: 1.2;
+}
+
+.nurse-online-bookings .booking-page .rc-table-data th:nth-child(3),
+.nurse-online-bookings .booking-page .rc-table-data th:nth-child(8) {
+  font-size: 9px !important;
+  letter-spacing: 0.02em !important;
+}
+
+.nurse-online-bookings .booking-page .rc-table-data th:nth-child(6),
+.nurse-online-bookings .booking-page .rc-table-data td:nth-child(6) {
+  display: none !important;
+}
+
+.nurse-online-bookings .booking-page .rc-table-data th:nth-child(2),
+.nurse-online-bookings .booking-page .rc-table-data td:nth-child(2) { width: 18% !important; }
+.nurse-online-bookings .booking-page .rc-table-data th:nth-child(5),
+.nurse-online-bookings .booking-page .rc-table-data td:nth-child(5) { width: 16% !important; }
+.nurse-online-bookings .booking-page .rc-table-data th:nth-child(2) {
+  text-align: center !important;
+}
+.nurse-online-bookings .booking-page .rc-table-data td:nth-child(5) {
+  text-align: center !important;
+}
+.nurse-online-bookings .booking-page .rc-table-data td:nth-child(2) .booking-patient-cell {
+  justify-content: center;
+  width: 100%;
+}
+
+/* Clinical color accents for the booking table without changing its data or controls. */
+.booking-page .rc-table-data thead th {
+  background: #f8fafc;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.booking-page .rc-table-data thead th:nth-child(1) { color: var(--theme-primary-dark); background: var(--theme-primary-soft); }
+.booking-page .rc-table-data thead th:nth-child(2) { color: var(--theme-primary); background: var(--theme-primary-soft); }
+.booking-page .rc-table-data thead th:nth-child(3) { color: var(--theme-primary); background: var(--theme-primary-soft); }
+.booking-page .rc-table-data thead th:nth-child(4) { color: var(--theme-primary-dark); background: var(--theme-primary-soft); }
+.booking-page .rc-table-data thead th:nth-child(5) { color: #be123c; background: #ffe4e6; }
+.booking-page .rc-table-data thead th:nth-child(6) { color: var(--theme-primary-dark); background: var(--theme-primary-soft); }
+.booking-page .rc-table-data thead th:nth-child(7) { color: #b45309; background: #fef3c7; }
+.booking-page .rc-table-data thead th:nth-child(8) { color: var(--theme-primary); background: var(--theme-primary-soft); }
+.booking-page .rc-table-data thead th:nth-child(9) { color: var(--theme-primary-dark); background: #d1fae5; }
+.booking-page .rc-table-data thead th:nth-child(10) { color: #be123c; background: #ffe4e6; }
+
+.booking-page .rc-table-data tbody tr:nth-child(odd) td {
+  background: color-mix(in srgb, var(--theme-primary-soft) 72%, transparent);
+}
+
+.booking-page .rc-table-data tbody tr:nth-child(even) td {
+  background: rgba(236, 253, 245, 0.52);
+}
+
+.booking-page .rc-table-data tbody tr:hover td {
+  background: #ffffff;
+  box-shadow: inset 0 2px 0 var(--theme-primary-soft), inset 0 -2px 0 var(--theme-primary-soft);
+}
+
+.booking-page .booking-payment-cell > span {
+  background: #ecfdf5 !important;
+  color: var(--theme-primary-dark) !important;
+  border: 1px solid #a7f3d0;
+}
+
+.booking-page .booking-token-badge {
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.14);
+}
+
+.booking-page .booking-vitals-btn {
+  background: #fce7f3;
+  color: #db2777;
+  border-color: #f9a8d4;
+}
+
+/* Empty State */
+.booking-empty-state {
+  padding: 48px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.booking-empty-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--theme-primary) 18%, transparent);
+}
+
+@media (max-width: 1100px) {
+  .booking-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .booking-filter-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .booking-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 16px;
+  }
+  .booking-head-actions {
+    flex-wrap: wrap;
+  }
+  .booking-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+  .booking-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ============================================================
+   APPOINTMENT CLINICAL VITALS INSTRUMENT MODAL & DETAIL CARDS
+   ============================================================ */
+
+.rc-modal-backdrop > form,
+.rc-modal-backdrop .rc-modal-compact,
+.rc-modal-backdrop .booking-vitals-modal {
+  height: auto !important;
+  max-height: calc(100vh - 48px) !important;
+}
+
+.booking-vitals-modal {
+  width: min(780px, calc(100vw - 32px)) !important;
+  height: min(720px, calc(100dvh - 48px)) !important;
+  min-height: 0 !important;
+  max-height: calc(100vh - 48px) !important;
+  margin: auto !important;
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  border: 1.5px solid rgba(226, 232, 240, 0.95) !important;
+  box-shadow: 0 25px 65px -12px color-mix(in srgb, var(--theme-primary-dark) 35%, transparent), 0 0 0 1px color-mix(in srgb, var(--theme-primary-dark) 12%, transparent) !important;
+  padding: 18px 22px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+  animation: modalPop 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes modalPop {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.vital-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  padding-bottom: 12px;
+  border-bottom: 1.5px solid #f1f5f9;
+}
+
+.vital-modal-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.vital-modal-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #ccfbf1 0%, #99f6e4 100%);
+  color: #0f766e;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 3px 10px rgba(15, 118, 110, 0.18);
+  flex-shrink: 0;
+}
+
+.vital-modal-title-wrap h3 {
+  margin: 0;
+  font-size: 17.5px;
+  font-weight: 850;
+  color: var(--theme-primary-dark);
+  letter-spacing: -0.3px;
+}
+
+.vital-patient-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+  padding: 2px 9px;
+  border-radius: 99px;
+  background: #f1f5f9;
+  font-size: 11.5px;
+  color: #475569;
+}
+
+.vital-patient-pill strong {
+  color: var(--theme-primary-dark);
+}
+
+.vital-modal-close {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  color: #64748b;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.vital-modal-close:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+  transform: scale(1.05);
+}
+
+/* Compact Vitals Cards Grid */
+.vitals-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 0;
+}
+
+.vitals-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 6px 2px 2px;
+  margin: 0 -6px 0 -2px;
+}
+
+.vital-detail-card {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vital-detail-card:hover,
+.vital-detail-card:focus-within {
+  background: #ffffff;
+  border-color: var(--theme-primary);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 12%, transparent);
+}
+
+.vital-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.vital-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.vital-card-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.vital-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.vital-card-label {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--theme-primary-dark);
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.vital-instrument-name {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #64748b;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.vital-card-ref {
+  font-size: 10px;
+  font-weight: 750;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #e2e8f0;
+  color: #334155;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Vital Input Container */
+.vital-card-input-wrap {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: all 0.18s ease;
+  height: 34px;
+}
+
+.vital-detail-card:focus-within .vital-card-input-wrap {
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--theme-primary) 15%, transparent);
+}
+
+.vital-card-input {
+  flex: 1;
+  height: 100% !important;
+  border: 0 !important;
+  outline: 0 !important;
+  background: transparent !important;
+  padding: 0 10px !important;
+  font-size: 13.5px !important;
+  font-weight: 750 !important;
+  color: var(--theme-primary-dark) !important;
+  font-family: inherit;
+  min-width: 0;
+  text-align: left !important;
+  opacity: 1 !important;
+  -webkit-text-fill-color: var(--theme-primary-dark) !important;
+}
+
+.vital-card-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 1 !important;
+}
+
+.vital-card-unit {
+  padding: 0 10px;
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  border-left: 1px solid #e2e8f0;
+  font-size: 11px;
+  font-weight: 800;
+  color: #475569;
+  flex-shrink: 0;
+}
+
+/* Modal Actions */
+.vital-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  padding-top: 12px;
+  border-top: 1.5px solid #f1f5f9;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.vital-btn-cancel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vital-btn-cancel:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.vital-btn-save {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 20px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary) 100%);
+  color: #ffffff;
+  border: 0;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary-dark) 35%, transparent);
+  transition: all 0.22s ease;
+}
+
+.vital-btn-save:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--theme-primary-dark) 45%, transparent);
+}
+
+@media (max-width: 680px) {
+  .vitals-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nurse-online-bookings .rc-modal-backdrop .booking-vitals-modal,
+.nurse-offline-bookings .rc-modal-backdrop .booking-vitals-modal {
+  width: min(940px, calc(100vw - 32px)) !important;
+}
+
+.nurse-online-bookings .vitals-modal-body,
+.nurse-offline-bookings .vitals-modal-body {
+  flex: 0 1 auto;
+}
+
+.nurse-online-bookings .vitals-cards-grid,
+.nurse-offline-bookings .vitals-cards-grid {
+  grid-template-columns: repeat(3, minmax(0, 240px));
+  justify-content: center;
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 14px;
+}
+
+.nurse-online-bookings .vital-detail-card,
+.nurse-offline-bookings .vital-detail-card {
+  align-self: start;
+  min-width: 0;
+  width: 100%;
+  padding: 10px;
+  gap: 8px;
+  box-sizing: border-box;
+}
+
+.nurse-online-bookings .vital-card-top,
+.nurse-offline-bookings .vital-card-top {
+  gap: 6px;
+}
+
+.nurse-online-bookings .vital-card-header-left,
+.nurse-offline-bookings .vital-card-header-left {
+  flex: 1 1 0%;
+  min-width: 0;
+}
+
+.nurse-online-bookings .vital-card-meta,
+.nurse-offline-bookings .vital-card-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nurse-online-bookings .vital-card-label,
+.nurse-offline-bookings .vital-card-label,
+.nurse-online-bookings .vital-instrument-name,
+.nurse-offline-bookings .vital-instrument-name {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.nurse-online-bookings .vital-card-ref,
+.nurse-offline-bookings .vital-card-ref {
+  flex-shrink: 0;
+}
+
+@media (max-width: 800px) {
+  .nurse-online-bookings .vitals-cards-grid,
+  .nurse-offline-bookings .vitals-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .nurse-online-bookings .vitals-cards-grid,
+  .nurse-offline-bookings .vitals-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.nurse-online-bookings .booking-vitals-modal .vitals-modal-body .vitals-cards-grid,
+.nurse-offline-bookings .booking-vitals-modal .vitals-modal-body .vitals-cards-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  grid-auto-rows: 136px !important;
+  align-content: start !important;
+  justify-content: center !important;
+  align-items: start !important;
+  gap: 12px !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vitals-cards-grid .vital-detail-card,
+.nurse-offline-bookings .booking-vitals-modal .vitals-cards-grid .vital-detail-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-template-rows: minmax(0, 1fr) auto 34px !important;
+  align-items: center !important;
+  justify-items: stretch !important;
+  width: 100% !important;
+  height: 136px !important;
+  min-width: 0 !important;
+  padding: 10px 12px !important;
+  box-sizing: border-box !important;
+  gap: 8px !important;
+  overflow: hidden !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-top,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-top {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  gap: 8px !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-header-left,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-header-left {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  align-items: center !important;
+  min-width: 0 !important;
+  gap: 8px !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-meta,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-meta {
+  display: flex !important;
+  flex: 1 1 auto !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+  gap: 0 !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-icon,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-icon {
+  flex: 0 0 28px !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-label,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-label {
+  display: block !important;
+  font-size: 12px !important;
+  line-height: 1.2 !important;
+  white-space: normal !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-instrument-name,
+.nurse-offline-bookings .booking-vitals-modal .vital-instrument-name {
+  display: none !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-ref,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-ref {
+  justify-self: start !important;
+  margin: 0 !important;
+  font-size: 9px !important;
+  padding: 2px 6px !important;
+  grid-row: 2 !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-input-wrap,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-input-wrap {
+  display: flex !important;
+  grid-row: 3 !important;
+  width: 100% !important;
+  height: 34px !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-input,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-input {
+  font-size: 11px !important;
+  padding: 0 7px !important;
+}
+
+.nurse-online-bookings .booking-vitals-modal .vital-card-unit,
+.nurse-offline-bookings .booking-vitals-modal .vital-card-unit {
+  padding: 0 7px !important;
+  font-size: 9px !important;
+}
+
+@media (max-width: 900px) {
+  .nurse-online-bookings .booking-vitals-modal .vitals-modal-body .vitals-cards-grid,
+  .nurse-offline-bookings .booking-vitals-modal .vitals-modal-body .vitals-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .nurse-online-bookings .booking-vitals-modal .vitals-modal-body .vitals-cards-grid,
+  .nurse-offline-bookings .booking-vitals-modal .vitals-modal-body .vitals-cards-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+.rc-sidebar .rc-med-nav-pill {
+  display: none !important;
+}
+
+.rc-shell:has(.rc-sidebar [title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-table-header .rc-th-capsule {
+  color: var(--theme-primary-dark) !important;
+}
+
+.rc-shell:has(.rc-sidebar [title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-table-row .rc-dash-sno-badge,
+.rc-shell:has(.rc-sidebar [title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-table-row .rc-patient-pid-badge,
+.rc-shell:has(.rc-sidebar [title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-table-row .rc-dash-patient-name,
+.rc-shell:has(.rc-sidebar [title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-table-row .rc-patient-phone-cell span,
+.rc-shell:has(.rc-sidebar [title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-table-row .rc-patient-age-badge {
+  color: #245b63 !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-dash-table-card.rc-patients-card,
+html body .nurse-module .rc-patients-page .rc-dash-table-container {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-dash-table-card.rc-patients-card {
+  padding-top: 8px !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-dash-table-head {
+  margin-bottom: 8px !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-dash-table-card.rc-patients-card::before,
+html body .nurse-module .rc-patients-page .rc-dash-table-container::before {
+  background: #d7e7e9 !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-table-header {
+  background: #f8fafc !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  box-shadow: none !important;
+  color: #334155 !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-table-header .rc-th-capsule,
+html body .nurse-module .rc-patients-page .rc-patient-table-header .rc-th-capsule:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: var(--theme-primary-dark) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0 !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-table-row,
+html body .nurse-module .rc-patients-page .rc-patient-table-row:nth-child(even) {
+  background: #ffffff !important;
+  border-bottom-color: #edf2f7 !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-table-row:hover {
+  background: #f8fbfc !important;
+  box-shadow: none !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-table-row :is(
+  .rc-dash-sno-badge,
+  .rc-patient-pid-badge,
+  .rc-patient-phone-cell,
+  .rc-patient-age-badge
+) {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: none !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-table-row .rc-dash-patient-avatar {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  flex: 0 0 22px;
+  border-radius: 50% !important;
+  background: var(--theme-primary-soft) !important;
+  border: 0 !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: none !important;
+  font-weight: 700 !important;
+  font-size: 9px !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-table-row .rc-dash-patient-name {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  color: var(--theme-primary-dark) !important;
+  font-weight: 600 !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-table-row .rc-patient-phone-icon {
+  color: var(--theme-primary-dark) !important;
+}
+
+html body .nurse-module .rc-patients-page .rc-patient-phone-cell:hover {
+  background: transparent !important;
+  border-color: transparent !important;
+}
+
+html body .nurse-module .rc-patients-page .actions-group .action-btn.medical-instrument-btn,
+html body .nurse-module .rc-patients-page .actions-group .action-btn.medical-instrument-btn:hover:not(:disabled) {
+  background: #eaf4f4 !important;
+  border-color: #cbdfe1 !important;
+  color: #245b63 !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06) !important;
+}
+
+.rc-shell:has(.rc-staff-med-badge[title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-kpi-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  justify-content: stretch !important;
+  width: 100% !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  gap: 16px !important;
+}
+
+.rc-shell:has(.rc-staff-med-badge[title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-kpi-card {
+  width: 100% !important;
+  max-width: none !important;
+}
+
+@media (max-width: 1024px) {
+  .rc-shell:has(.rc-staff-med-badge[title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .rc-shell:has(.rc-staff-med-badge[title="Clinical Nursing Station"]) .rc-patients-page .rc-patient-kpi-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+html body .nurse-dashboard-page.role-single-screen .nd-stat-grid {
+  width: 94% !important;
+  grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  justify-content: space-between !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.nurse-dashboard-page .nd-stat-card {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 174px !important;
+  min-height: 174px !important;
+  padding: 16px 16px 34px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0,
+    #ffffff calc(100% - 28px),
+    var(--theme-primary-soft) calc(100% - 28px),
+    var(--theme-primary-soft) calc(100% - 4px),
+    var(--theme-primary) calc(100% - 4px),
+    var(--theme-primary) 100%
+  ) !important;
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent) !important;
+}
+
+.nurse-dashboard-page .nd-stat-card .nd-stat-icon-box {
+  background: var(--theme-primary-dark) !important;
+  border-color: var(--theme-primary-dark) !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 16%, transparent) !important;
+}
+
+.nurse-dashboard-page .nd-stat-icon-box,
+.nurse-dashboard-page .nd-stat-pill,
+.nurse-dashboard-page .nd-station-badge,
+.nurse-dashboard-page .nd-live-pulse-badge {
+  background: #e0f2f1 !important;
+  border-color: #b9d8d6 !important;
+  color: #367f82 !important;
+}
+
+.nurse-dashboard-page .nd-live-dot {
+  background: var(--theme-primary-dark) !important;
+  box-shadow: 0 0 8px var(--theme-primary-dark) !important;
+}
+
+.med-history-page .med-history-badge {
+  background: #e0f2f1 !important;
+  border-color: #b9d8d6 !important;
+  color: #367f82 !important;
+}
+
+.med-history-page .med-history-hero::before {
+  background: var(--theme-primary-dark);
+}
+
+.med-history-page .med-history-hero > div:first-child > p {
+  display: none;
+}
+
+.med-history-page .med-history-table th {
+  color: #000000 !important;
+  font-size: 11px !important;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.med-history-page .med-badge--allergy,
+.med-history-page .med-badge--chronic,
+.med-history-page .med-badge--meds,
+.med-history-page .med-badge--surg {
+  background: #e0f2f1 !important;
+  border-color: #b9d8d6 !important;
+  color: #367f82 !important;
+}
+
+.med-history-page .med-btn--add {
+  background: var(--theme-primary-dark) !important;
+  border-color: var(--theme-primary-dark) !important;
+}
+
+.med-history-page .med-metrics-grid {
+  width: 94% !important;
+  grid-template-columns: repeat(4, minmax(0, 210px)) !important;
+  justify-content: space-between !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.med-history-page .med-metric-card {
+  box-sizing: border-box !important;
+  width: 210px !important;
+  height: 110px !important;
+  min-height: 110px !important;
+  padding: 14px 14px 30px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0,
+    #ffffff calc(100% - 24px),
+    var(--theme-primary-soft) calc(100% - 24px),
+    var(--theme-primary-soft) calc(100% - 4px),
+    var(--theme-primary) calc(100% - 4px),
+    var(--theme-primary) 100%
+  ) !important;
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent) !important;
+}
+
+.med-history-page .med-metric-icon,
+.med-history-page .med-card-icon {
+  background: var(--theme-primary-dark) !important;
+  border-color: var(--theme-primary-dark) !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 16%, transparent) !important;
+}
+
+.nurse-online-bookings .booking-hero::before,
+.nurse-offline-bookings .booking-hero::before {
+  background: var(--theme-primary-dark) !important;
+}
+
+.nurse-online-bookings .booking-badge,
+.nurse-offline-bookings .booking-badge {
+  background: #e0f2f1 !important;
+  border-color: #b9d8d6 !important;
+  color: #367f82 !important;
+}
+
+.nurse-online-bookings .booking-metric-card,
+.nurse-offline-bookings .booking-metric-card {
+  border-color: var(--theme-primary-glow) !important;
+  border-bottom: 3px solid var(--theme-primary-dark) !important;
+}
+
+.nurse-online-bookings .booking-metric-card .booking-metric-icon,
+.nurse-offline-bookings .booking-metric-card .booking-metric-icon,
+.nurse-online-bookings .booking-card-icon,
+.nurse-offline-bookings .booking-card-icon {
+  background: var(--theme-primary-soft) !important;
+  color: var(--theme-primary-dark) !important;
+}
+
+.nurse-online-bookings .booking-card,
+.nurse-offline-bookings .booking-card {
+  border-color: var(--theme-primary-glow) !important;
+}
+
+.nurse-online-bookings .booking-metrics-grid {
+  width: 94% !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  justify-content: space-between !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.nurse-online-bookings .booking-metric-card {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 150px !important;
+  min-height: 150px !important;
+  padding: 14px 14px 34px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0,
+    #ffffff calc(100% - 28px),
+    var(--theme-primary-soft) calc(100% - 28px),
+    var(--theme-primary-soft) calc(100% - 4px),
+    var(--theme-primary) calc(100% - 4px),
+    var(--theme-primary) 100%
+  ) !important;
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent) !important;
+}
+
+.nurse-online-bookings .booking-metric-card .booking-metric-icon {
+  background: var(--theme-primary-dark) !important;
+  border-color: var(--theme-primary-dark) !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 16%, transparent) !important;
+}
+
+@media (max-width: 1100px) {
+  .nurse-online-bookings .booking-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .nurse-online-bookings .booking-metrics-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+.nurse-offline-bookings .booking-metrics-grid {
+  width: 94% !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  justify-content: space-between !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.nurse-offline-bookings .booking-metric-card {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: 150px !important;
+  min-height: 150px !important;
+  padding: 14px 14px 34px !important;
+  border: 0 !important;
+  border-radius: 12px !important;
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0,
+    #ffffff calc(100% - 28px),
+    var(--theme-primary-soft) calc(100% - 28px),
+    var(--theme-primary-soft) calc(100% - 4px),
+    var(--theme-primary) calc(100% - 4px),
+    var(--theme-primary) 100%
+  ) !important;
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent) !important;
+}
+
+.nurse-offline-bookings .booking-metric-card .booking-metric-icon {
+  background: var(--theme-primary-dark) !important;
+  border-color: var(--theme-primary-dark) !important;
+  color: #ffffff !important;
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--theme-primary-dark) 16%, transparent) !important;
+}
+
+@media (max-width: 1100px) {
+  .nurse-offline-bookings .booking-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .nurse-offline-bookings .booking-metrics-grid {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .nurse-dashboard-page .nd-stat-grid,
+  .med-history-page .med-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 210px)) !important;
+    justify-content: start !important;
+  }
+
+  .nurse-dashboard-page .nd-stat-card,
+  .med-history-page .med-metric-card {
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 900px) {
+  .nurse-dashboard-page .nd-stat-grid,
+  .med-history-page .med-metrics-grid {
+    grid-template-columns: minmax(0, 210px) !important;
+  }
+}
+
+/* Nurse summary cards follow the Super Admin dashboard card treatment. */
+html body .nurse-dashboard-page.role-single-screen .nd-stat-grid {
+  width: 100% !important;
+  gap: 16px !important;
+  height: 80px !important;
+}
+
+html body .nurse-dashboard-page.role-single-screen .nd-stat-card {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 8px !important;
+  height: 80px !important;
+  min-height: 80px !important;
+  padding: 8px 12px 24px !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 5%, transparent) !important;
+}
+
+html body .nurse-dashboard-page.role-single-screen .nd-stat-card-glow {
+  display: none !important;
+}
+
+html body .nurse-dashboard-page.role-single-screen .nd-stat-card::after {
+  height: 14px !important;
+  background: var(--theme-primary-soft) !important;
+  border-bottom: 4px solid var(--theme-primary) !important;
+}
+
+html body .nurse-dashboard-page.role-single-screen .nd-stat-icon-box {
+  position: static !important;
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  border-radius: 9px !important;
+  background: var(--theme-primary-soft) !important;
+  border-color: var(--theme-primary-glow) !important;
+  color: var(--theme-primary-dark) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary-dark) 8%, transparent) !important;
+  transform: none !important;
+}
+
+html body .nurse-dashboard-page.role-single-screen .nd-stat-body {
+  min-width: 0 !important;
+  padding: 0 !important;
+}
+
+html body .nurse-dashboard-page.role-single-screen .nd-stat-label {
+  color: #64748b !important;
+  font-size: 11px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  margin: 0 0 2px !important;
+}
+
+html body .nurse-dashboard-page.role-single-screen .nd-stat-count strong {
+  color: var(--theme-primary-dark) !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.1 !important;
+}
+
+
+/* Compact page heading; the JSX marker excludes modals and navigation. */
+@media screen {
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .booking-hero[data-page-header],
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .med-history-hero[data-page-header] {
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  gap: 6px 10px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .booking-hero[data-page-header] > *,
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .med-history-hero[data-page-header] > * { min-width: 0; max-width: 100%; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .booking-hero[data-page-header] :is(h1, h2),
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .med-history-hero[data-page-header] :is(h1, h2) { font-size: var(--app-page-heading-size, 18px) !important; line-height: 1.2 !important; margin: 0 !important; letter-spacing: 0 !important; white-space: normal !important; overflow-wrap: anywhere; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .booking-hero[data-page-header] p,
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .med-history-hero[data-page-header] p { font-size: 12px !important; line-height: 1.35 !important; margin: 3px 0 0 !important; white-space: normal !important; overflow-wrap: anywhere; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .booking-hero[data-page-header] [class*="actions"],
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .med-history-hero[data-page-header] [class*="actions"] { min-width: 0; max-width: 100%; height: auto !important; flex-wrap: wrap !important; gap: 6px !important; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .booking-hero[data-page-header] button,
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .med-history-hero[data-page-header] button { max-width: 100%; min-height: 34px !important; height: auto !important; padding: 7px 10px !important; font-size: 12px !important; line-height: 1.3; white-space: normal; }
+}
+
+/* Wrapped dashboard content uses natural height on smaller screens. */
+@media screen and (max-width: 900px) {
+  html body .nurse-dashboard-page.role-single-screen { height: auto !important; max-height: none !important; overflow: visible !important; }
+  html body .nurse-dashboard-page.role-single-screen .nd-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; height: auto !important; }
+  html body .nurse-dashboard-page.role-single-screen .nd-table-card { flex: 0 0 auto !important; overflow-x: auto !important; }
+}
+
+html body .nurse-module .med-history-page .med-history-hero[data-page-header] {
+  min-height: 0 !important;
+  padding: 8px 12px !important;
+  gap: 8px 12px !important;
+  align-items: center !important;
+  overflow: visible !important;
+}
+
+html body .nurse-module .med-history-page .med-history-card {
+  padding: 12px !important;
+}
+
+html body .nurse-module .med-history-page .med-card-header {
+  margin-bottom: 4px !important;
+  padding: 0 !important;
+}
+
+html body .nurse-module .med-history-page .med-card-header .med-search-bar {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 12px !important;
+}
+
+html body .nurse-module .med-history-page .med-history-badge {
+  margin: 0 0 4px !important;
+}
+
+html body .nurse-module .med-history-page .med-history-table th {
+  height: 54px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+html body .nurse-module .med-history-page .med-head-actions {
+  flex: 0 0 auto;
+  flex-wrap: nowrap !important;
+  gap: 6px !important;
+}
+
+html body .nurse-module .med-history-page .med-history-hero .med-btn {
+  display: inline-grid !important;
+  grid-template-columns: max-content max-content !important;
+  grid-auto-flow: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 32px !important;
+  height: 32px !important;
+  padding: 0 5px !important;
+  gap: 4px !important;
+  font-size: 11px !important;
+  line-height: 1 !important;
+  white-space: nowrap !important;
+}
+
+html body .nurse-module .med-history-page .med-history-hero .med-btn > span {
+  white-space: nowrap !important;
+}
+
+html body .nurse-module .med-history-page .med-btn-icon-wrap {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex: 0 0 auto !important;
+}
+
+@media screen and (max-width: 700px) {
+  html body .nurse-module .med-history-page .med-head-actions {
+    flex-wrap: wrap !important;
+  }
+}
+
+html body .nurse-module .booking-page .booking-hero[data-page-header] {
+  height: auto !important;
+  min-height: 0 !important;
+  align-items: center !important;
+  overflow: visible !important;
+}
+
+html body .nurse-module .booking-page .booking-hero[data-page-header] > div:first-child {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 4px !important;
+  margin-left: 10px !important;
+}
+
+html body .nurse-module .booking-page .booking-hero .booking-badge {
+  align-self: flex-start !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+html body .nurse-module .booking-page .booking-hero h2 {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+html body .nurse-module .booking-page .booking-hero h2 > svg {
+  flex: 0 0 auto !important;
+}
+
+html body .nurse-module .booking-page .booking-hero p {
+  margin: 0 !important;
+  line-height: 1.35 !important;
+}
+
+html body .nurse-module .booking-page .booking-card {
+  padding-top: 8px !important;
+}
+
+html body .nurse-module .booking-page .booking-card-head {
+  margin-bottom: 4px !important;
+  padding-bottom: 0 !important;
+}
+
+html body .nurse-module .booking-page .booking-filter-grid {
+  padding-top: 4px !important;
+}
+
+html body .nurse-module .booking-page .booking-empty-state {
+  gap: 6px !important;
+}
+
+html body .nurse-module .booking-page .booking-empty-state > :is(h4, p) {
+  margin: 0 !important;
+}

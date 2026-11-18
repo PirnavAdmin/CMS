@@ -1,120 +1,180 @@
+/* RECEPTIONISTS PAGE - DASHBOARD THEME WITH 3D ANIMATIONS & DOCTOR SCREEN STYLES */
+
 .receptionists-page {
-  min-height: 100%;
-  padding: 18px;
-  background: #f8fafc;
-  color: #0f172a;
+  position: relative;
+  min-height: calc(100vh - 82px);
+  height: 100%;
+  flex: 1;
+  width: 100%;
+  padding: 24px 32px 48px;
   box-sizing: border-box;
+  background: transparent !important;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
+.receptionists-bg-overlay,
+.receptionists-reception-particle {
+  display: none !important;
+}
+
+.particle-rec-1 {
+  top: 10%;
+  right: 6%;
+  width: 64px;
+  height: 64px;
+  animation-duration: 8s;
+  color: var(--theme-primary);
+}
+
+.particle-rec-2 {
+  top: 48%;
+  left: 3%;
+  width: 70px;
+  height: 70px;
+  animation-duration: 11s;
+  color: var(--theme-primary-dark);
+}
+
+.particle-rec-3 {
+  bottom: 12%;
+  right: 12%;
+  width: 60px;
+  height: 60px;
+  animation-duration: 9s;
+  color: var(--theme-primary);
+}
+
+.particle-rec-4 {
+  top: 32%;
+  left: 45%;
+  width: 56px;
+  height: 56px;
+  animation-duration: 13s;
+  color: var(--theme-primary);
+}
+
+@keyframes floatReceptionParticle {
+  0% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  100% {
+    transform: translateY(-28px) rotate(12deg) scale(1.1);
+  }
+}
+
+/* Page Header */
 .receptionists-header {
+  position: relative;
+  z-index: 2;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 20px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .receptionists-header h2 {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
+  line-height: 1.2;
+  color: var(--theme-primary-dark);
   font-weight: 800;
-  line-height: 1.15;
-  letter-spacing: 0;
+  letter-spacing: -0.5px;
 }
 
 .receptionists-header p {
-  margin: 7px 0 0;
-  color: #64748b;
-  font-size: 14px;
-  line-height: 1.4;
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #475569;
+  font-weight: 600;
 }
 
 .receptionists-header-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.receptionists-primary-button,
-.receptionists-secondary-button,
-.receptionists-save-button,
-.receptionists-icon-button,
-.receptionists-action-button {
-  border-radius: 8px;
-  font-weight: 750;
-  cursor: pointer;
-}
-
-.receptionists-action-button {
-  width: 34px;
-  height: 34px;
-  min-width: 34px;
-  border: 1px solid #dbe3ed;
-  border-radius: 10px;
-  background: #ffffff;
-  color: #0f172a;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  transition: background 0.16s ease, border-color 0.16s ease, transform 0.16s ease, color 0.16s ease;
-}
-
-.receptionists-action-button:hover:not(:disabled) {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
-}
-
-.receptionists-action-button:disabled {
-  background: #f1f4f7;
-  color: #8a95a6;
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
+/* Action Buttons */
 .receptionists-primary-button {
-  height: 42px;
+  height: 44px;
   border: none;
-  background: #0f766e;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary) 100%);
   color: #ffffff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
-  padding: 0 16px;
+  gap: 10px;
+  padding: 0 20px;
   font-size: 14px;
-  box-shadow: 0 8px 18px rgba(15, 118, 110, 0.16);
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--theme-primary) 35%, transparent);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.receptionists-primary-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--theme-primary) 45%, transparent);
 }
 
 .receptionists-icon-button {
-  width: 42px;
-  height: 42px;
-  border: 1px solid #dbe3ed;
-  background: #ffffff;
-  color: #0f172a;
+  width: 44px;
+  height: 44px;
+  border: 1.5px solid var(--theme-primary-glow);
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--theme-primary) 12%, transparent);
 }
 
+.receptionists-icon-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  border-color: var(--theme-primary);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 35%, transparent);
+}
+
+/* Toolbar & Search Input */
 .receptionists-toolbar {
-  margin-bottom: 12px;
+  position: relative;
+  z-index: 2;
+  margin-bottom: 20px;
 }
 
 .receptionists-search {
-  height: 44px;
-  border: 1px solid #d7e0ea;
-  border-radius: 10px;
-  background: #ffffff;
+  height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   display: flex;
   align-items: center;
-  gap: 11px;
-  padding: 0 14px;
+  gap: 12px;
+  padding: 0 16px;
   color: #64748b;
   box-sizing: border-box;
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--theme-primary-dark) 4%, transparent);
+  transition: all 0.2s ease;
+}
+
+.receptionists-search:focus-within {
+  border-color: var(--theme-primary);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--theme-primary) 15%, transparent);
 }
 
 .receptionists-search input {
@@ -122,556 +182,1051 @@
   border: none;
   outline: none;
   background: transparent;
-  color: #0f172a;
+  color: var(--theme-primary-dark);
   font-size: 14px;
+  font-weight: 600;
 }
 
 .receptionists-search input::placeholder {
-  color: #94a3b8;
+  color: #64748b;
 }
 
+/* Notifications & Messages */
 .receptionists-success,
 .receptionists-error {
-  margin: 0 0 12px;
-  border-radius: 8px;
-  padding: 11px 12px;
-  font-size: 13px;
+  position: relative;
+  z-index: 2;
+  margin: 0 0 16px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1.4;
 }
 
 .receptionists-success {
-  background: #ecfdf5;
-  border: 1px solid #bbf7d0;
-  color: #047857;
+  background: rgba(220, 252, 231, 0.95);
+  border: 1px solid #86efac;
+  color: #15803d;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+}
+
+.receptionists-error {
+  background: rgba(254, 242, 242, 0.95);
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
 }
 
 .receptionists-notification-close {
-  display: inline-flex;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  border: 0;
-  border-radius: 4px;
   background: transparent;
+  border: none;
   color: currentColor;
   cursor: pointer;
 }
 
-.receptionists-notification-close:hover {
-  background: rgb(4 120 87 / 12%);
-}
-
-.receptionists-error {
-  background: #fff1f2;
-  border: 1px solid #fecdd3;
-  color: #be123c;
-}
-
+/* Receptionists Frosted Glass Table Card */
 .receptionists-table {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  overflow-x: hidden !important;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 10px 30px color-mix(in srgb, var(--theme-primary-dark) 6%, transparent), inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
 .receptionists-thead,
 .receptionists-row {
+  width: 100%;
+  box-sizing: border-box;
+  display: grid;
+  /* One shared desktop grid: every header, cell, and action remains visible. */
+  grid-template-columns: 48px minmax(180px, 1.15fr) minmax(130px, 0.82fr) minmax(250px, 1.55fr) minmax(120px, 0.75fr) 112px 178px !important;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px;
   min-width: 0;
 }
 
 .receptionists-thead {
-  display: none;
+  min-height: 48px;
+  background: rgba(255, 255, 255, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.6);
+  color: #1e293b;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.receptionists-thead > :nth-child(1),
+.receptionists-row > :nth-child(1) {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.receptionists-thead > :nth-child(2) {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.receptionists-thead > :nth-child(6),
+.receptionists-status-cell {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+}
+
+.receptionists-thead span:last-child,
+.receptionists-actions-head {
+  text-align: center !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
 }
 
 .receptionists-row {
-  min-width: 0;
-  min-height: 390px;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding: 28px 24px 20px;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+  min-height: 64px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.2);
+  color: var(--theme-primary-dark);
+  transition: all 0.2s ease;
 }
 
 .receptionists-row:last-child {
   border-bottom: 0;
 }
 
-.receptionists-row > span:first-child {
-  display: none;
+.receptionists-row:hover {
+  background: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 10%, transparent);
 }
 
 .receptionists-name-cell {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  padding-bottom: 18px;
-  border-bottom: 1px solid #eef2f7;
-  text-align: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100% !important;
 }
 
 .receptionists-avatar {
-  width: 104px;
-  height: 104px;
-  flex: 0 0 104px;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
   border-radius: 50%;
-  background: #eef8fa;
-  color: #149ca4;
-  border: 1px solid #d7eef1;
-  box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.72);
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 10px color-mix(in srgb, var(--theme-primary) 15%, transparent);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  font-size: 28px;
+  font-size: 14px;
   font-weight: 900;
-  line-height: 1;
 }
 
-.receptionists-name-cell .receptionists-avatar span {
-  display: flex;
+/* Highlighted Receptionist Name Styling */
+.receptionists-name-highlight {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  margin: 0;
-  color: inherit;
-  font-size: 42px;
+  gap: 6px;
+  padding: 4px 14px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--theme-primary) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--theme-primary) 35%, transparent);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary) 12%, transparent);
+}
+
+.receptionists-name-highlight b {
+  color: var(--theme-primary-dark) !important;
   font-weight: 900;
-  line-height: 1;
-}
-
-.receptionists-name-cell b {
- font-size: 11px;
-  font-weight: 800;
-}
-
-.receptionists-name-cell span {
-  display: block;
-  margin-top: 5px;
-  color: #149ca4;
-  font-size: 12px;
-  line-height: 1.25;
-  font-weight: 800;
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
 }
 
 .receptionists-cell {
-  min-width: 0;
-  color: #334155;
-  font-size: 12px;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
-  display: grid;
-  grid-template-columns: minmax(76px, 0.45fr) minmax(0, 1fr);
-  gap: 10px;
-  padding: 13px 0;
-  border-bottom: 1px solid #eef2f7;
-  font-weight: 800;
-}
-
-.receptionists-cell::before {
-  color: #64748b;
-  min-width: 0;
-}
-
-.receptionists-row > .receptionists-cell:nth-child(3)::before {
-  content: "Branch";
-}
-
-.receptionists-row > .receptionists-cell:nth-child(4)::before {
-  content: "Email";
-}
-
-.receptionists-row > .receptionists-cell:nth-child(5)::before {
-  content: "Phone";
-}
-
-.receptionists-row > .receptionists-cell:nth-child(6)::before {
-  content: "Status";
-}
-
-.receptionists-row > .receptionists-cell:nth-child(7)::before {
-  content: "Created";
-}
-
-.receptionists-row > .receptionists-cell:nth-child(8)::before {
-  content: "Role";
-}
-
-.receptionists-status-cell {
-  display: grid;
-  justify-content: stretch;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .receptionists-cell.receptionists-email {
-  display: grid;
-  max-width: 100%;
+  color: var(--theme-primary) !important;
+  font-weight: 800 !important;
+  font-size: 12px;
+  line-height: 1.35;
+  min-width: 0;
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: break-word;
-  overflow: visible;
 }
 
-.receptionists-cell.receptionists-email::after {
-  min-width: 0;
+/* Fit all four row controls into the Actions column without reducing data columns. */
+.receptionists-actions .actions-group {
+  gap: 6px;
+  padding: 2px;
+}
+
+.receptionists-actions .action-btn.medical-instrument-btn,
+.receptionists-actions .action-btn {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+}
+
+@media (max-width: 1180px) {
+  .receptionists-table {
+    overflow-x: auto !important;
+  }
+
+  .receptionists-thead,
+  .receptionists-row {
+    min-width: 1120px;
+  }
+}
+
+/* Status Badge */
+.receptionists-status-cell {
+  display: flex;
+  justify-content: center;
 }
 
 .receptionists-status {
-  min-width: 72px;
-  height: 26px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  padding: 0 11px;
-  font-size: 12px;
-  font-weight: 800;
+  position: relative !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  min-width: 98px !important;
+  height: 30px !important;
+  padding: 0 30px 0 12px !important;
+  border-radius: 999px !important;
+  font-size: 12px !important;
+  font-weight: 850 !important;
+  letter-spacing: 0.025em !important;
+  text-transform: capitalize !important;
+  white-space: nowrap !important;
+  margin: 0 auto !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .receptionists-status-active {
-  background: #dcfce7;
-  color: #15803d;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 50%, #a7f3d0 100%) !important;
+  color: #065f46 !important;
+  border: 1.5px solid #10b981 !important;
+  box-shadow:
+    0 2px 8px rgba(16, 185, 129, 0.24),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(16, 185, 129, 0.15) !important;
+}
+
+.receptionists-status-active::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #10b981 !important;
+  border: 1.5px solid #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(16, 185, 129, 0.5),
+    0 0 7px #10b981 !important;
+  flex-shrink: 0 !important;
+  animation: medicalVitalPulse 1.8s cubic-bezier(0.4, 0, 0.6, 1) infinite !important;
 }
 
 .receptionists-status-inactive {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 50%, #fecaca 100%) !important;
+  color: #991b1b !important;
+  border: 1.5px solid #ef4444 !important;
+  box-shadow:
+    0 2px 8px rgba(239, 68, 68, 0.24),
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 2px rgba(239, 68, 68, 0.15) !important;
 }
 
+.receptionists-status-inactive::before {
+  content: "" !important;
+  display: inline-block !important;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
+  background: #ef4444 !important;
+  border: 1.5px solid #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.5),
+    0 0 7px #ef4444 !important;
+  flex-shrink: 0 !important;
+  animation: medicalStandbyAlert 2.2s ease-in-out infinite !important;
+}
+
+/* Action Icons */
 .receptionists-actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  padding-top: 18px;
-  margin-top: auto;
-}
-
-.receptionists-action-button {
-  width: 40px;
-  height: 40px;
-  border: 1px solid #dbe3ed;
-  background: #ffffff;
-  color: #0f172a;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.receptionists-action-danger {
-  color: #dc2626;
-}
-
-.receptionists-image-upload {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  margin: 0 auto !important;
   gap: 8px;
 }
 
-.receptionists-image-circle {
-  width: 112px;
-  height: 112px;
-  border-radius: 50%;
-  background: #e4f5f7;
-  border: 1px solid #99d4d9;
-  color: #149ca4;
-  font-size: 34px;
-  font-weight: 800;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-}
-
-.receptionists-image-preview {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.receptionists-image-filename {
-  max-width: 260px;
-  color: #64748b;
-  font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.receptionists-image-button,
-.receptionists-image-remove {
-  position: absolute;
-  bottom: 7px;
+.receptionists-action-button {
   width: 36px;
   height: 36px;
-  border: none;
-  border-radius: 50%;
-  color: #ffffff;
+  border: 1px solid var(--theme-primary-soft);
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  color: var(--theme-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  box-shadow: 0 2px 5px color-mix(in srgb, var(--theme-primary) 12%, transparent);
+  transition: all 0.2s ease;
 }
 
-.receptionists-image-button {
-  right: 3px;
-  background: #14a7ad;
+.receptionists-action-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  color: #ffffff;
+  border-color: var(--theme-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary) 35%, transparent);
 }
 
-.receptionists-image-remove {
-  left: 3px;
-  background: #dc2626;
+.receptionists-action-danger {
+  background: linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%);
+  border-color: #fca5a5;
+  color: #dc2626;
+  box-shadow: 0 2px 5px rgba(220, 38, 38, 0.12);
 }
 
-.receptionists-image-input {
-  display: none;
+.receptionists-action-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  border-color: #dc2626;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
 }
 
+/* Empty State */
 .receptionists-empty {
-  padding: 28px;
+  padding: 48px 24px;
   text-align: center;
   color: #64748b;
   font-size: 14px;
+  font-weight: 700;
 }
 
+/* Modal Styling with Medical Theme & Perfect Viewport Alignment */
 .receptionists-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 3300;
-  background: rgba(15, 23, 42, 0.48);
+  z-index: 3500;
+  background: color-mix(in srgb, var(--theme-primary-dark) 65%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 18px;
+  padding: 16px;
+  overflow-y: auto;
   box-sizing: border-box;
+  animation: receptionistFadeIn 0.2s ease-out;
+}
+
+@keyframes receptionistFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 .receptionists-modal {
-  width: min(620px, 100%);
-  max-height: calc(100vh - 56px);
-  overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid #dbe3ed;
-  border-radius: 16px;
-  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.25);
+  width: 100%;
+  max-width: 500px;
+  max-height: min(92vh, calc(100vh - 32px));
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1.5px solid rgba(226, 232, 240, 0.95);
+  border-radius: 22px;
+  box-shadow:
+    0 24px 60px -10px color-mix(in srgb, var(--theme-primary-dark) 35%, transparent),
+    0 0 0 1px rgba(255, 255, 255, 0.85);
+  overflow: hidden;
+  animation: receptionistPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes receptionistPopIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .receptionists-modal-header {
+  flex-shrink: 0;
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  gap: 14px;
-  padding: 18px 20px;
-  border-bottom: 1px solid #e2e8f0;
+  align-items: center;
+  padding: 14px 22px;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--theme-primary) 8%, transparent) 0%, color-mix(in srgb, var(--theme-primary-dark) 5%, transparent) 100%);
+  border-bottom: 1.5px solid rgba(226, 232, 240, 0.85);
 }
 
 .receptionists-modal-title {
-  min-width: 0;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
 .receptionists-modal-icon {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
   border-radius: 12px;
-  background: #ccfbf1;
-  color: #0f766e;
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary) 100%);
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 0 auto;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--theme-primary) 32%, transparent);
 }
 
 .receptionists-modal-title h3 {
   margin: 0;
-  color: #0f172a;
-  font-size: 20px;
+  color: var(--theme-primary-dark);
+  font-size: 1.2rem;
   font-weight: 800;
-  line-height: 1.2;
 }
 
 .receptionists-modal-title p {
-  margin: 4px 0 0;
-  color: #64748b;
-  font-size: 12px;
-  line-height: 1.3;
+  margin: 2px 0 0;
+  color: var(--theme-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .receptionists-modal-close {
-  width: 38px;
-  height: 38px;
-  border: 1px solid #dbe3ed;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #0f172a;
+  width: 36px;
+  height: 36px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #64748b;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  flex: 0 0 auto;
+  transition: all 0.2s ease;
+}
+
+.receptionists-modal-close:hover {
+  background: rgba(239, 68, 68, 0.12);
+  border-color: #fca5a5;
+  color: #ef4444;
+}
+
+.receptionists-view-modal {
+  max-width: 620px;
+}
+
+.receptionists-view-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  padding: 22px;
+}
+
+.receptionists-view-grid > div {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.receptionists-view-grid span {
+  color: #64748b;
+  font-size: 0.76rem;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.receptionists-view-grid strong {
+  color: var(--theme-primary-dark);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
 
 .receptionists-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
-  padding: 20px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 22px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+@media (max-width: 560px) {
+  .receptionists-view-grid {
+    grid-template-columns: 1fr;
+    padding: 16px;
+  }
+}
+
+.receptionists-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.receptionists-form::-webkit-scrollbar-track {
+  background: rgba(241, 245, 249, 0.6);
+  border-radius: 10px;
+}
+
+.receptionists-form::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.receptionists-form::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Image Upload & Avatar Circle */
+.receptionists-image-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 4px 0 10px;
+  width: 100%;
+}
+
+.receptionists-image-circle {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--theme-primary-soft) 0%, var(--theme-primary-soft) 100%);
+  border: 2.5px solid var(--theme-primary);
+  color: var(--theme-primary);
+  font-size: 32px;
+  font-weight: 800;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 16%, transparent);
+  user-select: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.receptionists-image-circle:hover {
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--theme-primary) 28%, transparent);
+  transform: scale(1.02);
+}
+
+.receptionists-image-circle > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.receptionists-image-preview {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.receptionists-image-button {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-primary-dark) 100%);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--theme-primary-dark) 25%, transparent);
+  transition: all 0.2s ease;
+}
+
+.receptionists-image-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary-dark) 100%);
+  transform: scale(1.1);
+}
+
+.receptionists-image-remove {
+  position: absolute;
+  right: -2px;
+  top: -2px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  background: #ef4444;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.35);
+  transition: all 0.2s ease;
+}
+
+.receptionists-image-remove:hover:not(:disabled) {
+  background: #dc2626;
+  transform: scale(1.1);
+}
+
+.receptionists-image-input {
+  display: none !important;
 }
 
 .receptionists-field {
-  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 7px;
+  gap: 4px;
 }
 
 .receptionists-field label {
-  color: #334155;
-  font-size: 13px;
-  line-height: 1.2;
+  font-size: 0.82rem;
   font-weight: 750;
+  color: #334155;
+  letter-spacing: 0.01em;
 }
 
 .receptionists-field input,
 .receptionists-field select {
-  width: 100%;
-  height: 44px;
-  border: 1px solid #cbd5e1;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #0f172a;
-  padding: 0 13px;
-  font-size: 14px;
+  height: 38px;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 0.88rem;
+  font-weight: 550;
+  color: var(--theme-primary-dark);
   outline: none;
-  box-sizing: border-box;
-}
-
-.receptionists-field select {
-  appearance: none;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E");
-  background-position: right 12px center;
-  background-repeat: no-repeat;
-  background-size: 16px;
-  padding-right: 32px;
+  background: #ffffff;
+  transition: all 0.2s ease;
 }
 
 .receptionists-field input:focus,
 .receptionists-field select:focus {
-  border-color: #0f766e;
-  box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.12);
+  border-color: var(--theme-primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-primary) 22%, transparent);
 }
 
 .receptionists-field input.is-invalid,
 .receptionists-field select.is-invalid {
-  border-color: #dc2626;
+  border-color: #ef4444;
   background: #fffafa;
 }
 
 .receptionists-field-error {
   color: #dc2626;
-  font-size: 12px;
+  font-size: 0.76rem;
   font-weight: 650;
-  line-height: 1.35;
-}
-
-.receptionists-form-message,
-.receptionists-modal-actions {
-  grid-column: 1 / -1;
 }
 
 .receptionists-modal-actions {
+  flex-shrink: 0;
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   margin-top: 4px;
-}
-
-.receptionists-secondary-button,
-.receptionists-save-button {
-  min-width: 128px;
-  height: 42px;
-  font-size: 14px;
+  padding-top: 14px;
+  padding-bottom: 2px;
+  border-top: 1.5px solid #e2e8f0;
 }
 
 .receptionists-secondary-button {
-  border: 1px solid #cbd5e1;
-  background: #ffffff;
-  color: #334155;
+  height: 40px;
+  border: 1.5px solid #fca5a5;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #fff1f2 0%, #fee2e2 100%);
+  color: #dc2626;
+  padding: 0 20px;
+  font-size: 0.88rem;
+  font-weight: 750;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.08);
+  transition: all 0.2s ease;
+}
+
+.receptionists-secondary-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+  transform: translateY(-1px);
 }
 
 .receptionists-save-button {
+  height: 40px;
   border: none;
-  background: #0f766e;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary) 100%);
   color: #ffffff;
+  padding: 0 22px;
+  font-size: 0.88rem;
+  font-weight: 750;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--theme-primary) 35%, transparent);
 }
 
-.receptionists-primary-button:disabled,
-.receptionists-secondary-button:disabled,
-.receptionists-save-button:disabled,
-.receptionists-icon-button:disabled,
-.receptionists-action-button:disabled,
-.receptionists-modal-close:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
+.receptionists-save-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, var(--theme-primary-dark) 0%, var(--theme-primary-dark) 100%);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--theme-primary) 45%, transparent);
+  transform: translateY(-1px);
 }
 
-@media (max-width: 1100px) {
-  .receptionists-table {
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+/* Keep receptionist table fully visible in the admin content width, matching Nurses page behavior. */
+.receptionists-page .receptionists-table {
+  overflow-x: hidden !important;
+}
+
+.receptionists-page .receptionists-thead,
+.receptionists-page .receptionists-row {
+  grid-template-columns: 64px minmax(170px, 1.45fr) minmax(100px, 0.9fr) minmax(220px, 1.8fr) minmax(112px, 0.95fr) 126px 184px !important;
+  gap: 8px !important;
+  padding: 14px 16px !important;
+  min-width: 0 !important;
+}
+
+.receptionists-page .receptionists-cell,
+.receptionists-page .receptionists-name-highlight b {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.receptionists-page .receptionists-email {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+.receptionists-page .receptionists-actions,
+.receptionists-page .receptionists-actions .actions-group {
+  width: 100% !important;
+  min-width: 0 !important;
+  justify-content: center !important;
+  gap: 6px !important;
+}
+
+.receptionists-page .receptionists-actions .action-btn.medical-instrument-btn,
+.receptionists-page .receptionists-actions .action-btn {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+}
+
+@media (max-width: 1180px) {
+  .receptionists-page .receptionists-table {
+    overflow-x: hidden !important;
+  }
+
+  .receptionists-page .receptionists-thead,
+  .receptionists-page .receptionists-row {
+    min-width: 0 !important;
   }
 }
 
-@media (max-width: 720px) {
-  .receptionists-page {
-    padding: 16px;
-  }
+/* Receptionists: force single-screen table visibility like Nurses, including all action buttons. */
+.receptionists-page .receptionists-table {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
 
-  .receptionists-header {
-    flex-direction: column;
-  }
+.receptionists-page .receptionists-thead,
+.receptionists-page .receptionists-row {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+  grid-template-columns: 58px minmax(170px, 1.35fr) minmax(90px, 0.7fr) minmax(220px, 1.65fr) minmax(108px, 0.8fr) 118px 178px !important;
+  column-gap: 6px !important;
+  padding-left: 14px !important;
+  padding-right: 14px !important;
+}
 
-  .receptionists-header-actions,
-  .receptionists-primary-button {
-    width: 100%;
-  }
+.receptionists-page .receptionists-thead > *,
+.receptionists-page .receptionists-row > * {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
 
-  .receptionists-form {
-    grid-template-columns: 1fr;
-    padding: 16px;
-  }
+.receptionists-page .receptionists-actions-head,
+.receptionists-page .receptionists-actions {
+  width: 178px !important;
+  min-width: 178px !important;
+  max-width: 178px !important;
+  justify-self: center !important;
+  overflow: visible !important;
+}
 
-  .receptionists-modal-header {
-    padding: 16px;
-  }
+.receptionists-page .receptionists-actions .actions-group {
+  width: 178px !important;
+  min-width: 178px !important;
+  max-width: 178px !important;
+  gap: 5px !important;
+  padding: 0 !important;
+  justify-content: center !important;
+  overflow: visible !important;
+}
 
-  .receptionists-modal-actions {
-    flex-direction: column-reverse;
-  }
+.receptionists-page .receptionists-actions .action-btn.medical-instrument-btn,
+.receptionists-page .receptionists-actions .action-btn {
+  width: 38px !important;
+  min-width: 38px !important;
+  height: 38px !important;
+  min-height: 38px !important;
+  border-radius: 11px !important;
+}
 
-  .receptionists-secondary-button,
-  .receptionists-save-button {
-    width: 100%;
-  }
+.receptionists-page .receptionists-cell,
+.receptionists-page .receptionists-name-highlight b {
+  min-width: 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.receptionists-page .receptionists-email {
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+}
+
+/* Receptionists compact fit pass: keep every action button visible on 1366px admin viewport. */
+.receptionists-page {
+  padding-left: 24px !important;
+  padding-right: 24px !important;
+}
+
+.receptionists-page .receptionists-table {
+  overflow: hidden !important;
+}
+
+.receptionists-page .receptionists-thead,
+.receptionists-page .receptionists-row {
+  grid-template-columns: 54px minmax(160px, 1.15fr) minmax(78px, 0.55fr) minmax(210px, 1.45fr) minmax(102px, 0.7fr) 112px 162px !important;
+  column-gap: 4px !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+.receptionists-page .receptionists-thead {
+  font-size: 0.72rem !important;
+  letter-spacing: 0.04em !important;
+}
+
+.receptionists-page .receptionists-row {
+  min-height: 72px !important;
+}
+
+.receptionists-page .receptionists-cell,
+.receptionists-page .receptionists-name-highlight b {
+  font-size: 12px !important;
+}
+
+.receptionists-page .receptionists-avatar {
+  width: 36px !important;
+  height: 36px !important;
+  flex-basis: 36px !important;
+  font-size: 12px !important;
+}
+
+.receptionists-page .receptionists-name-cell {
+  gap: 8px !important;
+}
+
+.receptionists-page .receptionists-name-highlight {
+  padding: 3px 10px !important;
+  max-width: 92px !important;
+}
+
+.receptionists-page .receptionists-status {
+  min-width: 92px !important;
+  height: 28px !important;
+  padding: 0 22px 0 10px !important;
+  font-size: 11px !important;
+}
+
+.receptionists-page .receptionists-actions-head,
+.receptionists-page .receptionists-actions {
+  width: 162px !important;
+  min-width: 162px !important;
+  max-width: 162px !important;
+}
+
+.receptionists-page .receptionists-actions .actions-group {
+  width: 162px !important;
+  min-width: 162px !important;
+  max-width: 162px !important;
+  gap: 4px !important;
+  padding: 0 !important;
+}
+
+.receptionists-page .receptionists-actions .action-btn.medical-instrument-btn,
+.receptionists-page .receptionists-actions .action-btn {
+  width: 34px !important;
+  min-width: 34px !important;
+  height: 34px !important;
+  min-height: 34px !important;
+  border-radius: 10px !important;
+}
+
+.receptionists-page .receptionists-actions .action-btn svg,
+.receptionists-page .receptionists-actions .instrument-icon {
+  width: 17px !important;
+  height: 17px !important;
+}
+
+.receptionists-page:not(.lab-technicians-page) .receptionists-thead {
+  color: #33464c !important;
+}
+
+.receptionists-page:not(.lab-technicians-page) .receptionists-email {
+  color: #1e293b !important;
+}
+
+.receptionists-page:not(.lab-technicians-page) .receptionists-actions .action-btn:not(.delete-instrument-btn):not(.delete-btn) {
+  background: #e2f2f1 !important;
+  border-color: #b9d8d6 !important;
+  color: #367f82 !important;
+  box-shadow: 0 2px 6px rgba(54, 127, 130, 0.12) !important;
+}
+
+.receptionists-page:not(.lab-technicians-page) .receptionists-actions .action-btn:not(.delete-instrument-btn):not(.delete-btn):hover:not(:disabled) {
+  background: #4b9da3 !important;
+  border-color: #82b8b5 !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(54, 127, 130, 0.2) !important;
+}
+
+
+/* Compact page heading; the JSX marker excludes modals and navigation. */
+@media screen {
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .receptionists-header[data-page-header] {
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 0 6px !important;
+  padding: 0 !important;
+  gap: 6px 10px !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+}
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .receptionists-header[data-page-header] > * { min-width: 0; max-width: 100%; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .receptionists-header[data-page-header] :is(h1, h2) { font-size: var(--app-page-heading-size, 18px) !important; line-height: 1.2 !important; margin: 0 !important; letter-spacing: 0 !important; white-space: normal !important; overflow-wrap: anywhere; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .receptionists-header[data-page-header] p { font-size: 12px !important; line-height: 1.35 !important; margin: 3px 0 0 !important; white-space: normal !important; overflow-wrap: anywhere; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .receptionists-header[data-page-header] [class*="actions"] { min-width: 0; max-width: 100%; height: auto !important; flex-wrap: wrap !important; gap: 6px !important; }
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content) .receptionists-header[data-page-header] button { max-width: 100%; min-height: 34px !important; height: auto !important; padding: 7px 10px !important; font-size: 12px !important; line-height: 1.3; white-space: normal; }
+}
+
+@media screen {
+  html body .content .receptionists-page { padding: 0 !important; min-width: 0; height: auto; }
+}
+
+
+/* Reserve enough width for every action and scroll instead of clipping. */
+html body .content .receptionists-page:not(.lab-technicians-page) .receptionists-table {
+  overflow-x: auto !important;
+}
+html body .content .receptionists-page:not(.lab-technicians-page) :is(.receptionists-thead, .receptionists-row) {
+  display: grid !important;
+  grid-template-columns: 40px minmax(130px, 1fr) minmax(90px, .7fr) minmax(180px, 1.4fr) 108px 96px 146px !important;
+  width: 100% !important;
+  min-width: 862px !important;
+  max-width: none !important;
+  column-gap: 8px !important;
+  padding: 7px 12px !important;
+  box-sizing: border-box !important;
+}
+html body .content .receptionists-page:not(.lab-technicians-page) .receptionists-row { min-height: 50px !important; }
+html body .content .receptionists-page:not(.lab-technicians-page) .receptionists-thead { min-height: 36px !important; }
+html body .content .receptionists-page:not(.lab-technicians-page) :is(.receptionists-actions-head, .receptionists-actions, .receptionists-actions .actions-group) {
+  width: 146px !important;
+  min-width: 146px !important;
+  max-width: 146px !important;
+  gap: 4px !important;
+  padding: 0 !important;
+  flex-wrap: nowrap !important;
+}
+html body .content .receptionists-page:not(.lab-technicians-page) .receptionists-actions .action-btn {
+  width: 32px !important;
+  min-width: 32px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  flex: 0 0 32px !important;
+}
+html body .content .receptionists-page:not(.lab-technicians-page) .receptionists-avatar { width: 32px !important; height: 32px !important; flex-basis: 32px !important; }
+html body .content .receptionists-page:not(.lab-technicians-page) .receptionists-search { height: 36px !important; min-height: 36px !important; padding: 0 12px !important; }
+html body .content .receptionists-page:not(.lab-technicians-page) .receptionists-toolbar { margin-bottom: 10px !important; padding: 0 !important; }
+
+
+
+/* Search shares the heading row and wraps on small screens. */
+@media screen {
+  html body .content .receptionists-header:has(> .admin-heading-search) { display: flex !important; flex-wrap: wrap !important; align-items: center !important; gap: 8px 12px !important; height: auto !important; flex-shrink: 0 !important; }
+  html body .content .receptionists-header:has(> .admin-heading-search) > :first-child { flex-shrink: 0; }
+  html body .content .receptionists-header:has(> .admin-heading-search) > .admin-heading-search { position: relative !important; inset: auto !important; transform: none !important; flex: 1 1 260px !important; width: auto !important; min-width: 180px !important; max-width: 520px !important; margin: 0 !important; padding: 0 10px !important; height: 34px !important; min-height: 34px !important; box-sizing: border-box; }
+  html body .content .receptionists-header:has(> .admin-heading-search) > .admin-heading-search input { min-width: 0 !important; width: 100%; font-size: 12px !important; }
+  html body .content .receptionists-header:has(> .admin-heading-search) > .admin-heading-search > svg { flex-shrink: 0; }
+  html body .content .receptionists-header:has(> .admin-heading-search) > [class*="header-actions"] { margin-left: auto; flex-shrink: 0; }
+}
+@media screen and (max-width: 640px) {
+  html body .content .receptionists-header:has(> .admin-heading-search) > .admin-heading-search { flex-basis: 100% !important; min-width: 0 !important; max-width: none !important; order: 3; }
 }

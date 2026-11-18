@@ -27,6 +27,27 @@ const getActivityIcon = (tone) => {
   return Activity;
 };
 
+const getIndianGreeting = () => {
+  const hour = Number(new Intl.DateTimeFormat("en-IN", {
+    timeZone: "Asia/Kolkata",
+    hour: "2-digit",
+    hourCycle: "h23",
+  }).format(new Date()));
+
+  if (hour < 12) return { label: "Morning", logo: "🌅", tone: "morning" };
+  if (hour < 17) return { label: "Afternoon", logo: "🌞", tone: "afternoon" };
+  return { label: "Evening", logo: "🌙", tone: "evening" };
+};
+
+const dashboardChartViews = [
+  { key: "revenueTrend", label: "Monthly Subscription Revenue", type: "line", valueFormat: "currency" },
+  { key: "clinicRevenue", label: "Subscription Revenue by Clinic", type: "bar", valueFormat: "currency" },
+  { key: "subscriptionStatus", label: "Subscription Status", type: "pie", valueFormat: "number" },
+  { key: "branchCount", label: "Branches by Clinic", type: "bar", valueFormat: "number" },
+  { key: "adminCount", label: "Admins by Clinic", type: "bar", valueFormat: "number" },
+  { key: "planDistribution", label: "Plan Distribution", type: "pie", valueFormat: "number" },
+];
+
 function ActivityItem({ activity }) {
   const tone = getActivityTone(activity);
   const Icon = getActivityIcon(tone);
@@ -53,6 +74,9 @@ function Dashboard() {
   const [dashboard, setDashboard] = useState({});
   const [summary, setSummary] = useState({});
   const [revenueData, setRevenueData] = useState([]);
+  const [chartData, setChartData] = useState({});
+  const [statisticsErrors, setStatisticsErrors] = useState([]);
+  const [selectedChart, setSelectedChart] = useState("revenueTrend");
   const [activities, setActivities] = useState([]);
 
   useEffect(() => {
@@ -69,6 +93,8 @@ function Dashboard() {
         setDashboard(data.dashboard);
         setSummary(data.summary);
         setRevenueData(data.revenueData);
+        setChartData(data.chartData || {});
+        setStatisticsErrors(data.statisticsErrors || []);
         setActivities(data.activities);
         setError(data.error);
       } catch (requestError) {
@@ -101,11 +127,11 @@ function Dashboard() {
 
     return [
       {
-        label: "Total Clinics",
+        label: "Customer Clinics",
         value: getDashboardMetric(metrics, ["totalClinics", "clinics", "clinicCount"]),
         icon: Building2,
         tone: "teal",
-        onClick: () => navigate("/superadmin/clinics"),
+        onClick: () => navigate("/superadmin/admins"),
       },
       {
         label: "Total Admins",
@@ -115,14 +141,31 @@ function Dashboard() {
         onClick: () => navigate("/superadmin/admins"),
       },
       {
-        label: "Revenue Summary",
-        value: formatCurrency(getDashboardMetric(metrics, ["totalRevenue", "revenue", "revenueSummary"])),
+        label: "Subscription Revenue",
+        value: formatCurrency(getDashboardMetric(metrics, ["subscriptionRevenue", "totalRevenue", "revenue", "revenueSummary"])), 
         icon: IndianRupee,
         tone: "amber",
         onClick: () => navigate("/superadmin/reports"),
       },
+      {
+        label: "Active Subscriptions",
+        value: getDashboardMetric(metrics, ["activeSubscriptions", "activeSubscriptionCount", "totalActiveSubscriptions"]),
+        icon: ShieldCheck,
+        tone: "teal",
+        onClick: () => navigate("/superadmin/subscriptions"),
+      },
+      {
+        label: "Expired Subscriptions",
+        value: getDashboardMetric(metrics, ["expiredSubscriptions", "expiredSubscriptionCount", "totalExpiredSubscriptions"]),
+        icon: Activity,
+        tone: "blue",
+        onClick: () => navigate("/superadmin/subscriptions"),
+      },
     ];
   }, [dashboard, navigate, summary]);
+
+  const activeChartView = dashboardChartViews.find((view) => view.key === selectedChart) || dashboardChartViews[0];
+  const greeting = getIndianGreeting();
 
   if (loading) {
     return <div className="sa-state">Loading Super Admin dashboard...</div>;
@@ -131,8 +174,13 @@ function Dashboard() {
   return (
     <div className="sa-dashboard-page" ref={pageRef}>
       <Header
-        title="Super Admin Dashboard"
-        subtitle="Platform-wide clinics, revenue, and operational activity."
+        title={`Good ${greeting.label} Super Admin !`}
+        subtitle="Platform customers, subscriptions, and Super Admin activity."
+        leading={(
+          <span className={`sa-dashboard-greeting-icon sa-dashboard-greeting-icon--${greeting.tone}`}>
+            {greeting.logo}
+          </span>
+        )}
       />
 
       {error ? <div className="sa-state sa-state--error">{error}</div> : null}
@@ -145,11 +193,28 @@ function Dashboard() {
             <div className="sa-panel__header">
               <div>
                 <h3>Charts & Statistics</h3>
-                <p>Revenue growth across all clinics.</p>
+                <p>Subscription revenue trend and platform statistics.</p>
               </div>
+              <label className="sa-dashboard-chart-picker">
+                <select value={selectedChart} onChange={(event) => setSelectedChart(event.target.value)} aria-label="Select dashboard chart">
+                  {dashboardChartViews.map((view) => (
+                    <option key={view.key} value={view.key}>{view.label}</option>
+                  ))}
+                </select>
+              </label>
             </div>
 
-            <Charts data={revenueData} dataKey="revenue" />
+            {statisticsErrors.length ? (
+              <div className="sa-dashboard-chart-error" role="alert">
+                Some dashboard statistics could not be loaded: {statisticsErrors.join(" ")}
+              </div>
+            ) : null}
+            <Charts
+              data={chartData[activeChartView.key] || (activeChartView.key === "revenueTrend" ? revenueData : [])}
+              dataKey={activeChartView.key === "revenueTrend" ? "revenue" : "value"}
+              type={activeChartView.type}
+              valueFormat={activeChartView.valueFormat}
+            />
           </div>
 
           <div className="sa-panel sa-panel--activity">

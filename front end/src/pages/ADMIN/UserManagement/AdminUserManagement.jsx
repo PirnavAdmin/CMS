@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   HeartPulse,
   RefreshCw,
@@ -6,6 +6,10 @@ import {
   Stethoscope,
   UserRound,
   UsersRound,
+  UserCheck,
+  ShieldCheck,
+  BadgeCheck,
+  UserCog,
 } from "lucide-react";
 import { apiUrl } from "../../../config/api";
 import {
@@ -349,8 +353,10 @@ function AdminUserManagement() {
   const [status, setStatus] = useState("All");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const latestLoadRequest = useRef(0);
 
   const loadUsers = useCallback(async () => {
+    const requestId = ++latestLoadRequest.current;
     setLoading(true);
     setError("");
     setSuccess("");
@@ -359,12 +365,14 @@ function AdminUserManagement() {
       let branchId = selectedBranchId;
       if (!branchId) {
         const branchOptions = buildBranchOptions(await fetchBranchesForHospital(getStoredHospitalId()));
+        if (requestId !== latestLoadRequest.current) return;
         setBranches(branchOptions);
         branchId = branchOptions[0]?.id || "";
         setSelectedBranchId(branchId);
       }
 
       if (!branchId) {
+        if (requestId !== latestLoadRequest.current) return;
         setUsers([]);
         setError("Branch not found for this clinic.");
         return;
@@ -397,6 +405,8 @@ function AdminUserManagement() {
         requestJson("Appointment/offline"),
         requestJson("Appointment/online"),
       ]);
+
+      if (requestId !== latestLoadRequest.current) return;
 
       const loginUsers =
         loginsResult.status === "fulfilled"
@@ -469,20 +479,24 @@ function AdminUserManagement() {
         const selectedBranchName = String(selectedBranch?.name || "").trim().toLowerCase();
         const userRole = String(user.role || "").trim().toLowerCase();
         const isPatient = userRole.includes("patient");
+        const assignedBranchIds = Array.from(new Set([userBranchId, ...userBranchIds].filter(Boolean)));
+        const hasAssignedBranch = assignedBranchIds.length > 0 || Boolean(userBranchName);
         const patientId = getPatientRecordId(user.raw || user);
         const patientPhone = getPatientRecordPhone(user.raw || user) || normalizePhone(user.phone);
         const appointmentBranch =
           patientBranchLookup[`id:${patientId}`] || patientBranchLookup[`phone:${patientPhone}`] || null;
         const belongsToBranch =
-          userBranchId === String(branchId) ||
-          userBranchIds.includes(String(branchId)) ||
-          (selectedBranchName && userBranchName === selectedBranchName) ||
-          (isPatient && (branchPatientIds.has(patientId) || branchPatientPhones.has(patientPhone)));
+          (assignedBranchIds.length > 0
+            ? assignedBranchIds.includes(String(branchId))
+            : selectedBranchName && userBranchName === selectedBranchName) ||
+          (!hasAssignedBranch &&
+            isPatient &&
+            (branchPatientIds.has(patientId) || branchPatientPhones.has(patientPhone)));
 
-        if (belongsToBranch && isPatient && appointmentBranch) {
-          user.branchId = user.branchId || appointmentBranch.branchId;
-          user.branchName = user.branchName || appointmentBranch.branchName;
-          user.branchLocation = user.branchLocation || appointmentBranch.branchLocation;
+        if (belongsToBranch) {
+          user.branchId = String(branchId);
+          user.branchName = selectedBranch?.name || appointmentBranch?.branchName || user.branchName;
+          user.branchLocation = appointmentBranch?.branchLocation || user.branchLocation;
         }
 
         return belongsToBranch;
@@ -490,10 +504,11 @@ function AdminUserManagement() {
 
       setUsers(mergeUsers(directoryUsers, loginUsers));
     } catch (loadError) {
+      if (requestId !== latestLoadRequest.current) return;
       setUsers([]);
       setError(loadError.message || "Unable to load user management data.");
     } finally {
-      setLoading(false);
+      if (requestId === latestLoadRequest.current) setLoading(false);
     }
   }, [branches, selectedBranchId]);
 
@@ -536,104 +551,132 @@ function AdminUserManagement() {
 
   return (
     <div className="admin-users-page">
-      <div className="admin-users-header">
+      <div className="admin-users-bg-overlay" />
+
+      {/* 3D Floating User Directory & Staff Telemetry Particles */}
+      <div className="admin-users-particle user-part-1" title="Hospital Staff Directory">
+        <UsersRound size={28} />
+      </div>
+      <div className="admin-users-particle user-part-2" title="User Role Profile">
+        <UserCheck size={26} />
+      </div>
+      <div className="admin-users-particle user-part-3" title="Staff Role Management">
+        <UserCog size={26} />
+      </div>
+      <div className="admin-users-particle user-part-4" title="Verified Staff Credentials">
+        <BadgeCheck size={26} />
+      </div>
+
+      <div className="admin-users-header" data-page-header>
         <div>
           <h2>User Management</h2>
           <p>{loading ? "Loading users..." : `${filteredUsers.length} Users Found`}</p>
         </div>
+        <label className="admin-heading-search admin-users-search">
+            <Search size={18} />
+            <input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search users by name, email, clinic, branch, or type..."
+            />
+          </label>
+
         <button className="admin-users-btn" type="button" onClick={loadUsers} disabled={loading}>
           <RefreshCw size={16} /> Refresh
         </button>
       </div>
 
-      <div className="admin-users-toolbar">
-        <label className="admin-users-search">
-          <Search size={16} />
-          <input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search users by name, email, clinic, branch, or type..."
-          />
-        </label>
-        <select value={status} onChange={(event) => setStatus(event.target.value)}>
-          <option value="All">All</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-        </select>
-        <select value={selectedBranchId} onChange={(event) => setSelectedBranchId(event.target.value)}>
-          <option value="">Select Branch</option>
-          {branches.map((branch) => (
-            <option key={branch.id} value={branch.id}>
-              {branch.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
       {success ? <div className="admin-users-success">{success}</div> : null}
       {error ? <div className="admin-users-error">{error}</div> : null}
 
-      <div className="admin-users-table">
-        <div className="admin-users-table-head">
-          <span>S.No.</span>
-          <span>Name</span>
-          <span>Email</span>
-          <span>Clinic</span>
-          <span>Branch</span>
-          <span>Role</span>
-          <span>Status</span>
-          <span>Last Active</span>
+      <div className="admin-users-table-card">
+        <div className="admin-users-toolbar">
+          
+          <select value={status} onChange={(event) => setStatus(event.target.value)}>
+            <option value="All">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+          </select>
+          <select
+            value={selectedBranchId}
+            onChange={(event) => {
+              latestLoadRequest.current += 1;
+              setSelectedBranchId(event.target.value);
+            }}
+          >
+            <option value="">Select Branch</option>
+            {branches.map((branch) => (
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        {loading ? <div className="admin-users-state">Loading user management data...</div> : null}
-        {!loading && !filteredUsers.length ? <div className="admin-users-state">No names found.</div> : null}
+        <div className="admin-users-table">
+          <div className="admin-users-table-head">
+            <span className="admin-users-sno-head">S.No.</span>
+            <span className="admin-users-name-head">Name</span>
+            <span className="admin-users-email-head">Email</span>
+            <span className="admin-users-clinic-head">Clinic</span>
+            <span className="admin-users-branch-head">Branch</span>
+            <span className="admin-users-role-head">Role</span>
+            <span className="admin-users-status-head">Status</span>
+            <span className="admin-users-active-head">Last Active</span>
+          </div>
 
-        {filteredUsers.map((user, index) => {
-          const avatarTone = index % 4;
-          const clinicBranding = getClinicInvoiceBranding({
-            clinicId: user.clinicId || user.hospitalId || getStoredHospitalId(),
-            clinicName: user.clinicName,
-          });
-          const roleMeta = getRoleMeta(user.role);
-          const RoleIcon = roleMeta.icon;
-          const lastActive = formatLastActive(user.lastActive || user.loginTime);
+          {loading ? <div className="admin-users-state">Loading user management data...</div> : null}
+          {!loading && !filteredUsers.length ? <div className="admin-users-state">No names found.</div> : null}
 
-          return (
-            <div className="admin-users-row" key={`${user.id}-${index}`}>
-              <span>{index + 1}</span>
-              <span className="admin-users-name-cell">
-                <span className={`admin-users-avatar admin-users-avatar--${avatarTone}`}>
-                  {getInitials(user.name || user.email)}
+          {filteredUsers.map((user, index) => {
+            const avatarTone = index % 4;
+            const clinicBranding = getClinicInvoiceBranding({
+              clinicId: user.clinicId || user.hospitalId || getStoredHospitalId(),
+              clinicName: user.clinicName,
+            });
+            const roleMeta = getRoleMeta(user.role);
+            const RoleIcon = roleMeta.icon;
+            const lastActive = formatLastActive(user.lastActive || user.loginTime);
+
+            return (
+              <div className="admin-users-row" key={`${user.id}-${index}`}>
+                <span className="admin-users-sno">{index + 1}</span>
+                <div className="admin-users-name-cell">
+                  <div className={`admin-users-avatar admin-users-avatar--${avatarTone}`}>
+                    {getInitials(user.name || user.email)}
+                  </div>
+                  <span className="admin-users-name-highlight">
+                    <b>{user.name || "-"}</b>
+                  </span>
+                </div>
+                <span className="admin-users-email" title={user.email || "-"}>
+                  {user.email || "-"}
                 </span>
-                <b>{user.name || "-"}</b>
-              </span>
-              <span className="admin-users-email" title={user.email || "-"}>
-                {user.email || "-"}
-              </span>
-              <span className="admin-users-clinic-cell">
-                <span className="admin-users-clinic-logo admin-users-clinic-logo--emerald">
-                  <img src={clinicBranding.logoUrl} alt="" />
+                <span className="admin-users-clinic-cell">
+                  <span className="admin-users-clinic-logo admin-users-clinic-logo--emerald">
+                    <img src={clinicBranding.logoUrl} alt="" />
+                  </span>
+                  <b>{user.clinicName || "-"}</b>
                 </span>
-                <b>{user.clinicName || "-"}</b>
-              </span>
-              <span>{user.branchName || "-"}</span>
-              <span>
-                <span className={`admin-users-role admin-users-role--${roleMeta.tone}`}>
-                  <RoleIcon size={15} />
-                  {roleMeta.label}
+                <span className="admin-users-branch-cell">{user.branchName || "-"}</span>
+                <span>
+                  <span className={`admin-users-role admin-users-role--${roleMeta.tone}`}>
+                    <RoleIcon size={15} />
+                    {roleMeta.label}
+                  </span>
                 </span>
-              </span>
-              <span>
-                <span className={`admin-users-status ${getDisplayStatus(user).toLowerCase() === "active" ? "is-online" : "is-offline"}`}>
-                  {getDisplayStatus(user)}
+                <span className="admin-users-status-cell">
+                  <span className={`admin-users-status ${getDisplayStatus(user).toLowerCase() === "active" ? "is-online" : "is-offline"}`}>
+                    {getDisplayStatus(user)}
+                  </span>
                 </span>
-              </span>
-              <span className="admin-users-last-active" title={formatDateTime(user.lastActive || user.loginTime)}>
-                {lastActive}
-              </span>
-            </div>
-          );
-        })}
+                <span className="admin-users-last-active" title={formatDateTime(user.lastActive || user.loginTime)}>
+                  {lastActive}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
     </div>

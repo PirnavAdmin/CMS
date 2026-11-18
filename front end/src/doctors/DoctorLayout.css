@@ -14,8 +14,10 @@
   height: 100vh;
   min-height: 100vh;
   overflow: hidden;
-  background: #f8fafc;
+  background: #f4f6f8 !important;
+  background-attachment: fixed !important;
   font-family: "Inter", "Segoe UI", sans-serif;
+  position: relative;
 }
 
 /* Body (topbar + content) */
@@ -27,6 +29,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: transparent;
 }
 
 /* Scrollable content area */
@@ -34,15 +37,97 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: var(--space-4, 16px);
-  background: #f8fafc;
+  padding: var(--space-4, 20px);
+  background: transparent;
 }
 
-/* Collapsed sidebar – hide it */
+.dr-layout,
+.dr-layout-body,
+.dr-layout-content {
+  background-color: #f4f6f8 !important;
+}
+
+/* Collapsed sidebar – keep a compact icon rail on desktop */
 .dr-layout--collapsed .dr-sidebar {
-  width: 0;
-  min-width: 0;
+  width: 144px;
+  min-width: 144px;
   overflow: hidden;
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-brand {
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+  margin: 14px 8px 0;
+  padding: 8px 4px 12px;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-brand > div:not(.dr-brand-icon) {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-brand-sub,
+.dr-layout--collapsed .dr-sidebar .dr-brand-name,
+.dr-layout--collapsed .dr-sidebar .dr-brand-branch {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-nav-label,
+.dr-layout--collapsed .dr-sidebar .dr-nav-tag {
+  display: none;
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-nav {
+  align-items: center;
+  padding-right: 8px;
+  padding-left: 8px;
+  transform: translateX(-8px);
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-nav-link {
+  width: 48px;
+  min-width: 48px;
+  justify-content: center;
+  gap: 0;
+  padding-right: 4px;
+  padding-left: 4px;
+  transform: none;
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-sidebar-profile {
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  margin: 8px 0 0;
+  padding: 10px 8px;
+  transform: translateX(-8px);
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-sidebar-profile-info {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+  overflow: visible;
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-sidebar-profile-info > p {
+  max-width: 100%;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.dr-layout--collapsed .dr-sidebar .dr-sidebar-profile-status {
+  justify-content: center;
 }
 
 .dr-sidebar-overlay {
@@ -70,7 +155,7 @@
     min-width: min(280px, 86vw);
     z-index: 300;
     transform: translateX(0);
-    box-shadow: 12px 0 30px rgba(15, 23, 42, 0.2);
+    box-shadow: 12px 0 30px color-mix(in srgb, var(--theme-primary-dark) 20%, transparent);
     transition: transform 0.25s ease;
   }
 
@@ -87,7 +172,7 @@
     inset: 0;
     z-index: 250;
     border: 0;
-    background: rgba(15, 23, 42, 0.38);
+    background: color-mix(in srgb, var(--theme-primary-dark) 38%, transparent);
     opacity: 1;
     transition: opacity 0.25s ease;
   }
@@ -96,4 +181,8 @@
     opacity: 0;
     pointer-events: none;
   }
+}
+
+@media screen and (max-width: 900px) {
+  html body .dr-layout-content:has(.role-single-screen) { overflow-y: auto !important; }
 }

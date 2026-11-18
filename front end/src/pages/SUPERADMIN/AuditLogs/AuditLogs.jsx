@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import DatePickerField from "../../../components/DatePickerField";
 import {
   FileText,
   LogIn,
@@ -68,6 +69,9 @@ const roleIcons = {
 };
 
 const normalizeKey = (value = "") => String(value || "").trim().toLowerCase();
+const normalizeRoleKey = (value = "") => String(value || "").trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
+const getAuditRoleKey = (row = {}) => normalizeRoleKey(firstValue(row.role, row.userRole, row.raw?.role, row.raw?.Role, row.raw?.userRole, row.raw?.UserRole));
+const isSuperAdminAuditLog = (row = {}) => getAuditRoleKey(row) === "superadmin";
 const UNASSIGNED_BRANCH_KEYS = new Set(["unassigned", "unassigned branch", "no branch", "n/a", "na", "-"]);
 
 const firstValue = (...values) => {
@@ -345,6 +349,7 @@ const isDataChangeLog = (row = {}) => {
 function AuditLogs() {
   const [search, setSearch] = useState("");
   const [systemAction, setSystemAction] = useState("All");
+  const [summaryFilter, setSummaryFilter] = useState("login");
   const [view, setView] = useState("login");
   const [auditLogs, setAuditLogs] = useState([]);
   const [allAuditLogs, setAllAuditLogs] = useState([]);
@@ -548,6 +553,7 @@ function AuditLogs() {
   const filteredRows = useMemo(() => {
     const query = search.trim().toLowerCase();
     return auditLogs.filter((log) => {
+      if (!isSuperAdminAuditLog(log)) return false;
       const matchesSearch = [
         log.userName,
         log.user,
@@ -561,20 +567,28 @@ function AuditLogs() {
       ]
         .some((value) => String(value).toLowerCase().includes(query));
       const matchesSystemAction = systemAction === "All" || getActionLabel(log) === systemAction;
+      const matchesSummaryFilter =
+        summaryFilter === "login"
+          ? Boolean(log.isLoginActivity)
+          : summaryFilter === "changes"
+            ? isDataChangeLog(log)
+            : true;
       return (
         matchesSearch &&
         matchesSystemAction &&
+        matchesSummaryFilter &&
         isWithinDateRange(log, startDate, endDate) &&
         matchesClinic(log, selectedClinic) &&
         matchesBranch(log, selectedBranch)
       );
     });
-  }, [auditLogs, endDate, search, selectedBranch, selectedClinic, startDate, systemAction]);
+  }, [auditLogs, endDate, search, selectedBranch, selectedClinic, startDate, summaryFilter, systemAction]);
 
   const scopedRows = useMemo(() => {
     const rows = allAuditLogs.length ? allAuditLogs : auditLogs;
     return rows.filter(
       (row) =>
+        isSuperAdminAuditLog(row) &&
         isWithinDateRange(row, startDate, endDate) &&
         matchesClinic(row, selectedClinic) &&
         matchesBranch(row, selectedBranch)
@@ -585,6 +599,7 @@ function AuditLogs() {
     const rows = loginHistory.length ? loginHistory : auditLogs.filter((row) => row.isLoginActivity);
     return rows.filter(
       (row) =>
+        isSuperAdminAuditLog(row) &&
         isWithinDateRange(row, startDate, endDate) &&
         matchesClinic(row, selectedClinic) &&
         matchesBranch(row, selectedBranch)
@@ -603,6 +618,7 @@ function AuditLogs() {
         detail: "All time records",
         icon: FileText,
         tone: "total",
+        filterKey: "all",
       },
       {
         label: "Login Activities",
@@ -610,6 +626,7 @@ function AuditLogs() {
         detail: "This period",
         icon: LogIn,
         tone: "login",
+        filterKey: "login",
       },
       {
         label: "Data Changes",
@@ -617,11 +634,19 @@ function AuditLogs() {
         detail: "This period",
         icon: PencilLine,
         tone: "changes",
+        filterKey: "changes",
       },
     ],
     [dashboardDataChanges, dashboardLoginActivities, dashboardTotalLogs]
   );
 
+  const handleSummaryFilterClick = (filterKey) => {
+    const nextFilter = summaryFilter === filterKey ? "all" : filterKey;
+    setSummaryFilter(nextFilter);
+    setView(nextFilter === "login" ? "login" : "all");
+    setSystemAction("All");
+    setCurrentPage(1);
+  };
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 10;
   const pageCount = Math.max(1, Math.ceil(filteredRows.length / pageSize));
@@ -640,12 +665,13 @@ function AuditLogs() {
       key: "serial",
       label: "S.No.",
       width: "42px",
+      align: "center",
       render: (_log, index) => index + 1,
     },
     {
       key: "userName",
       label: "User",
-      width: "minmax(105px, 0.75fr)",
+      width: "minmax(110px, 0.75fr)",
       render: (row) => {
         const name = row.userName || row.user || row.action || "-";
         const tone = getRoleTone(row.role);
@@ -660,7 +686,7 @@ function AuditLogs() {
     {
       key: "email",
       label: "Email Address",
-      width: "minmax(170px, 1fr)",
+      width: "minmax(160px, 1fr)",
       cellClassName: "sa-table-cell--nowrap",
       render: (row) => (
         <span title={row.email || row.userEmail || ""} className="sa-table-text-overflow">
@@ -671,7 +697,8 @@ function AuditLogs() {
     {
       key: "action",
       label: "Action",
-      width: "minmax(78px, 0.5fr)",
+      width: "minmax(80px, 0.5fr)",
+      align: "center",
       render: (row) => {
         const action = getActionLabel(row);
         return <span className={`sa-audit-pill sa-audit-pill--${getActionTone(action)}`}>{action}</span>;
@@ -680,7 +707,7 @@ function AuditLogs() {
     {
       key: "ipAddress",
       label: "IP Address",
-      width: "minmax(220px, 1.2fr)",
+      width: "minmax(180px, 1.1fr)",
       cellClassName: "sa-table-cell--nowrap",
       render: (row) => (
         <span title={row.ipAddress || ""} className="sa-table-text-overflow">
@@ -691,7 +718,8 @@ function AuditLogs() {
     {
       key: "isLoginActivity",
       label: "Login",
-      width: "52px",
+      width: "56px",
+      align: "center",
       render: (row) => (
         <span className={`sa-audit-login ${row.isLoginActivity ? "is-yes" : "is-no"}`}>
           {row.isLoginActivity ? "Yes" : "No"}
@@ -701,7 +729,7 @@ function AuditLogs() {
     {
       key: "timestamp",
       label: "Timestamp",
-      width: "minmax(130px, 0.82fr)",
+      width: "minmax(140px, 0.82fr)",
       cellClassName: "sa-table-cell--nowrap",
       render: (row) => (
         <span title={row.timestamp || ""} className="sa-table-text-overflow">
@@ -712,7 +740,8 @@ function AuditLogs() {
     {
       key: "role",
       label: "Role",
-      width: "minmax(92px, 0.58fr)",
+      width: "minmax(96px, 0.58fr)",
+      align: "center",
       render: (row) => {
         const role = row.role || "-";
         const tone = getRoleTone(role);
@@ -728,10 +757,9 @@ function AuditLogs() {
   ];
 
   return (
-    <>
+    <div className="sa-audit-logs-page">
       <Header
         title="Audit Logs"
-        subtitle="Trace backend audit records, login activity, IP address, and timestamps."
         action={
           <button className="sa-btn" type="button" onClick={() => loadLogs()} disabled={loading}>
             Refresh
@@ -742,16 +770,22 @@ function AuditLogs() {
         {summaryCards.map((card) => {
           const SummaryIcon = card.icon;
           return (
-            <article className="sa-audit-summary-card" key={card.label}>
+            <button
+              className={`sa-audit-summary-card${summaryFilter === card.filterKey ? " is-active" : ""}`}
+              key={card.label}
+              type="button"
+              onClick={() => handleSummaryFilterClick(card.filterKey)}
+              aria-pressed={summaryFilter === card.filterKey}
+            >
               <span className={`sa-audit-summary-icon sa-audit-summary-icon--${card.tone}`}>
                 <SummaryIcon size={22} />
               </span>
               <span>
                 <b>{card.label}</b>
                 <strong>{card.value}</strong>
-                <small>{card.detail}</small>
+                <small>{summaryFilter === card.filterKey ? "Showing below" : card.detail}</small>
               </span>
-            </article>
+            </button>
           );
         })}
       </div>
@@ -765,6 +799,7 @@ function AuditLogs() {
             aria-selected={view === item.key}
             onClick={() => {
               setView(item.key);
+              setSummaryFilter(item.key === "login" ? "login" : "all");
               setSystemAction("All");
             }}
           >
@@ -783,20 +818,18 @@ function AuditLogs() {
       <div className="sa-audit-scope-filter" aria-label="Audit clinic and branch filters">
         <label>
           <span>Start Date</span>
-          <input
-            type="date"
+          <DatePickerField
             value={startDate}
             max={endDate || undefined}
-            onChange={(event) => setStartDate(event.target.value)}
+            onChange={setStartDate}
           />
         </label>
         <label>
           <span>End Date</span>
-          <input
-            type="date"
+          <DatePickerField
             value={endDate}
             min={startDate || undefined}
-            onChange={(event) => setEndDate(event.target.value)}
+            onChange={setEndDate}
           />
         </label>
         <label>
@@ -888,7 +921,7 @@ function AuditLogs() {
           </button>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

@@ -1,33 +1,63 @@
-
+import { billValue, parsePatientBills } from "../utils/patientBills";
 import React, {
   useEffect,
   useState,
   useCallback,
+  useRef,
+  useLayoutEffect,
 } from "react";
 
 import "./Dashboard.css";
+import DashboardCards from "../components/superadmin/DashboardCards";
 
 import {
-  BarChart,
   Bar,
+  ComposedChart,
+  Area,
   CartesianGrid,
   XAxis,
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
 } from "recharts";
 
 import {
+  Pill,
+  Sun,
+  Moon,
+  RefreshCw,
+  ChevronDown,
   Stethoscope,
   Users,
   CalendarCheck,
   IndianRupee,
+  FlaskConical,
   UserPlus,
   UserCog,
   UserRoundCheck,
+  LayoutGrid,
+  Phone,
+  Mail,
+  Info,
+  ArrowRight,
+  Droplet,
+  Syringe,
+  Calendar,
+  TrendingUp,
+  Building2,
+  Pencil,
+  Zap,
+  BarChart3,
+  FileText,
+  CalendarPlus,
+  Plus,
+  Rocket,
+  Bell,
+  Send,
+  FileSpreadsheet,
+  TrendingDown,
+  Activity,
+  ChevronRight,
 } from "lucide-react";
 
 import { useLocation, useNavigate } from "react-router-dom";
@@ -38,6 +68,7 @@ import {
   formatIndianCurrency,
 } from "../utils/format";
 import { getClinicDisplayName } from "../utils/clinicDisplay";
+import { getRoleProfile } from "../profile/sessionProfile";
 import {
   fetchRevenueBillingRows,
   getRevenueAmount,
@@ -83,8 +114,6 @@ const toNumericAmount = (value) => {
   return Number.isFinite(number) ? number : 0;
 };
 
-const formatCurrencyShort = formatCompactIndianCurrency;
-
 const fetchWithTimeout = (url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) => {
   const controller = new AbortController();
   const timeoutId = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -94,12 +123,6 @@ const fetchWithTimeout = (url, options = {}, timeoutMs = REQUEST_TIMEOUT_MS) => 
     signal: controller.signal,
   }).finally(() => window.clearTimeout(timeoutId));
 };
-
-const getPaddedMax = (value) =>
-  Math.max(
-    1,
-    Math.ceil(Number(value || 0) * 1.25)
-  );
 
 const pickValue = (record = {}, keys = [], fallback = "") => {
   for (const key of keys) {
@@ -128,6 +151,8 @@ const pickValue = (record = {}, keys = [], fallback = "") => {
 };
 
 const parseList = (data) => {
+  if (data?.data && !Array.isArray(data.data)) return parseList(data.data);
+  for (const key of ["rows", "results", "records", "doctors", "patients", "pharmacists", "users"]) { if (Array.isArray(data?.[key])) return data[key]; }
   if (Array.isArray(data)) return data;
   if (Array.isArray(data?.data)) return data.data;
   if (Array.isArray(data?.items)) return data.items;
@@ -138,6 +163,33 @@ const parseList = (data) => {
   if (Array.isArray(data?.staff)) return data.staff;
   if (Array.isArray(data?.Staff)) return data.Staff;
   return [];
+};
+
+// Use the same OP/lab/pharmacy invoice sources as the Revenue Report.
+const loadDashboardRevenue = async (read, clinicId) => {
+  const sources = ["Billing/op", "Billing/lab", "Billing/pharmacy"];
+  const groups = await Promise.all(sources.map(async path => {
+    const invoices = new Map();
+    for (let page = 1; ; page++) {
+      const payload = await read(path + "?pageSize=10000&limit=10000&includeAll=true&all=true&page=" + page + "&pageNumber=" + page);
+      const rows = parsePatientBills(payload);
+      if (!rows) throw new Error("Unexpected revenue billing response");
+      rows.forEach((bill, index) => {
+        const owner = billValue(bill, "hospitalId", "HospitalId", "clinicId", "ClinicId", "hospital.id", "clinic.id");
+        if (owner !== "" && clinicId && String(owner) !== String(clinicId)) return;
+        const identity = billValue(bill, "billingId", "BillingId", "billId", "BillId", "id", "Id", "invoiceNo", "InvoiceNo", "invoiceNumber", "InvoiceNumber", "billNumber", "BillNumber");
+        const key = identity !== "" ? String(identity) : page + ":" + index;
+        const rawAmount = billValue(bill, "totalAmount", "TotalAmount", "grandTotal", "GrandTotal", "netAmount", "NetAmount", "payableAmount", "PayableAmount", "paymentAmount", "PaymentAmount", "paidAmount", "PaidAmount", "amount", "Amount", "total", "Total", "revenue", "Revenue");
+        const amount = typeof rawAmount === "number" ? rawAmount : Number(String(rawAmount).replace(/[,?\s]/g, ""));
+        if (rawAmount === "" || !Number.isFinite(amount)) throw new Error("A bill has no valid revenue amount");
+        invoices.set(key, amount);
+      });
+      const totalPages = Number(payload.totalPages || payload.pagination?.totalPages || payload.data?.totalPages || payload.meta?.totalPages || 1);
+      if (!rows.length || page >= totalPages) break;
+    }
+    return [...invoices.values()].reduce((sum, amount) => sum + amount, 0);
+  }));
+  return Math.round(groups.reduce((sum, amount) => sum + amount, 0) * 100) / 100;
 };
 
 const parseRevenueDashboard = (data = {}) => {
@@ -190,6 +242,18 @@ const isNurseRecord = (record = {}) => {
   );
 };
 
+const isLabTechnicianRecord = (record = {}) => {
+  const role = String(
+    pickValue(record, ["role", "Role", "staffRole", "StaffRole", "userRole", "UserRole"], "")
+  ).trim().toLowerCase();
+
+  if (role) return role === "labtechnician" || role === "labtech" || role === "lab" || role.includes("lab technician");
+
+  return Boolean(
+    pickValue(record, ["labTechnicianId", "LabTechnicianId", "labId", "LabId"], "")
+  );
+};
+
 const formatToday = () => {
   const today = new Date();
   return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
@@ -235,6 +299,59 @@ const getLocalDateKey = (value) => {
   return raw;
 };
 
+const toDateOnly = (value) => {
+  if (value instanceof Date) {
+    return new Date(value.getFullYear(), value.getMonth(), value.getDate());
+  }
+
+  const key = getLocalDateKey(value);
+  if (!key) return null;
+
+  const match = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!match) return null;
+
+  const [, year, month, day] = match;
+  return new Date(Number(year), Number(month) - 1, Number(day));
+};
+
+const isValidDate = (date) =>
+  date instanceof Date && !Number.isNaN(date.getTime());
+
+const isSameDay = (date, comparisonDate) =>
+  isValidDate(date) &&
+  isValidDate(comparisonDate) &&
+  date.getFullYear() === comparisonDate.getFullYear() &&
+  date.getMonth() === comparisonDate.getMonth() &&
+  date.getDate() === comparisonDate.getDate();
+
+const isThisWeek = (date, comparisonDate) => {
+  if (!isValidDate(date) || !isValidDate(comparisonDate)) return false;
+
+  const weekStart = new Date(comparisonDate);
+  weekStart.setDate(comparisonDate.getDate() - comparisonDate.getDay());
+  weekStart.setHours(0, 0, 0, 0);
+
+  const weekEnd = new Date(weekStart);
+  weekEnd.setDate(weekStart.getDate() + 7);
+
+  return date >= weekStart && date < weekEnd;
+};
+
+const isSameMonth = (date, comparisonDate) =>
+  isValidDate(date) &&
+  isValidDate(comparisonDate) &&
+  date.getFullYear() === comparisonDate.getFullYear() &&
+  date.getMonth() === comparisonDate.getMonth();
+
+const isSameYear = (date, comparisonDate) =>
+  isValidDate(date) &&
+  isValidDate(comparisonDate) &&
+  date.getFullYear() === comparisonDate.getFullYear();
+
+const isSameQuarter = (date, comparisonDate) =>
+  isSameYear(date, comparisonDate) &&
+  Math.floor(date.getMonth() / 3) === Math.floor(comparisonDate.getMonth() / 3);
+
 const countTodayAppointments = (data) => {
   const todayKey = formatToday();
   return parseList(data).filter((appointment) => getLocalDateKey(getAppointmentDateValue(appointment)) === todayKey).length;
@@ -266,54 +383,35 @@ const getClinicStatusText = (clinic = {}, dashboardData = {}) => {
 /* ================= COMPONENT ================= */
 
 function Dashboard() {
-  const navigate =
-    useNavigate();
-  const location =
-    useLocation();
-  const [dashboardData,
-    setDashboardData] =
-    useState(null);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const adminProfile = getRoleProfile("admin");
+  const adminName = adminProfile?.name || "Admin";
+  const storedHospitalId = getStoredHospitalId();
+  const storedClinicId = localStorage.getItem("hospitalId") || localStorage.getItem("clinicId") || "";
+  const storedClinicName = localStorage.getItem("hospitalName") || localStorage.getItem("clinicName") || "";
+  const hasClinic = Boolean(storedClinicId && storedClinicName);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const pageRef = useRef(null);
+  const [clock, setClock] = useState(() => new Date());
+  const [moduleCounts, setModuleCounts] = useState({});
+  const [dashboardError, setDashboardError] = useState("");
+  useEffect(() => { const timer = window.setInterval(() => setClock(new Date()), 30000); return () => window.clearInterval(timer); }, []);
+  useLayoutEffect(() => {
+    const page = pageRef.current;
+    if (!page) return;
+    const fit = () => page.style.setProperty("--admin-dashboard-height", Math.max(200, window.innerHeight - page.getBoundingClientRect().top - 12) + "px");
+    fit(); const observer = new ResizeObserver(fit);
+    if (page.parentElement) observer.observe(page.parentElement);
+    window.addEventListener("resize", fit);
+    return () => { observer.disconnect(); window.removeEventListener("resize", fit); };
+  });
+  const [timeFilter, setTimeFilter] = useState("month");
 
-  const [loading,
-    setLoading] =
-    useState(true);
-  const [clinicCardFlipped,
-    setClinicCardFlipped] =
-    useState(false);
   const openAddDoctor = () => {
     navigate("/doctors/add");
   };
-
-  useEffect(() => {
-    if (
-      loading ||
-      location.hash !== "#recent-activity"
-    ) {
-      return undefined;
-    }
-
-    const frameId =
-      window.requestAnimationFrame(
-        () => {
-          document
-            .getElementById(
-              "recent-activity"
-            )
-            ?.scrollIntoView({
-              behavior: "smooth",
-              block: "center",
-            });
-        }
-      );
-
-    return () =>
-      window.cancelAnimationFrame(
-        frameId
-      );
-  }, [
-    loading,
-    location.hash,
-  ]);
 
   const getDashboardMetricValue = (keys = [], fallback = 0) => {
     const value = pickValue(dashboardData, keys, fallback);
@@ -324,283 +422,84 @@ function Dashboard() {
     return Number.isFinite(parsed) ? parsed : fallback;
   };
 
-  const fetchDashboard = useCallback(
-    async () => {
-
-      try {
-        const token =
-          getAdminToken();
-        const headers = {
-          "ngrok-skip-browser-warning":
-            "true",
-          ...(token
-            ? {
-              Authorization:
-                `Bearer ${token}`,
-            }
-            : {}),
-        };
-
-        const storedHospitalId = getStoredHospitalId();
-        const urlParams = new URLSearchParams();
-        if (storedHospitalId) {
-          urlParams.set("hospitalId", String(storedHospitalId));
-          urlParams.set("clinicId", String(storedHospitalId));
-        }
-        const dashboardUrl = urlParams.toString() ? `${API}?${urlParams.toString()}` : API;
-
-        const response =
-          await fetchWithTimeout(dashboardUrl, {
-            headers,
-          });
-
-        if (!response.ok) {
-          throw new Error(
-            "Unable to load dashboard"
-          );
-        }
-
-        const data =
-          await response.json();
-
-        let merged = { ...data };
-        setDashboardData(merged);
-        setLoading(false);
-
-        const receptionistCount =
-          pickValue(
-            merged,
-            [
-              "totalReceptionists",
-              "receptionistCount",
-              "receptionists",
-              "receptionistTotal",
-              "receptionist_count",
-            ],
-            null
-          );
-        const nurseCount =
-          pickValue(
-            merged,
-            [
-              "totalNurses",
-              "nurseCount",
-              "nurses",
-              "nurseTotal",
-              "nurse_count",
-            ],
-            null
-          );
-
-        Promise.allSettled([
-          fetchWithTimeout(`${API}/ClincData`, { headers }, 2500),
-          fetchWithTimeout(APPOINTMENT_API, { headers }, 2500),
-          fetchWithTimeout(REVENUE_API, { headers }, 2500),
-          receptionistCount === null || receptionistCount === 0
-            ? fetchWithTimeout(RECEPTIONIST_API, { headers }, 2500)
-            : Promise.resolve(null),
-          nurseCount === null || nurseCount === 0
-            ? fetchWithTimeout(
-                storedHospitalId
-                  ? `${STAFF_API}?role=Nurse&hospitalId=${encodeURIComponent(storedHospitalId)}`
-                  : `${STAFF_API}?role=Nurse`,
-                { headers },
-                2500
-              )
-            : Promise.resolve(null),
-        ]).then(async ([clinicResult, appointmentResult, revenueResult, receptionistResult, nurseResult]) => {
-          let nextMerged = { ...data };
-          let hasDashboardRevenue = false;
-
-        if (clinicResult.status === "fulfilled" && clinicResult.value?.ok) {
-          const clinicData = await clinicResult.value.json().catch(() => ({}));
-          nextMerged = {
-            ...nextMerged,
-            clinic: {
-              ...(nextMerged.clinic || {}),
-              ...clinicData,
-            },
-            clinicName: nextMerged.clinicName || clinicData?.clinicName || nextMerged.clinic?.clinicName,
-          };
-        }
-
-        if (appointmentResult.status === "fulfilled" && appointmentResult.value?.ok) {
-          const appointmentData = await appointmentResult.value.json().catch(() => []);
-          nextMerged = {
-            ...nextMerged,
-            todayAppointments: countTodayAppointments(appointmentData),
-          };
-        }
-
-        if (revenueResult.status === "fulfilled" && revenueResult.value?.ok) {
-          const revenueData = await revenueResult.value.json().catch(() => ({}));
-          const parsedRevenue = parseRevenueDashboard(revenueData);
-          hasDashboardRevenue = parsedRevenue.totalRevenue > 0 || parsedRevenue.revenueTrend.length > 0;
-          nextMerged = {
-            ...nextMerged,
-            totalRevenue: parsedRevenue.totalRevenue || nextMerged.totalRevenue || 0,
-            revenueTrend: parsedRevenue.revenueTrend.length
-              ? parsedRevenue.revenueTrend
-              : nextMerged.revenueTrend,
-          };
-        }
-
-        const storedHospitalId = getStoredHospitalId();
-        const revenueReportParams = new URLSearchParams();
-        if (storedHospitalId) {
-          revenueReportParams.set("hospitalId", String(storedHospitalId));
-          revenueReportParams.set("clinicId", String(storedHospitalId));
-        }
-        const revenueReportUrl = revenueReportParams.toString()
-          ? `${REVENUE_REPORT_API}?${revenueReportParams.toString()}`
-          : REVENUE_REPORT_API;
-        const revenueReportResponse = await fetchWithTimeout(revenueReportUrl, { headers }, 2500).catch(() => null);
-        const revenueReportData = revenueReportResponse?.ok ? await revenueReportResponse.json().catch(() => []) : [];
-        const revenueReportRows = parseRevenueReportRows(revenueReportData);
-        const billingRows = await fetchRevenueBillingRows({ apiUrl, headers });
-        const scopedBillingRows = billingRows.filter((row) =>
-          passesRevenueFilters(row, { clinicId: storedHospitalId || "" })
-        );
-        const billingTotals = getRevenueTotals(scopedBillingRows);
-        const dashboardRevenueMissing = !hasDashboardRevenue && toNumericAmount(nextMerged.totalRevenue) <= 0;
-        if (dashboardRevenueMissing && revenueReportRows.length) {
-          const reportTotals = getRevenueTotals(revenueReportRows);
-          const reportTrend = groupRevenueByMonth(revenueReportRows);
-          const useBillingTotals = scopedBillingRows.length && billingTotals.revenue > reportTotals.revenue;
-          nextMerged = {
-            ...nextMerged,
-            totalRevenue: useBillingTotals ? billingTotals.revenue : reportTotals.revenue,
-            opRevenue: useBillingTotals ? billingTotals.opRevenue : reportTotals.opRevenue,
-            diagnosticRevenue: useBillingTotals ? billingTotals.diagnosticRevenue : reportTotals.diagnosticRevenue,
-            pharmacyRevenue: useBillingTotals ? billingTotals.pharmacyRevenue : reportTotals.pharmacyRevenue,
-            revenueTrend: (useBillingTotals ? groupRevenueByMonth(scopedBillingRows) : reportTrend).map((row) => ({
-              ...row,
-              name: row.month,
-            })),
-          };
-        } else if (dashboardRevenueMissing) {
-          if (scopedBillingRows.length) {
-            nextMerged = {
-              ...nextMerged,
-              totalRevenue: billingTotals.revenue,
-              opRevenue: billingTotals.opRevenue,
-              diagnosticRevenue: billingTotals.diagnosticRevenue,
-              pharmacyRevenue: billingTotals.pharmacyRevenue,
-              revenueTrend: groupRevenueByMonth(scopedBillingRows).map((row) => ({
-                ...row,
-                name: row.month,
-              })),
-            };
-          }
-        }
-
-        if (receptionistResult.status === "fulfilled" && receptionistResult.value?.ok) {
-          const receptionistData = await receptionistResult.value.json().catch(() => []);
-          const receptionists =
-            Array.isArray(receptionistData)
-              ? receptionistData
-              : receptionistData?.data || receptionistData?.rows || [];
-          nextMerged = {
-            ...nextMerged,
-            receptionistCount: receptionists.length,
-          };
-        }
-
-        if (nurseResult.status === "fulfilled" && nurseResult.value?.ok) {
-          const nurseData = await nurseResult.value.json().catch(() => []);
-          const nurseRows = parseList(nurseData);
-          const nurses = nurseRows.filter(isNurseRecord);
-          nextMerged = {
-            ...nextMerged,
-            nurseCount: nurses.length || nurseRows.length,
-          };
-        }
-
-          setDashboardData(nextMerged);
-        });
-
-      } catch (error) {
-
-        console.log(error);
-
-      } finally {
-        setLoading(false);
-      }
-    }, []
-  );
+  const fetchDashboard = useCallback(async () => {
+    setLoading(true);
+    setDashboardError("");
+    const token = getAdminToken();
+    const headers = { "ngrok-skip-browser-warning": "true", ...(token ? { Authorization: "Bearer " + token } : {}) };
+    const scopedUrl = (path) => {
+      const url = apiUrl(path);
+      return storedHospitalId ? url + (url.includes("?") ? "&" : "?") + "hospitalId=" + encodeURIComponent(storedHospitalId) : url;
+    };
+    const read = async (path) => {
+      const response = await fetchWithTimeout(scopedUrl(path), { headers, cache: "no-store" }, 10000);
+      if (!response.ok) throw new Error(path + " (HTTP " + response.status + ")");
+      return response.json();
+    };
+    const scopedRows = (payload) => parseList(payload).filter(row => {
+      const clinicId = row.hospitalId ?? row.HospitalId ?? row.clinicId ?? row.ClinicId;
+      return !clinicId || !storedHospitalId || String(clinicId) === String(storedHospitalId);
+    });
+    const modules = [
+      ["Doctors", "Doctor"], ["Patients", "Patient"], ["Nurses", "Staff?role=Nurse"],
+      ["Receptionists", "Receptionist"], ["Lab Technicians", "Staff/lab-technicians"], ["Pharmacists", "pharmacists"],
+    ];
+    const results = await Promise.allSettled([
+      read("Dashboard"), ...modules.map(([,path]) => read(path)),
+      read("Appointment"), read("Dashboard/ClincData"), read("Dashboard/revenue"),
+      storedHospitalId ? loadDashboardRevenue(read, storedHospitalId) : Promise.reject(new Error("Clinic is not selected")),
+    ]);
+    let next = results[0].status === "fulfilled" ? (results[0].value?.data ?? results[0].value) : {};
+    const counts = {};
+    const failed = [];
+    modules.forEach(([label], index) => {
+      const result = results[index + 1];
+      if (result.status !== "fulfilled") { counts[label] = null; failed.push(label); return; }
+      let rows = scopedRows(result.value);
+      if (label === "Nurses") rows = rows.filter(isNurseRecord);
+      counts[label] = rows.length;
+    });
+    const appointments = results[7];
+    if (appointments.status === "fulfilled") {
+      const rows = scopedRows(appointments.value);
+      next = { ...next, recentAppointmentsList: rows, todayAppointments: countTodayAppointments(rows) };
+    }
+    if (results[8].status === "fulfilled") next.clinic = { ...(next.clinic || {}), ...(results[8].value?.data ?? results[8].value) };
+    if (results[9].status === "fulfilled") next = { ...next, ...parseRevenueDashboard(results[9].value) };
+    const revenue = results[10];
+    next.revenueAvailable = revenue.status === "fulfilled";
+    next.totalRevenue = next.revenueAvailable ? revenue.value : null;
+    if (!next.revenueAvailable) failed.push("Revenue (OP, lab and pharmacy bills)");
+    setModuleCounts(counts);
+    setDashboardData(next);
+    if (failed.length) setDashboardError("Unable to load: " + failed.join(", ") + ". Use Refresh to retry.");
+    setLoading(false);
+  }, [storedHospitalId]);
 
   useEffect(() => {
     fetchDashboard();
   }, [fetchDashboard]);
-  /* ================= LOADING ================= */
 
-  // Helper skeleton component (lightweight) used for placeholders while loading
-  const Skeleton = ({ width = "100%", height = 16, style = {} }) => (
-    <div
-      className="skeleton"
-      style={{ width, height, borderRadius: 6, ...style }}
-    />
-  );
+  /* ================= CHART & RECORD COMPUTATION ================= */
 
-  /* ================= CHART DATA ================= */
+  const totalRevenue = dashboardData?.totalRevenue ?? 0;
+  const revenueDisplay = loading ? "..." : dashboardData?.revenueAvailable ? formatCurrency(totalRevenue) : "Unavailable";
 
-  const revenueData =
-    dashboardData?.revenueTrend?.map(
-      (item) => ({
-        name:
-          item.month,
-        value:
-          item.revenue,
-      })
-    ) || [];
-
-  const totalRevenue =
-    dashboardData?.totalRevenue || 0;
-
-  const growthData =
-    dashboardData?.growthChart?.map(
-      (item) => ({
-        name:
-          item.month,
-        patients:
-          item.patients,
-        appointments:
-          item.appointments,
-      })
-    ) || [];
-
-  const pieData = [
-    {
-      name:
-        "Available",
-      value:
-        dashboardData
-          ?.clinicStatus
-          ?.available || 0,
-      color:
-        "#0ea5a5",
-    },
-    {
-      name:
-        "Busy",
-      value:
-        dashboardData
-          ?.clinicStatus
-          ?.busy || 0,
-      color:
-        "#3b82f6",
-    },
-    {
-      name:
-        "On Leave",
-      value:
-        dashboardData
-          ?.clinicStatus
-          ?.onLeave || 0,
-      color:
-        "#f59e0b",
-    },
-  ];
+  const chartPoints = dashboardData?.growthChart?.length
+    ? dashboardData.growthChart.map((item) => ({
+        name: item.month,
+        value: item.appointments || item.patients || 0,
+      }))
+    : [
+        { name: "Aug 28", value: 4 },
+        { name: "Aug 29", value: 7 },
+        { name: "Aug 30", value: 5 },
+        { name: "Aug 31", value: 9 },
+        { name: "Sep 01", value: 8 },
+        { name: "Sep 02", value: 12 },
+        { name: "Sep 03", value: 9 },
+        { name: "Sep 04", value: 11 },
+      ];
 
   const clinicRecord =
     dashboardData?.clinic ||
@@ -623,749 +522,151 @@ function Dashboard() {
     contactNumber:
       pickValue(
         dashboardData?.clinic || clinicRecord,
-        [
-          "contactNumber",
-          "phoneNumber",
-          "phone",
-          "mobile",
-          "contact",
-        ],
-        pickValue(
-          dashboardData,
-          [
-            "clinicContactNumber",
-            "contactNumber",
-            "phoneNumber",
-            "phone",
-          ],
-          "-"
-        )
+        ["contactNumber", "phoneNumber", "phone", "mobile", "contact"],
+        pickValue(dashboardData, ["clinicContactNumber", "contactNumber", "phone"], "-")
       ),
     email:
       pickValue(
         dashboardData?.clinic || clinicRecord,
         ["email", "clinicEmail", "hospitalEmail"],
-        pickValue(
-          dashboardData,
-          ["clinicEmail", "email", "hospitalEmail"],
-          "-"
-        )
+        pickValue(dashboardData, ["clinicEmail", "email"], "-")
       ),
-    status:
-      getClinicStatusText(
-        dashboardData?.clinic || clinicRecord,
-        dashboardData
-      ),
+    status: getClinicStatusText(dashboardData?.clinic || clinicRecord, dashboardData),
     address:
       pickValue(
         dashboardData?.clinic || clinicRecord,
-        [
-          "fullAddress",
-          "address",
-          "clinicAddress",
-          "hospitalAddress",
-        ],
-        pickValue(
-          dashboardData,
-          [
-            "clinicFullAddress",
-            "fullAddress",
-            "clinicAddress",
-            "address",
-          ],
-          "-"
-        )
+        ["fullAddress", "address", "clinicAddress", "hospitalAddress"],
+        pickValue(dashboardData, ["clinicFullAddress", "fullAddress", "address"], "-")
       ),
   };
 
-  const summaryCards = [
-    {
-      label:
-        "Today's Appointments",
-      value:
-        formatNumber(
-          dashboardData?.todayAppointments
-        ),
-      icon:
-        CalendarCheck,
-      color:
-        "blue",
-      route:
-        "/appointments",
-    },
-    {
-      label:
-        "Total Revenue",
-      value:
-        formatCurrency(
-          totalRevenue
-        ),
-      icon:
-        IndianRupee,
-      color:
-        "purple",
-      route:
-        "/reports",
-    },
-    {
-      label:
-        "Total Doctors",
-      value:
-        formatNumber(
-          dashboardData?.totalDoctors
-        ),
-      icon:
-        Stethoscope,
-      color:
-        "teal",
-      route:
-        "/doctors",
-    },
-    {
-      label:
-        "Total Receptionists",
-      value:
-        formatNumber(
-          getDashboardMetricValue(
-            [
-              "totalReceptionists",
-              "receptionistCount",
-              "receptionists",
-              "receptionistTotal",
-              "receptionist_count",
-              "receptionistCount",
-            ],
-            0
-          )
-        ),
-      icon:
-        Users,
-      color:
-        "green",
-      route:
-        "/receptionists",
-    },
-    {
-      label:
-        "Total Nurses",
-      value:
-        formatNumber(
-          getDashboardMetricValue(
-            [
-              "totalNurses",
-              "nurseCount",
-              "nurses",
-              "nurseTotal",
-              "nurse_count",
-            ],
-            0
-          )
-        ),
-      icon:
-        UserCog,
-      color:
-        "amber",
-      route:
-        "/nurses",
-    },
-    {
-      label:
-        "Total Patients",
-      value:
-        formatNumber(
-          dashboardData?.totalPatients
-        ),
-      icon:
-        UserRoundCheck,
-      color:
-        "orange",
-      route:
-        "/patients",
-    },
-  ];
+  const receptionistCount = getDashboardMetricValue(
+    [
+      "totalReceptionists",
+      "receptionistCount",
+      "receptionists",
+      "receptionistTotal",
+      "receptionist_count",
+    ],
+    0
+  );
 
+  const nurseCount = getDashboardMetricValue(
+    [
+      "totalNurses",
+      "nurseCount",
+      "nurses",
+      "nurseTotal",
+      "nurse_count",
+    ],
+    0
+  );
+
+  const labTechnicianCount = getDashboardMetricValue(
+    [
+      "totalLabTechnicians",
+      "labTechnicianCount",
+      "labTechnicians",
+      "labtechnicians",
+      "labTechCount",
+      "labTechs",
+      "lab_count",
+    ],
+    0
+  );
+
+  const appointmentRows = Array.isArray(dashboardData?.recentAppointmentsList)
+    ? dashboardData.recentAppointmentsList
+    : [];
+
+  const appointmentDates = appointmentRows
+    .map((appointment) => toDateOnly(getAppointmentDateValue(appointment)))
+    .filter(Boolean);
+  const today = toDateOnly(new Date());
+  const todayAppointmentCount = dashboardData?.todayAppointments ?? appointmentDates.filter((date) => isSameDay(date, today)).length;
+  const weekAppointmentCount = appointmentDates.filter((date) => isThisWeek(date, today)).length;
+  const monthAppointmentCount = appointmentDates.filter((date) => isSameMonth(date, today)).length;
+  const selectedPeriodAppointmentCount =
+    timeFilter === "year"
+      ? appointmentDates.filter((date) => isSameYear(date, today)).length
+      : timeFilter === "quarter"
+        ? appointmentDates.filter((date) => isSameQuarter(date, today)).length
+        : monthAppointmentCount;
+  const totalPatients = dashboardData?.totalPatients ?? 0;
+  const consultationCount = selectedPeriodAppointmentCount;
+  const growthValue = chartPoints.length
+    ? chartPoints.reduce((sum, point) => sum + toNumericAmount(point.value), 0)
+    : selectedPeriodAppointmentCount;
+
+  const displayRecentAppointments = appointmentRows.length
+    ? appointmentRows.slice(0, 4).map((apt) => ({
+        name: apt.patientName || apt.patient?.name || apt.name || "Unknown Patient",
+        subtitle: apt.chiefComplaints || apt.complaint || apt.reason || "General Checkup",
+        time: apt.time || apt.slotTime || apt.appointmentTime || "--",
+        date: getLocalDateKey(getAppointmentDateValue(apt)) || "--",
+        status: apt.status || apt.appointmentStatus || "Scheduled",
+      }))
+    : [];
+
+  const Skeleton = ({ width = "100%", height = 16, style = {} }) => (
+    <div className="skeleton" style={{ width, height, borderRadius: 6, ...style }} />
+  );
+
+  if (!hasClinic) {
+    return (
+      <div className="db-dashboard db-no-clinic-dashboard">
+        <div className="db-3d-bg-overlay" />
+        <section className="db-no-clinic-card">
+          <div className="db-no-clinic-icon">
+            <Building2 size={30} />
+          </div>
+          <div>
+            <h1 className="db-title">Clinic Setup Required</h1>
+            <p className="db-subtitle">
+              Welcome back, {adminName}. Create your clinic first, then dashboard counts and clinic modules will load from that clinic.
+            </p>
+          </div>
+          <button type="button" className="db-no-clinic-button" onClick={() => navigate("/clinic/setup")}>
+            <Plus size={18} />
+            Create Clinic
+          </button>
+        </section>
+      </div>
+    );
+  }
+
+  const hour = clock.getHours();
+  const greeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
+  const GreetingIcon = hour >= 17 ? Moon : Sun;
+  const cards = [
+    { label: "Doctors", value: getDashboardMetricValue(["totalDoctors", "doctorCount"]), icon: Stethoscope, path: "/doctors" },
+    { label: "Patients", value: totalPatients, icon: Users, path: "/patients" },
+    { label: "Nurses", value: nurseCount, icon: UserCog, path: "/nurses" },
+    { label: "Receptionists", value: receptionistCount, icon: UserRoundCheck, path: "/receptionists" },
+    { label: "Lab Technicians", value: labTechnicianCount, icon: FlaskConical, path: "/lab-technicians" },
+    { label: "Pharmacists", value: 0, icon: Pill, path: "/pharmacists" },
+    { label: "Revenue", icon: IndianRupee, path: "/RevenueReport/daily", className: "admin-revenue-card" },
+  ].map(card => ({ ...card, value: loading ? "..." : card.label === "Revenue" ? revenueDisplay : moduleCounts[card.label] == null ? "Unavailable" : formatNumber(moduleCounts[card.label]), tone: "teal", onClick: () => navigate(card.path) }));
   return (
-
-    <div className="dashboard">
-
-      {/* HEADER */}
-
-      <div className="dashboard-header">
-
-        <div>
-
-          <h1>
-            Dashboard
-          </h1>
-
-          <p>
-            Welcome back —
-            here's what's
-            happening at
-            the clinic today.
-          </p>
-
-        </div>
-
-        <button
-          type="button"
-          className="dashboard-action-button"
-          onClick={openAddDoctor}
-          title="Add doctor"
-        >
-          <UserPlus size={16} />
-          Add Doctor
-        </button>
-
+    <div className="db-dashboard db-admin-overview" ref={pageRef}>
+      <header className="admin-overview-heading" data-page-header><span className="admin-greeting-icon"><GreetingIcon size={27}/></span><div><h1>{greeting}, {adminName}!</h1><p>Here's what's happening at your clinic today.</p></div><button type="button" className="admin-refresh" onClick={fetchDashboard} disabled={loading}><RefreshCw size={16}/><span>Refresh</span></button></header>
+      <div className="admin-metrics-section"><DashboardCards cards={cards}/>{dashboardError && <p className="admin-count-error" role="status">{dashboardError}</p>}</div>
+      <div className="admin-overview-columns">
+        <section className="admin-detail-section"><div className="admin-section-heading"><h2>Clinic Information</h2><Building2 size={19}/></div>
+          <dl className="admin-clinic-details">{[["Clinic Name",clinicInfo.name],["Contact Number",clinicInfo.contactNumber],["Email",clinicInfo.email],["Address",clinicInfo.address]].map(([label,value]) => <div key={label}><dt>{label}</dt><dd>{loading ? "Loading..." : value}</dd></div>)}</dl>
+          <div className="admin-section-footer"><span>Clinic Status</span><strong className="admin-status-tag">{clinicInfo.status}</strong></div>
+        </section>
+        <section className="admin-detail-section" id="recent-activity"><div className="admin-section-heading"><h2>Recent Appointments</h2><button type="button" onClick={() => navigate("/appointments")}>View All <ArrowRight size={13}/></button></div>
+          <div className="admin-appointment-list">{loading ? <p className="admin-empty">Loading appointments...</p> : displayRecentAppointments.length ? displayRecentAppointments.map((apt,index) => <article className="admin-appointment" key={index}><span className="admin-appointment-icon"><UserPlus size={18}/></span><div><strong>{apt.name}</strong><p>{apt.subtitle}</p><small>{apt.date}{" | "}{apt.time}</small></div><span className="admin-status-tag">{apt.status}</span></article>) : <p className="admin-empty">No recent appointments.</p>}</div>
+          <div className="admin-section-footer admin-appointment-totals">{[["Today",todayAppointmentCount],["This Week",weekAppointmentCount],["This Month",monthAppointmentCount]].map(([label,value]) => <div key={label}><span>{label}</span><strong>{formatNumber(value)}</strong></div>)}</div>
+        </section>
+        <section className="admin-detail-section admin-clinic-statistics"><div className="admin-section-heading"><h2>Clinic Status</h2><select aria-label="Statistics period" value={timeFilter} onChange={e => setTimeFilter(e.target.value)}><option value="month">This Month</option><option value="quarter">This Quarter</option><option value="year">This Year</option></select></div>
+          <div className="admin-chart-summary"><span>Appointments</span><strong>{formatNumber(selectedPeriodAppointmentCount)}</strong></div>
+          <div className="admin-overview-chart"><ResponsiveContainer width="100%" height="100%"><ComposedChart data={dashboardData?.growthChart?.length ? chartPoints : []} margin={{top:12,right:8,left:-25,bottom:0}}><CartesianGrid stroke="#dce8e9" strokeDasharray="3 3" vertical={false}/><XAxis dataKey="name" tick={{fontSize:10}} tickLine={false} axisLine={false}/><YAxis tick={{fontSize:10}} tickLine={false} axisLine={false}/><Tooltip/><Area type="monotone" dataKey="value" name="Appointments" stroke="var(--theme-primary-dark)" fill="var(--theme-primary-soft)" strokeWidth={2}/></ComposedChart></ResponsiveContainer></div>
+          <div className="admin-section-footer admin-stat-totals"><div><span>Patients</span><strong>{formatNumber(totalPatients)}</strong></div><div><span>Revenue</span><strong>{revenueDisplay}</strong></div></div>
+        </section>
       </div>
-
-      {/* STATS */}
-
-      <div className="dashboard-stats">
-
-        <div
-          className={`dashboard-clinic-flip-card ${clinicCardFlipped ? "is-flipped" : ""}`}
-          onClick={() => setClinicCardFlipped((prev) => !prev)}
-          role="button"
-          tabIndex={0}
-          onKeyDown={(event) => {
-            if (event.key === "Enter" || event.key === " ") {
-              setClinicCardFlipped((prev) => !prev);
-            }
-          }}
-          aria-label="Flip clinic details card"
-        >
-          <div className="dashboard-clinic-flip-card-inner">
-            <div className="dashboard-clinic-flip-front">
-              <div className="dashboard-clinic-flip-header">Clinic Info</div>
-              <div className="dashboard-clinic-flip-row">
-                <span className="dashboard-clinic-flip-label">Clinic Name</span>
-                <span className="dashboard-clinic-flip-value">
-                  {loading ? <Skeleton width="70%" height={20} /> : clinicInfo.name || "-"}
-                </span>
-              </div>
-              <div className="dashboard-clinic-flip-row">
-                <span className="dashboard-clinic-flip-label">Contact Number</span>
-                <span className="dashboard-clinic-flip-value">
-                  {loading ? <Skeleton width="50%" height={18} /> : clinicInfo.contactNumber || "-"}
-                </span>
-              </div>
-              <div className="dashboard-clinic-flip-row">
-                <span className="dashboard-clinic-flip-label">Email</span>
-                <span className="dashboard-clinic-flip-value">
-                  {loading ? <Skeleton width="60%" height={18} /> : clinicInfo.email || "-"}
-                </span>
-              </div>
-              <div className="dashboard-clinic-flip-row">
-                <span className="dashboard-clinic-flip-label">Status</span>
-                <span className={`dashboard-clinic-flip-status ${clinicInfo.status?.toLowerCase() === "active" ? "active" : "inactive"}`}>
-                  {loading ? <Skeleton width={76} height={18} /> : clinicInfo.status || "-"}
-                </span>
-              </div>
-              <div className="dashboard-clinic-flip-footer">
-                Tap or press Enter to view full address.
-              </div>
-            </div>
-            <div className="dashboard-clinic-flip-back">
-              <div className="dashboard-clinic-flip-header">Full Address</div>
-              <div className="dashboard-clinic-flip-address">
-                {loading ? <Skeleton width="100%" height={18} /> : clinicInfo.address || "-"}
-              </div>
-              <div className="dashboard-clinic-flip-footer">
-                Tap or press Enter to flip back.
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {summaryCards.map(
-          ({
-            label,
-            value,
-            icon: Icon,
-            color,
-            route,
-          }) => (
-
-            <div
-              className="dashboard-stat-card"
-              key={label}
-              role={route ? "button" : undefined}
-              tabIndex={route ? 0 : undefined}
-              onClick={() => route && navigate(route)}
-              onKeyDown={(event) => {
-                if ((event.key === "Enter" || event.key === " ") && route) {
-                  navigate(route);
-                }
-              }}
-              aria-label={route ? `Go to ${label}` : label}
-            >
-
-              <div
-                className={`dashboard-stat-icon dashboard-stat-icon--${color || "sky"}`}
-              >
-
-                <Icon size={18} />
-
-              </div>
-
-                <div className="dashboard-stat-body">
-
-                <p className="dashboard-stat-label">
-                  {label}
-                </p>
-
-                <h2 className="dashboard-stat-value">
-                  {loading ? <Skeleton width={80} height={28} /> : value}
-                </h2>
-
-              </div>
-
-            </div>
-          )
-        )}
-
-      </div>
-
-      {/* TOP GRID */}
-
-      <div className="dashboard-chart-grid">
-
-        {/* REVENUE TREND */}
-
-        <div className="dashboard-panel">
-
-          <div className="dashboard-panel-header">
-
-            <div>
-
-              <h3>
-                Revenue Trend
-              </h3>
-
-              <p>
-                Monthly collections
-              </p>
-
-            </div>
-
-            <div className="dashboard-panel-metric">
-              {formatCurrency(totalRevenue)}
-            </div>
-
-          </div>
-
-          <div className="dashboard-chart">
-
-            {loading ? (
-              <div style={{ height: 240 }}>
-                <Skeleton width="100%" height={240} />
-              </div>
-            ) : (
-              <ResponsiveContainer
-                width="100%"
-                height={240}
-              >
-
-                <BarChart
-                  data={revenueData}
-                  margin={{
-                    top: 18,
-                    right: 26,
-                    left: 8,
-                    bottom: 4,
-                  }}
-                >
-
-                <CartesianGrid
-                  stroke="#e2e8f0"
-                  strokeDasharray="3 3"
-                  vertical={false}
-                />
-
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 12,
-                  }}
-                  dy={8}
-                />
-
-                <YAxis
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 12,
-                  }}
-                  tickFormatter={formatCurrencyShort}
-                  width={54}
-                  domain={[
-                    0,
-                    getPaddedMax,
-                  ]}
-                />
-
-                <Tooltip
-                  cursor={{
-                    fill: "rgba(15, 118, 110, 0.08)",
-                  }}
-                  contentStyle={{
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 10,
-                    boxShadow:
-                      "0 12px 30px rgba(15, 23, 42, 0.12)",
-                  }}
-                  formatter={(value) => [
-                    formatCurrency(value),
-                    "Revenue",
-                  ]}
-                />
-
-                <Bar
-                  dataKey="value"
-                  fill="#0f766e"
-                  barSize={58}
-                  radius={[
-                    10,
-                    10,
-                    0,
-                    0,
-                  ]}
-                />
-
-              </BarChart>
-
-            </ResponsiveContainer>
-
-          )}
-
-          </div>
-
-        </div>
-
-        {/* CLINIC STATUS */}
-
-        <div className="dashboard-panel">
-
-          <div className="dashboard-panel-header">
-
-            <div>
-
-              <h3>
-                Clinic Status
-              </h3>
-
-              <p>
-                Doctor availability
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="dashboard-status-chart">
-            {loading ? (
-              <Skeleton width="100%" height={180} />
-            ) : (
-              <ResponsiveContainer
-                width="100%"
-                height={180}
-              >
-
-                <PieChart>
-
-                  <Pie
-                    data={pieData}
-                    innerRadius={64}
-                    outerRadius={92}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-
-                    {pieData.map(
-                      (
-                        entry,
-                        index
-                      ) => (
-
-                        <Cell
-                          key={index}
-                          fill={
-                            entry.color
-                          }
-                        />
-                      )
-                    )}
-
-                  </Pie>
-
-                </PieChart>
-
-              </ResponsiveContainer>
-            )}
-
-          </div>
-
-          {/* LEGEND */}
-
-          <div className="dashboard-status-legend">
-
-            <span>
-
-              <b
-                style={{
-                  color:
-                    "#0ea5a5",
-                }}
-              >
-                ●
-              </b>
-
-              {" "}Available
-
-            </span>
-
-            <span>
-
-              <b
-                style={{
-                  color:
-                    "#3b82f6",
-                }}
-              >
-                ●
-              </b>
-
-              {" "}Busy
-
-            </span>
-
-            <span>
-
-              <b
-                style={{
-                  color:
-                    "#f59e0b",
-                }}
-              >
-                ●
-              </b>
-
-              {" "}On Leave
-
-            </span>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* BOTTOM GRID */}
-
-      <div className="dashboard-bottom-grid">
-
-        {/* USER GROWTH */}
-
-        <div className="dashboard-panel dashboard-panel--large">
-
-          <div className="dashboard-panel-header">
-
-            <div>
-
-              <h3>
-                User Growth
-              </h3>
-
-              <p>
-                Patients and appointments by month
-              </p>
-
-            </div>
-
-            <div className="dashboard-legend-inline">
-
-              <span className="dashboard-legend-chip dashboard-legend-chip--teal">
-                Patients
-              </span>
-
-              <span className="dashboard-legend-chip dashboard-legend-chip--blue">
-                Appointments
-              </span>
-
-            </div>
-
-          </div>
-
-          <div className="dashboard-chart">
-            {loading ? (
-              <Skeleton width="100%" height={240} />
-            ) : (
-
-              <ResponsiveContainer
-                width="100%"
-                height={240}
-              >
-
-                <BarChart
-                  data={growthData}
-                  margin={{
-                    top: 18,
-                    right: 28,
-                    left: 0,
-                    bottom: 4,
-                  }}
-                >
-
-                <CartesianGrid
-                  stroke="#e2e8f0"
-                  strokeDasharray="3 3"
-                  vertical={false}
-                />
-
-                <XAxis
-                  dataKey="name"
-                  axisLine={false}
-                  tickLine={false}
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 12,
-                  }}
-                  dy={8}
-                />
-
-                <YAxis
-                  axisLine={false}
-                  allowDecimals={false}
-                  tickLine={false}
-                  tick={{
-                    fill: "#64748b",
-                    fontSize: 12,
-                  }}
-                  width={36}
-                  domain={[
-                    0,
-                    getPaddedMax,
-                  ]}
-                />
-
-                <Tooltip
-                  cursor={{
-                    fill: "rgba(37, 99, 235, 0.06)",
-                  }}
-                  contentStyle={{
-                    border: "1px solid #e2e8f0",
-                    borderRadius: 10,
-                    boxShadow:
-                      "0 12px 30px rgba(15, 23, 42, 0.12)",
-                  }}
-                  formatter={(value, name) => [
-                    formatNumber(value),
-                    name,
-                  ]}
-                />
-
-                <Bar
-                  dataKey="patients"
-                  name="Patients"
-                  fill="#0f766e"
-                  barSize={52}
-                  radius={[
-                    8,
-                    8,
-                    0,
-                    0,
-                  ]}
-                />
-
-                <Bar
-                  dataKey="appointments"
-                  name="Appointments"
-                  fill="#2563eb"
-                  barSize={52}
-                  radius={[
-                    8,
-                    8,
-                    0,
-                    0,
-                  ]}
-                />
-
-              </BarChart>
-
-              </ResponsiveContainer>
-
-            )}
-
-          </div>
-
-        </div>
-
-        {/* RECENT ACTIVITY */}
-
-        <div
-          id="recent-activity"
-          className="dashboard-panel dashboard-panel--activity"
-        >
-
-          <div className="dashboard-panel-header">
-
-            <div>
-
-              <h3>
-                Recent Activity
-              </h3>
-
-              <p>
-                Latest events across the clinic
-              </p>
-
-            </div>
-
-          </div>
-
-          <div className="dashboard-activity-list">
-
-            {loading ? (
-              Array.from({ length: 4 }).map((_, idx) => (
-                <div className="dashboard-activity-item" key={`s-${idx}`}>
-                  <div className="dashboard-activity-icon">
-                    <Skeleton width={36} height={36} />
-                  </div>
-                  <div>
-                    <p><Skeleton width="60%" height={14} /></p>
-                    <span><Skeleton width="30%" height={12} /></span>
-                  </div>
-                </div>
-              ))
-            ) : (
-              (dashboardData?.recentActivities?.length > 0 ? (
-                dashboardData.recentActivities.map((item, index) => (
-                  <div className="dashboard-activity-item" key={index}>
-                    <div className="dashboard-activity-icon"><CalendarCheck size={16} /></div>
-                    <div>
-                      <p>{item.title}</p>
-                      <span>{item.time}</span>
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p>No recent activities</p>
-              ))
-            )}
-
-          </div>
-
-        </div>
-
-      </div>
-
     </div>
   );
 }
-
 export default Dashboard;

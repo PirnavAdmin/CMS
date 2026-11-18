@@ -43,7 +43,8 @@ const useAuth = () => {
 };
 
 function AppLayout() {
-  const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+
   const { user } = useAuth();
   const location = useLocation();
 
@@ -58,14 +59,16 @@ function AppLayout() {
     return <Navigate to="/dashboard" replace />;
   }
 
+  const isSuperAdminPath = location.pathname.startsWith("/superadmin");
+
   return (
-    <div className="layout">
-      <Sidebar open={open} onClose={() => setOpen(false)} />
+    <div className={`layout${collapsed ? " sidebar-collapsed" : ""}`}>
+      <Sidebar collapsed={collapsed} />
 
-      <div className="main">
-        <Topbar onMenu={() => setOpen(true)} />
+      <div className={`main ${isSuperAdminPath ? "superadmin-main" : ""}`}>
+        <Topbar onMenu={() => setCollapsed((current) => !current)} />
 
-        <div className="content">
+        <div className={`content ${isSuperAdminPath ? "superadmin-content" : ""}`}>
           <Outlet />
         </div>
       </div>

@@ -1,19 +1,23 @@
 import React, { useMemo, useState } from "react";
-import { BellRing, CalendarDays, CheckCircle2, CreditCard, Megaphone, Send, Trash2 } from "lucide-react";
+import { BellRing, CalendarDays, CheckCircle2, CreditCard, FileText, Receipt, Megaphone, Send, Trash2 } from "lucide-react";
 import { markNotificationRead } from "../../pages/SUPERADMIN/superAdminApi";
 
-function NotificationPanel({ items = [], onDelete = () => {}, onRead = () => {} }) {
+function NotificationPanel({ items = [], onDelete = () => {}, onRead = () => {}, sentOnlyManual = false }) {
   const [activeNotification, setActiveNotification] = useState(null);
   const [statusFilter, setStatusFilter] = useState("All");
 
   const isRead = (item = {}) => String(item.status || "").toLowerCase() === "read";
   const isSent = (item = {}) => String(item.status || "").toLowerCase() === "sent";
+  const isManualSent = (item = {}) => isSent(item) && (!sentOnlyManual || Boolean(item.sentBySuperAdmin));
   const getNotificationKey = (item = {}) =>
     item.id || [item.title, item.message, item.targetUsers].join("|");
   const getNotificationTone = (item = {}, index = 0) => {
     const text = `${item.title || ""} ${item.message || ""}`.toLowerCase();
-    if (text.includes("payment") || text.includes("paid") || text.includes("invoice") || text.includes("bill")) {
-      return { tone: "payment", Icon: CreditCard };
+    if (text.includes("invoice") || text.includes("bill")) {
+      return { tone: "payment", Icon: FileText };
+    }
+    if (text.includes("payment") || text.includes("paid")) {
+      return { tone: "payment", Icon: Receipt };
     }
     if (text.includes("maintenance") || text.includes("system") || text.includes("notice") || text.includes("alert")) {
       return { tone: "system", Icon: Megaphone };
@@ -44,11 +48,11 @@ function NotificationPanel({ items = [], onDelete = () => {}, onRead = () => {} 
   const filteredItems = useMemo(() => {
     if (statusFilter === "Unread") return items.filter((item) => !isRead(item) && !isSent(item));
     if (statusFilter === "Read") return items.filter((item) => isRead(item) && !isSent(item));
-    if (statusFilter === "Sent") return items.filter(isSent);
+    if (statusFilter === "Sent") return items.filter(isManualSent);
     return items;
-  }, [items, statusFilter]);
+  }, [items, statusFilter, sentOnlyManual]);
   const unreadCount = items.filter((item) => !isRead(item) && !isSent(item)).length;
-  const sentCount = items.filter(isSent).length;
+  const sentCount = items.filter(isManualSent).length;
   const tabs = [
     { label: "All", tone: "all", icon: BellRing },
     { label: "Unread", count: unreadCount, tone: "unread", icon: BellRing },
@@ -154,4 +158,6 @@ function NotificationPanel({ items = [], onDelete = () => {}, onRead = () => {} 
 }
 
 export default NotificationPanel;
+
+
 

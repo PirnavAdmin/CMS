@@ -1,3 +1,5 @@
+import DashboardCards from "../../components/superadmin/DashboardCards";
+import { DashboardGreeting, useDashboardLayout, DashboardPager } from "../../components/superadmin/DashboardCards";
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,9 +9,16 @@ import {
   Clock,
   ClipboardList,
   UserPlus,
+  Users,
+  Stethoscope,
+  Calendar,
+  Activity,
+  FileText,
+  ChevronRight,
 } from "lucide-react";
 import { formatToday, parseList, requestJson as defaultRequestJson } from "../receptionApi";
 import { getReceptionistScope, scopeReceptionistRecords } from "../receptionScope";
+import { isDeletedPatient, patientBelongsToReceptionistPatientList } from "./ReceptionPatients";
 
 const normalizeKey = (key) => String(key || "").toLowerCase();
 
@@ -212,10 +221,29 @@ function ReceptionDashboard({
   getScope = getReceptionistScope,
   scopeRecords = scopeReceptionistRecords,
 }) {
+  const layout = useDashboardLayout();
   const navigate = useNavigate();
   const receptionistScope = useMemo(() => getScope(), [getScope]);
   const [appointments, setAppointments] = useState([]);
+  const [totalPatients, setTotalPatients] = useState(null);
   const [stats, setStats] = useState({ today: 0, waiting: 0, completed: 0 });
+
+  useEffect(() => {
+    let active = true;
+    apiRequest("Patient")
+      .then((data) => {
+        const patients = parseList(data)
+          .filter((patient) => !isDeletedPatient(patient))
+          .filter((patient) => scopeRecords !== scopeReceptionistRecords
+            ? scopeRecords([patient], receptionistScope).length > 0
+            : patientBelongsToReceptionistPatientList(patient, new Set(), new Set(), receptionistScope));
+        if (active) setTotalPatients(patients.length);
+      })
+      .catch(() => {
+        if (active) setTotalPatients(null);
+      });
+    return () => { active = false; };
+  }, [apiRequest, receptionistScope, scopeRecords]);
 
   useEffect(() => {
     const buildDashboardState = (appointmentSources) => {
@@ -274,106 +302,252 @@ function ReceptionDashboard({
   const latest = appointments;
 
   return (
-    <section className="rc-page">
-      <div className="rc-page-head">
-        <div>
-          <h2>{title}</h2>
-          <p>View today's schedule, waiting queue, and front desk actions.</p>
-        </div>
+    <section className="rc-page rc-dashboard-page role-single-screen" ref={layout.ref}>
+      {/* 3D Hospital Theme Animated Background Overlays */}
+      <div className="db-3d-bg-overlay" />
+      <div className="db-3d-floating-particle p1" />
+      <div className="db-3d-floating-particle p2" />
+      <div className="db-3d-floating-particle p3" />
+      <div className="db-3d-ecg-wave">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none" className="db-ecg-svg">
+          <path
+            d="M0 60 L300 60 L310 40 L320 80 L330 20 L345 100 L355 60 L370 60 L400 60 L700 60 L710 35 L720 85 L730 15 L745 105 L755 60 L770 60 L1200 60"
+            fill="none"
+            stroke="color-mix(in srgb, var(--theme-primary) 25%, transparent)"
+            strokeWidth="2.5"
+            strokeDasharray="1200"
+            strokeDashoffset="1200"
+            className="ecg-path"
+          />
+        </svg>
+      </div>
+
+      {/* PAGE HEADER */}
+      <div className="rc-dash-header" data-page-header>
+        <DashboardGreeting role="Receptionist" />
         {!hideActions && (
-          <div className="rc-head-actions">
-            <button className="rc-btn" onClick={() => navigate("/reception/appointments")}>
-              <CalendarPlus size={16} /> Book Appointment
+          <div className="rc-dash-head-actions">
+            <button
+              type="button"
+              className="rc-head-action-btn btn-secondary"
+              onClick={() => navigate("/reception/appointments")}
+              title="Book Appointment"
+            >
+              <CalendarPlus size={16} />
+              <span>Book Appointment</span>
             </button>
-            <button className="rc-btn primary" onClick={() => navigate("/reception/patients")}>
-              <UserPlus size={16} /> Add Patient
+            <button
+              type="button"
+              className="rc-head-action-btn btn-primary"
+              onClick={() => navigate("/reception/patients")}
+              title="Add Patient"
+            >
+              <UserPlus size={16} />
+              <span>Add Patient</span>
             </button>
           </div>
         )}
       </div>
 
-      <div className="rc-stat-grid">
-        <article className="rc-stat-card">
-          <div className="rc-stat-icon blue">
-            <CalendarCheck size={22} />
-          </div>
-          <span>Today</span>
-          <p>Today's Appointments</p>
-          <strong>{stats.today}</strong>
-        </article>
-        <article className="rc-stat-card">
-          <div className="rc-stat-icon amber">
-            <Clock size={22} />
-          </div>
-          <span>Today</span>
-          <p>Waiting Patients</p>
-          <strong>{stats.waiting}</strong>
-        </article>
-        <article className="rc-stat-card">
-          <div className="rc-stat-icon green">
-            <CheckCircle size={22} />
-          </div>
-          <span>Today</span>
-          <p>Completed Appointments</p>
-          <strong>{stats.completed}</strong>
-        </article>
-      </div>
+      {/* TOP 5 RADIANT KPI STAT CARDS */}
+      <div className="reception-overview-metrics"><DashboardCards cards={[
+        { label: "Total Patients", value: totalPatients ?? "—", icon: Users, onClick: () => navigate("/reception/patients") },
+        { label: "Today's Appointments", value: stats.today, icon: CalendarCheck },
+        { label: "Waiting Patients", value: stats.waiting, icon: Clock },
+        { label: "In Consultation", value: appointments.filter((item) => getAppointmentStatus(item) === "In Progress").length, icon: Stethoscope },
+        { label: "Completed Appointments", value: stats.completed, icon: CheckCircle },
+      ].map(card => ({ ...card, tone: "teal", onClick: card.onClick || (() => navigate("/reception/appointments")) }))} /></div>
 
+      {/* QUICK BILLING ACTIONS */}
       {!hideCards && (
-        <div className="rc-action-grid">
-          <button onClick={() => navigate("/reception/appointments")}> 
-            <ClipboardList size={22} />
-            <span>
-              <strong>OP Billing</strong> Book and manage outpatient billing (open appointment)
-            </span>
+        <div className="rc-dash-action-grid">
+          <button
+            type="button"
+            className="rc-dash-action-tile qa-op-billing"
+            onClick={() => navigate("/reception/appointments")}
+          >
+            <div className="rc-dash-action-icon-wrap icon-cyan">
+              <ClipboardList size={22} />
+            </div>
+            <div className="rc-dash-action-content">
+              <div className="rc-dash-action-top-row">
+                <span className="rc-dash-action-tag tag-cyan">Outpatient</span>
+                <span className="rc-dash-action-title">OP Billing</span>
+              </div>
+              <p className="rc-dash-action-desc">
+                Book and manage outpatient billing (open appointment)
+              </p>
+            </div>
+            <div className="rc-dash-action-chevron">
+              <ChevronRight size={18} />
+            </div>
           </button>
-          <button onClick={() => navigate("/reception/billing?mode=diagnostic")}>
-            <ClipboardList size={22} />
-            <span>
-              <strong>Diagnostic Billing</strong> Create diagnostic invoices
-            </span>
+
+          <button
+            type="button"
+            className="rc-dash-action-tile qa-diagnostic-billing"
+            onClick={() => navigate("/reception/billing?mode=diagnostic")}
+          >
+            <div className="rc-dash-action-icon-wrap icon-purple">
+              <Activity size={22} />
+            </div>
+            <div className="rc-dash-action-content">
+              <div className="rc-dash-action-top-row">
+                <span className="rc-dash-action-tag tag-purple">Lab & Scans</span>
+                <span className="rc-dash-action-title">Diagnostic Billing</span>
+              </div>
+              <p className="rc-dash-action-desc">
+                Create diagnostic and laboratory invoices
+              </p>
+            </div>
+            <div className="rc-dash-action-chevron">
+              <ChevronRight size={18} />
+            </div>
           </button>
-          <button onClick={() => navigate("/reception/billing?mode=pharmacy")}>
-            <ClipboardList size={22} />
-            <span>
-              <strong>Pharmacy Billing</strong> Create pharmacy invoices
-            </span>
+
+          <button
+            type="button"
+            className="rc-dash-action-tile qa-pharmacy-billing"
+            onClick={() => navigate("/reception/billing?mode=pharmacy")}
+          >
+            <div className="rc-dash-action-icon-wrap icon-emerald">
+              <FileText size={22} />
+            </div>
+            <div className="rc-dash-action-content">
+              <div className="rc-dash-action-top-row">
+                <span className="rc-dash-action-tag tag-emerald">Medications</span>
+                <span className="rc-dash-action-title">Pharmacy Billing</span>
+              </div>
+              <p className="rc-dash-action-desc">
+                Create pharmacy invoices & prescription dispenses
+              </p>
+            </div>
+            <div className="rc-dash-action-chevron">
+              <ChevronRight size={18} />
+            </div>
           </button>
         </div>
       )}
 
-      <div className="rc-card">
-        <div className="rc-card-head">
-          <div>
-            <h3>Appointment List</h3>
-            <p>{todayDate}</p>
+      {/* APPOINTMENT LIST TABLE CARD */}
+      <div className="rc-dash-table-card">
+        <div className="rc-dash-table-head">
+          <div className="rc-dash-table-head-left">
+            <div className="rc-dash-panel-icon">
+              <Calendar size={18} />
+            </div>
+            <div>
+              <h3>Appointment List</h3>
+              <div className="rc-dash-meta-badges">
+                <span className="rc-dash-date-pill">
+                  <Calendar size={12} />
+                  {todayDate}
+                </span>
+                <span className="rc-dash-count-pill">
+                  {latest.length} {latest.length === 1 ? "Patient" : "Patients"}
+                </span>
+              </div>
+            </div>
           </div>
-          <button className="rc-btn small" onClick={() => navigate("/reception/appointments")}>
-            Manage
+          <button
+            type="button"
+            className="rc-dash-manage-btn"
+            onClick={() => navigate("/reception/appointments")}
+          >
+            <span>Manage</span>
+            <ChevronRight size={15} />
           </button>
         </div>
-        <div className="rc-table compact">
-          <div className="rc-table-head four">
-            <span>S.No.</span>
-            <span>Patient</span>
-            <span>Doctor</span>
-            <span>Time</span>
-            <span>Status</span>
+
+        <div className="rc-dash-table-container">
+          <div className="rc-dash-table-header">
+            <span className="col-sno">
+              <span className="rc-th-capsule rc-th-sno">S.No.</span>
+            </span>
+            <span className="col-patient">
+              <span className="rc-th-capsule rc-th-name">Patient</span>
+            </span>
+            <span className="col-doctor">
+              <span className="rc-th-capsule rc-th-doctor">Doctor</span>
+            </span>
+            <span className="col-time">
+              <span className="rc-th-capsule rc-th-time">Time</span>
+            </span>
+            <span className="col-status">
+              <span className="rc-th-capsule rc-th-status">Status</span>
+            </span>
           </div>
-          {latest.length ? (
-            latest.map((item, index) => (
-              <div className="rc-table-row four" key={item.id || item.appointmentId}>
-                <span>{index + 1}</span>
-                <span>{getAppointmentPatientName(item)}</span>
-                <span>{getAppointmentDoctorName(item)}</span>
-                <span>{getAppointmentTime(item)}</span>
-                <span>{getAppointmentStatus(item)}</span>
+
+          <div className="rc-dash-table-body">
+            {latest.length ? (
+              layout.rows(latest).map((item, index) => {
+                const patientName = getAppointmentPatientName(item);
+                const doctorName = getAppointmentDoctorName(item);
+                const timeStr = getAppointmentTime(item);
+                const statusText = getAppointmentStatus(item) || "Waiting";
+                const statusClass = statusText.toLowerCase().replace(/\s+/g, "-");
+                const initials = patientName
+                  .split(" ")
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((p) => p[0].toUpperCase())
+                  .join("") || "PT";
+
+                return (
+                  <div
+                    className="rc-dash-table-row"
+                    key={item.id || item.appointmentId || index}
+                  >
+                    <span className="col-sno">
+                      <span className="rc-dash-sno-badge">{index + 1}</span>
+                    </span>
+
+                    <span className="col-patient">
+                      <div className="rc-dash-patient-cell">
+                        <div className="rc-dash-patient-avatar">{initials}</div>
+                        <span className="rc-dash-patient-name">{patientName}</span>
+                      </div>
+                    </span>
+
+                    <span className="col-doctor">
+                      <div className="rc-dash-doctor-cell">
+                        <Stethoscope size={14} className="rc-dash-doc-icon" />
+                        <span>{doctorName}</span>
+                      </div>
+                    </span>
+
+                    <span className="col-time">
+                      <div className="rc-dash-time-cell">
+                        <Clock size={13} className="rc-dash-time-icon" />
+                        <span>{timeStr}</span>
+                      </div>
+                    </span>
+
+                    <span className="col-status rc-status-cell">
+                      <span className={`rc-status ${statusClass}`}>
+                        {statusText}
+                      </span>
+                    </span>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="rc-dash-empty">
+                <Calendar size={32} />
+                <p>No appointments scheduled for today.</p>
+                <button
+                  type="button"
+                  className="rc-dash-empty-btn"
+                  onClick={() => navigate("/reception/appointments")}
+                >
+                  <CalendarPlus size={14} />
+                  <span>Book New Appointment</span>
+                </button>
               </div>
-            ))
-          ) : (
-            <div className="rc-empty">No appointments found.</div>
-          )}
+            )}
+          </div>
         </div>
+        <DashboardPager layout={layout} total={latest.length} />
       </div>
     </section>
   );

@@ -1,8 +1,11 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { Download, Printer, Search, Trash2 } from "lucide-react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import DatePickerField from "../../components/DatePickerField";
+import { Check, ChevronDown, Download, Plus, Printer, Search, Syringe, Trash2 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./Prescription.css";
-import { apiUrl } from "../../config/api";
+import { API_ENDPOINTS, apiUrl } from "../../config/api";
+import { collection, field } from "../../Pharmacy/pharmacyApi";
+import { normalizeMedicine } from "../../Pharmacy/medicineColumns";
 import {
   filterByLoggedInDoctor,
   getAuthToken,
@@ -27,17 +30,13 @@ const APPOINTMENTS_API = apiUrl("Appointment");
 const CONSULTATION_API = apiUrl("Consultation");
 const PRESCRIPTION_API = apiUrl("Prescription");
 
+const normalizeStatusKey = (status) => String(status || "").trim().toLowerCase().replace(/\s+/g, "");
+const isPrescriptionQueueStatus = (status) => {
+  const key = normalizeStatusKey(status);
+  return key && key !== "waiting" && key !== "completed";
+};
+
 const emptyValue = "-";
-const DEFAULT_MEDICINE_OPTIONS = [
-  "Paracetamol",
-  "Ibuprofen",
-  "Amoxicillin",
-  "Azithromycin",
-  "Cetirizine",
-  "Pantoprazole",
-  "Metformin",
-  "Amlodipine",
-];
 const DOSAGE_OPTIONS = ["1 Tablet", "1/2 Tablet", "2 Tablets", "5 ml", "10 ml", "1 Capsule", "1 Sachet"];
 const FREQUENCY_OPTIONS = [
   "1-0-1",
@@ -90,6 +89,101 @@ const formatPrintDateTime = (value = new Date()) => {
     minute: "2-digit",
     hour12: true,
   });
+};
+
+const RxCustomSelect = ({
+  value,
+  placeholder,
+  options,
+  onChange,
+  className = "",
+  ariaLabel,
+  disabled = false,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handlePointerDown = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("touchstart", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("touchstart", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
+
+  return (
+    <div
+      ref={dropdownRef}
+      className={`rx-custom-select-container ${isOpen ? "rx-dropdown--open" : ""}`}
+    >
+      <button
+        type="button"
+        className={`rx-cell-input rx-custom-select-trigger ${className} ${isOpen ? "rx-select-open" : ""}`}
+        onClick={() => setIsOpen((prev) => !prev)}
+        aria-haspopup="listbox"
+        aria-expanded={isOpen}
+        aria-label={ariaLabel || placeholder}
+        disabled={disabled}
+      >
+        <span className={`rx-custom-select-text ${!value ? "is-placeholder" : ""}`}>
+          {value || placeholder}
+        </span>
+        <ChevronDown
+          size={16}
+          className={`rx-dropdown-arrow ${isOpen ? "is-open" : ""}`}
+          aria-hidden="true"
+        />
+      </button>
+
+      {isOpen && (
+        <div className="rx-custom-dropdown-menu" role="listbox">
+          <button
+            type="button"
+            className={`rx-custom-dropdown-item is-placeholder ${!value ? "active" : ""}`}
+            onClick={() => {
+              onChange("");
+              setIsOpen(false);
+            }}
+          >
+            <span>{placeholder}</span>
+            {!value && <Check size={14} className="rx-dropdown-check" />}
+          </button>
+          {options.map((option) => (
+            <button
+              type="button"
+              key={option}
+              className={`rx-custom-dropdown-item ${value === option ? "active" : ""}`}
+              onClick={() => {
+                onChange(option);
+                setIsOpen(false);
+              }}
+            >
+              <span>{option}</span>
+              {value === option && <Check size={14} className="rx-dropdown-check" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 };
 
 const createMedicine = () => ({
@@ -170,32 +264,20 @@ const normalizeAppointment = (item, fallback = {}) => {
 const normalizeMedicines = (medicines) =>
   (Array.isArray(medicines) ? medicines : []).map((medicine) => ({
     id: medicine.id || Date.now() + Math.random(),
-    medicineName: medicine.medicineName || medicine.medicine || "",
+    medicineId: medicine.medicineId ?? medicine.MedicineId ?? medicine.catalogueMedicineId ?? medicine.CatalogueMedicineId ?? null,
+    medicineName: medicine.medicineName || medicine.MedicineName || medicine.name || medicine.Name || medicine.medicine || "",
     brandName: medicine.brandName || medicine.brand || medicine.brand_name || "",
     dosage: medicine.dosage || "",
-    quantity: medicine.quantity || medicine.qty || "",
+    quantity: medicine.prescribedQuantity ?? medicine.PrescribedQuantity ?? medicine.quantity ?? medicine.Quantity ?? medicine.qty ?? "",
     frequency: medicine.frequency || "",
     duration: medicine.duration || "",
     notes: medicine.notes || "",
   }));
 
-const getMedicineLabel = (medicine = {}) => {
-  const name = medicine.medicineName || medicine.medicine || medicine.name || "";
-  const brand = medicine.brandName || medicine.brand || medicine.brand_name || "";
-  return [name, brand ? `(${brand})` : ""].filter(Boolean).join(" ").trim();
-};
-
-const extractMedicineOptions = (prescriptions = []) => {
-  const options = new Map();
-
-  prescriptions.forEach((prescription) => {
-    normalizeMedicines(prescription?.medicines).forEach((medicine) => {
-      const label = getMedicineLabel(medicine);
-      if (label) options.set(label.toLowerCase(), { ...medicine, label });
-    });
-  });
-
-  return Array.from(options.values()).sort((a, b) => a.label.localeCompare(b.label));
+const parseMedicineCatalogue = (payload) => {
+  const rows = collection(payload, ["medicines", "catalogue", "catalog", "options"]);
+  if (!rows) throw new Error("The backend medicine catalogue did not return a medicine list.");
+  return rows;
 };
 
 const getValidationMessages = (data) => {
@@ -321,9 +403,33 @@ function Prescription() {
   const [appointment, setAppointment] = useState(null);
   const [consultation, setConsultation] = useState(routeState.consultation || null);
   const [diagnosis, setDiagnosis] = useState("");
-  const [instructions, setInstructions] = useState(
-    "Take medicines after food and complete the full course."
-  );
+  const [instructions, setInstructions] = useState("");
+  const [dosageOptions, setDosageOptions] = useState(DOSAGE_OPTIONS);
+  const [frequencyOptions, setFrequencyOptions] = useState(FREQUENCY_OPTIONS);
+  const [instructionOptions, setInstructionOptions] = useState(INSTRUCTION_OPTIONS);
+  const [noteOptions, setNoteOptions] = useState(NOTE_OPTIONS);
+  const [lookupError, setLookupError] = useState("");
+  useEffect(() => {
+    let active = true;
+    const token = getAuthToken();
+    const lookups = [
+      [API_ENDPOINTS.prescription.dosages, setDosageOptions, "dosage"],
+      [API_ENDPOINTS.prescription.frequencies, setFrequencyOptions, "frequency"],
+      [API_ENDPOINTS.prescription.instructions, setInstructionOptions, "instruction"],
+      [API_ENDPOINTS.prescription.medicineNotes, setNoteOptions, "note"],
+    ];
+    Promise.allSettled(lookups.map(async ([path, setter, key]) => {
+      const response = await fetch(apiUrl(path), { headers: { Authorization: `Bearer ${token}`, "ngrok-skip-browser-warning": "true" } });
+      if (!response.ok) throw new Error(key);
+      const payload = await response.json();
+      const values = collection(payload, [key + "s", "options", "notes"]) || [];
+      const options = values.map((row) => typeof row === "string" ? row : field(row, key, "name", "text", "label", "value", "description")).filter(Boolean).map(String);
+      if (active && options.length) setter([...new Set(options)]);
+    })).then((results) => {
+      if (active && results.some((result) => result.status === "rejected")) setLookupError("Some prescription options could not be loaded. Default options are shown; retry by reloading this page.");
+    });
+    return () => { active = false; };
+  }, []);
   const [followUp, setFollowUp] = useState("");
   const [medicines, setMedicines] = useState([createMedicine()]);
   const [loading, setLoading] = useState(true);
@@ -332,27 +438,69 @@ function Prescription() {
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState({});
   const [medicineSearch, setMedicineSearch] = useState("");
-  const [medicineOptions, setMedicineOptions] = useState([]);
-  const [typedMedicineNames, setTypedMedicineNames] = useState([]);
+  const [catalogueMedicineOptions, setCatalogueMedicineOptions] = useState([]);
+  const [medicineCatalogueError, setMedicineCatalogueError] = useState("");
+  const [medicineCatalogueLoading, setMedicineCatalogueLoading] = useState(true);
+  const [catalogueReload, setCatalogueReload] = useState(0);
   const [isMedicineSearchFocused, setIsMedicineSearchFocused] = useState(false);
 
-  useEffect(() => {
-    const saved = localStorage.getItem("prescriptionTypedMedicineNames");
-    if (!saved) return;
 
-    try {
-      const names = JSON.parse(saved);
-      if (Array.isArray(names)) {
-        setTypedMedicineNames(
-          names
-            .filter((name) => typeof name === "string" && name.trim())
-            .map((name) => name.trim())
-        );
-      }
-    } catch {
-      // ignore invalid persisted data
-    }
-  }, []);
+  useEffect(() => {
+    let active = true;
+    const token = getAuthToken();
+    setMedicineCatalogueLoading(true);
+    setMedicineCatalogueError("");
+    fetch(apiUrl(API_ENDPOINTS.pharmacy.medicines), {
+      headers: {
+        Accept: "application/json",
+        "ngrok-skip-browser-warning": "true",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      cache: "no-store",
+    })
+      .then(async (response) => {
+        const text = await response.text();
+        let payload = null;
+        if (text) {
+          try {
+            payload = JSON.parse(text);
+          } catch {
+            payload = text;
+          }
+        }
+        if (!response.ok) {
+          if (response.status === 403) throw new Error("Your doctor account does not have access to the pharmacy medicine catalogue. An administrator must enable catalogue access.");
+          const message = payload?.message || payload?.title || payload?.error;
+          throw new Error(message || `Unable to load medicine catalogue (HTTP ${response.status}).`);
+        }
+        return parseMedicineCatalogue(payload);
+      })
+      .then((items) => {
+        if (!active) return;
+        const options = items.map((item) => {
+          const catalogueMedicine = normalizeMedicine(item);
+          const medicineId = field(item, "medicineId", "catalogueMedicineId", "id");
+          const medicineName = String(catalogueMedicine.Name ?? "").trim();
+          const brandName = catalogueMedicine.BrandName;
+          const strength = catalogueMedicine.Strength;
+          const code = catalogueMedicine.MedicineCode;
+          return { ...item, medicineId, medicineName, brandName,
+            label: [medicineName, strength, brandName ? `(${brandName})` : "", code ? `[${code}]` : ""].filter(Boolean).join(" ") };
+        }).filter((item) => item.medicineName && item.medicineId !== "" && item.medicineId != null);
+        setCatalogueMedicineOptions(options);
+        if (items.length && !options.length) setMedicineCatalogueError("The pharmacy catalogue returned incomplete medicine records. Please contact your administrator.");
+      })
+      .catch((failure) => {
+        if (active) {
+          setCatalogueMedicineOptions([]);
+          setMedicineCatalogueError(failure.message || "Unable to load medicine catalogue.");
+        }
+      })
+      .finally(() => { if (active) setMedicineCatalogueLoading(false); });
+    return () => {
+      active = false;
+    };
+  }, [catalogueReload]);
 
   useEffect(() => {
     const loadPrescription = async () => {
@@ -419,11 +567,8 @@ function Prescription() {
             ) ||
             selectedAppointment ||
             appointments.find((item) =>
-              ["inprogress", "in progress", "waiting"].includes(
-                String(item.status || "").trim().toLowerCase()
-              )
-            ) ||
-            appointments[0];
+              isPrescriptionQueueStatus(item.status)
+            );
         }
 
         if (!selectedAppointment?.appointmentId) {
@@ -454,7 +599,6 @@ function Prescription() {
         const savedConsultation = routeState.consultation || consultationResult.item;
         const savedPrescription = prescriptionResult.item;
 
-        setMedicineOptions(extractMedicineOptions(prescriptionResult.rows));
 
         setAppointment(
           normalizeAppointment(normalizedAppointment, {
@@ -476,12 +620,6 @@ function Prescription() {
 
         const existingMedicines = normalizeMedicines(savedPrescription?.medicines);
         setMedicines(existingMedicines.length ? existingMedicines : [createMedicine()]);
-        setMedicineOptions((prev) =>
-          extractMedicineOptions([
-            { medicines: existingMedicines },
-            ...prev.map((item) => ({ medicines: [item] })),
-          ])
-        );
       } catch (err) {
         console.error(err);
         setError(err.message || "Unable to load prescription.");
@@ -537,9 +675,10 @@ function Prescription() {
     () =>
       medicines
         .map((medicine) => ({
+          medicineId: medicine.medicineId ?? null,
           medicineName: medicine.medicineName.trim(),
           dosage: medicine.dosage.trim(),
-          quantity: String(medicine.quantity || "").trim(),
+          quantity: Number(medicine.quantity),
           frequency: medicine.frequency.trim(),
           duration: medicine.duration.trim(),
           notes: medicine.notes.trim(),
@@ -548,36 +687,11 @@ function Prescription() {
     [medicines]
   );
 
-  const combinedMedicineOptions = useMemo(() => {
-    const unique = new Map();
-
-    typedMedicineNames
-      .filter(Boolean)
-      .map((name) => ({ medicineName: name, label: name }))
-      .forEach((item) => {
-        const key = item.label.trim().toLowerCase();
-        if (key) unique.set(key, item);
-      });
-
-    medicineOptions.forEach((item) => {
-      const key = (item.medicineName || item.label || "").trim().toLowerCase();
-      if (key && !unique.has(key)) unique.set(key, item);
-    });
-
-    return Array.from(unique.values());
-  }, [medicineOptions, typedMedicineNames]);
-
-  const medicineSelectOptions = useMemo(() => {
-    const options = new Set(DEFAULT_MEDICINE_OPTIONS);
-    combinedMedicineOptions.forEach((medicine) => {
-      const label = medicine.medicineName || medicine.label;
-      if (label) options.add(label);
-    });
-    medicines.forEach((medicine) => {
-      if (medicine.medicineName) options.add(medicine.medicineName);
-    });
-    return Array.from(options).sort((a, b) => a.localeCompare(b));
-  }, [combinedMedicineOptions, medicines]);
+  const combinedMedicineOptions = catalogueMedicineOptions;
+  const medicineSelectOptions = useMemo(() =>
+    [...new Set(catalogueMedicineOptions.map((medicine) => medicine.label))].sort((a, b) => a.localeCompare(b)),
+    [catalogueMedicineOptions]
+  );
 
   const updateMedicine = (id, field, value) =>
     setMedicines((prev) =>
@@ -598,10 +712,6 @@ function Prescription() {
 
   const normalizedMedicineSearch = medicineSearch.trim();
   const lowerMedicineSearch = normalizedMedicineSearch.toLowerCase();
-  const hasExactMedicineMatch = combinedMedicineOptions.some((medicine) => {
-    const label = (medicine.medicineName || medicine.label || "").trim().toLowerCase();
-    return label === lowerMedicineSearch;
-  });
 
   const filteredMedicineOptions = useMemo(() => {
     const query = lowerMedicineSearch;
@@ -625,75 +735,22 @@ function Prescription() {
     isMedicineSearchFocused &&
     (filteredMedicineOptions.length > 0 || normalizedMedicineSearch.length > 0);
 
-  const registerTypedMedicine = (medicineName) => {
-    const name = String(medicineName || "").trim();
-    if (!name) return;
-
-    const normalized = name.toLowerCase();
-    const alreadyStored =
-      typedMedicineNames.some((item) => item.trim().toLowerCase() === normalized) ||
-      medicineOptions.some((medicine) => {
-        const label = (medicine.medicineName || medicine.label || "").trim().toLowerCase();
-        return label === normalized;
-      });
-
-    if (alreadyStored) return;
-
-    const nextMedicine = { medicineName: name, label: name };
-    setMedicineOptions((prev) => [nextMedicine, ...prev]);
-    setTypedMedicineNames((prev) => {
-      const next = [name, ...prev.filter((item) => item.trim().toLowerCase() !== normalized)];
-      localStorage.setItem("prescriptionTypedMedicineNames", JSON.stringify(next));
-      return next;
-    });
-  };
-
-  const addTypedMedicine = (query) => {
-    const medicineName = String(query || "").trim();
-    if (!medicineName) return;
-
-    const normalized = medicineName.toLowerCase();
-    const existingMedicine = combinedMedicineOptions.find((medicine) => {
-      const label = (medicine.medicineName || medicine.label || "").trim().toLowerCase();
-      return label === normalized;
-    });
-
-    const nextMedicine = existingMedicine
-      ? existingMedicine
-      : { medicineName, label: medicineName };
-
-    if (!existingMedicine) {
-      setMedicineOptions((prev) => [nextMedicine, ...prev]);
-    }
-
-    selectMedicine(nextMedicine);
-  };
-
   const handleMedicineSearchKeyDown = (event) => {
     if (event.key !== "Enter") return;
     event.preventDefault();
-
-    if (!normalizedMedicineSearch) return;
-    if (hasExactMedicineMatch) {
-      const exactMatch = combinedMedicineOptions.find((medicine) => {
-        const label = (medicine.medicineName || medicine.label || "").trim().toLowerCase();
-        return label === normalizedMedicineSearch.toLowerCase();
-      });
-      if (exactMatch) {
-        selectMedicine(exactMatch);
-        return;
-      }
-    }
-
-    addTypedMedicine(normalizedMedicineSearch);
+    const exactMatch = combinedMedicineOptions.find((medicine) =>
+      medicine.medicineName.toLowerCase() === lowerMedicineSearch || medicine.label.toLowerCase() === lowerMedicineSearch
+    );
+    if (exactMatch) selectMedicine(exactMatch);
   };
 
   const selectMedicine = (medicine) => {
     const nextMedicine = {
       ...createMedicine(),
+      medicineId: medicine.medicineId ?? medicine.MedicineId ?? null,
       medicineName: medicine.medicineName || medicine.label || "",
       dosage: medicine.dosage || "",
-      quantity: medicine.quantity || "",
+      quantity: "",
       frequency: medicine.frequency || "",
       duration: medicine.duration || "",
       notes: medicine.notes || "",
@@ -932,6 +989,13 @@ function Prescription() {
       return;
     }
 
+    if (validMedicines.some((medicine) => !medicine.medicineId || !Number.isInteger(medicine.quantity) || medicine.quantity <= 0)) {
+      const text = "Select each medicine from the backend catalogue and enter a positive whole prescribed quantity.";
+      setError(text);
+      toast.error(text);
+      return;
+    }
+
     const incompleteMedicine = validMedicines.find(
       (medicine) =>
         !medicine.dosage ||
@@ -970,9 +1034,12 @@ function Prescription() {
           appointmentDate: appointment?.date || undefined,
           diagnosis: diagnosis.trim(),
           instructions: instructions.trim(),
-          followUpDate: new Date(`${followUp}T10:00:00`).toISOString(),
+          followUpDate: followUp ? new Date(`${followUp}T10:00:00`).toISOString() : null,
           status: "Completed",
-          medicines: validMedicines,
+          medicines: validMedicines.map((medicine) => ({
+            ...medicine,
+            prescribedQuantity: medicine.quantity,
+          })),
         }),
       });
 
@@ -1037,7 +1104,7 @@ function Prescription() {
                 className={`rx-step-circle ${i < 2 ? "done" : i === 2 ? "active" : ""
                   }`}
               >
-                {i < 2 ? "✓" : i + 1}
+                {i < 2 ? <Check size={18} /> : i + 1}
               </div>
               <span className={`rx-step-label ${i === 2 ? "active" : ""}`}>
                 {label}
@@ -1087,22 +1154,13 @@ function Prescription() {
                       {medicine.brandName ? <span>{medicine.brandName}</span> : null}
                     </button>
                   ))}
-                  {normalizedMedicineSearch && !hasExactMedicineMatch ? (
-                    <button
-                      type="button"
-                      className="rx-medicine-results__new"
-                      onMouseDown={(event) => event.preventDefault()}
-                      onClick={() => addTypedMedicine(medicineSearch)}
-                    >
-                      <strong>Add "{normalizedMedicineSearch}"</strong>
-                      <span>New medicine</span>
-                    </button>
-                  ) : null}
+                  {!filteredMedicineOptions.length && <p>No matching catalogue medicines.</p>}
                 </div>
               ) : null}
             </div>
           </div>
 
+          {lookupError && <p role="status">{lookupError}</p>}
           <div className="rx-table-wrap">
             <div className="rx-thead">
               <span>Medicine</span>
@@ -1111,32 +1169,33 @@ function Prescription() {
               <span>Frequency</span>
               <span>Duration</span>
               <span>Notes</span>
-              <span>Actions</span>
+              <span className="rx-action-col">Actions</span>
             </div>
             {medicines.map((medicine) => (
               <div className="rx-row" key={medicine.id}>
-                <input
-                  className="rx-cell-input rx-med-name"
-                  list="prescription-medicine-options"
-                  value={medicine.medicineName}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    updateMedicine(medicine.id, "medicineName", value);
+                <RxCustomSelect
+                  className="rx-med-name"
+                  value={catalogueMedicineOptions.find((option) => String(option.medicineId) === String(medicine.medicineId))?.label || medicine.medicineName}
+                  placeholder={medicineCatalogueLoading ? "Loading medicines..." : "Select medicine"}
+                  options={medicineSelectOptions}
+                  onChange={(value) => {
+                    const selected = catalogueMedicineOptions.find((option) => option.label === value);
+                    setMedicines((previous) => previous.map((item) => item.id === medicine.id ? { ...item, medicineId: selected?.medicineId ?? null, medicineName: selected?.medicineName || "" } : item));
                   }}
-                  onBlur={(event) => registerTypedMedicine(event.target.value)}
-                  placeholder="Select or type medicine"
+                  disabled={medicineCatalogueLoading || Boolean(medicineCatalogueError) || !catalogueMedicineOptions.length}
+                  ariaLabel="Medicine"
                 />
-                <input
-                  className="rx-cell-input"
-                  list="prescription-dosage-options"
+                <RxCustomSelect
                   value={medicine.dosage}
-                  onChange={(event) =>
-                    updateMedicine(medicine.id, "dosage", event.target.value)
+                  placeholder="Dosage"
+                  options={dosageOptions}
+                  onChange={(value) =>
+                    updateMedicine(medicine.id, "dosage", value)
                   }
-                  placeholder="Select or type dosage"
+                  ariaLabel="Dosage"
                 />
                 <input
-                  className="rx-cell-input"
+                  className="rx-cell-input rx-qty-input"
                   type="number"
                   min="1"
                   inputMode="numeric"
@@ -1146,43 +1205,34 @@ function Prescription() {
                   }
                   placeholder="Qty"
                 />
-                <select
-                  className="rx-cell-input rx-freq"
+                <RxCustomSelect
+                  className="rx-freq"
                   value={medicine.frequency}
-                  onChange={(event) =>
-                    updateMedicine(medicine.id, "frequency", event.target.value)
+                  placeholder="Frequency"
+                  options={frequencyOptions}
+                  onChange={(value) =>
+                    updateMedicine(medicine.id, "frequency", value)
                   }
-                >
-                  <option value="">Frequency</option>
-                  {FREQUENCY_OPTIONS.map((option) => (
-                    <option value={option} key={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
+                  ariaLabel="Frequency"
+                />
                 <input
                   className="rx-cell-input"
                   value={medicine.duration}
                   onChange={(event) =>
                     updateMedicine(medicine.id, "duration", event.target.value)
                   }
-                  placeholder="5 Days"
+                  placeholder="Duration"
                 />
-                <select
-                  className="rx-cell-input"
+                <RxCustomSelect
                   value={medicine.notes}
-                  onChange={(event) =>
-                    updateMedicine(medicine.id, "notes", event.target.value)
+                  placeholder="Notes"
+                  options={noteOptions}
+                  onChange={(value) =>
+                    updateMedicine(medicine.id, "notes", value)
                   }
-                >
-                  <option value="">Notes</option>
-                  {NOTE_OPTIONS.map((option) => (
-                    <option value={option} key={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-                <span>
+                  ariaLabel="Notes"
+                />
+                <span className="rx-action-col">
                   <button
                     className="rx-del-btn"
                     type="button"
@@ -1196,14 +1246,18 @@ function Prescription() {
             ))}
           </div>
 
-          <datalist id="prescription-medicine-options">
-            {medicineSelectOptions.map((option) => (
-              <option value={option} key={option} />
-            ))}
-          </datalist>
+          {medicineCatalogueError ? (
+            <p className="rx-field-error" role="alert">
+              {medicineCatalogueError}
+            </p>
+          ) : null}
 
+          <div className="rx-catalogue-status">
+            <span role="status">{medicineCatalogueLoading ? "Loading pharmacy medicine catalogue..." : medicineCatalogueError ? "Medicine catalogue unavailable." : catalogueMedicineOptions.length ? `${catalogueMedicineOptions.length} pharmacy catalogue medicines available.` : "No medicines found in the pharmacy catalogue. Add medicines in Pharmacy first."}</span>
+            <button type="button" disabled={medicineCatalogueLoading} onClick={() => setCatalogueReload((value) => value + 1)}>Refresh medicines</button>
+          </div>
           <datalist id="prescription-dosage-options">
-            {DOSAGE_OPTIONS.map((option) => (
+            {dosageOptions.map((option) => (
               <option value={option} key={option} />
             ))}
           </datalist>
@@ -1212,9 +1266,10 @@ function Prescription() {
             className="rx-add-med-btn"
             type="button"
             onClick={addMedicine}
-            title="Add medicine"
+            title="Add Medication"
           >
-            + Add Medicine
+            <Plus size={16} />
+            <span>Add Medication</span>
           </button>
 
           <div className="rx-field">
@@ -1224,12 +1279,13 @@ function Prescription() {
               value={instructions}
               onChange={(event) => setInstructions(event.target.value)}
             >
-              {INSTRUCTION_OPTIONS.map((option) => (
+              <option value="">Select Instructions</option>
+              {instructionOptions.map((option) => (
                 <option value={option} key={option}>
                   {option}
                 </option>
               ))}
-              {instructions && !INSTRUCTION_OPTIONS.includes(instructions) ? (
+              {instructions && !instructionOptions.includes(instructions) ? (
                 <option value={instructions}>{instructions}</option>
               ) : null}
             </select>
@@ -1237,15 +1293,14 @@ function Prescription() {
 
           <div className="rx-field rx-field--half">
             <label className="rx-label">Follow Up Date</label>
-            <input
-              className="rx-input"
-              type="date"
+            <DatePickerField
               value={followUp}
-              onChange={(event) => {
-                setFollowUp(event.target.value);
+              onChange={(nextValue) => {
+                setFollowUp(nextValue);
                 setFieldErrors((prev) => ({ ...prev, followUp: "" }));
                 setError("");
               }}
+              inputClassName="rx-input"
             />
             {fieldErrors.followUp ? (
               <small className="rx-field-error">{fieldErrors.followUp}</small>
@@ -1254,20 +1309,35 @@ function Prescription() {
 
           <div className="rx-actions">
             <div className="rx-actions-right">
-              <button className="rx-btn-icon" type="button" onClick={printPrescription}>
-                <Printer size={16} /> Print
-              </button>
               <button
-              className="rx-btn-submit"
-              type="button"
-              onClick={submitPrescription}
-                disabled={submitting || !canCreatePrescription}
-                title="Submit prescription"
+                className="rx-btn-icon rx-btn-icon--print"
+                type="button"
+                onClick={printPrescription}
+                title="Print Slip"
               >
-                {submitting ? "Submitting..." : "Submit Prescription"}
+                <Printer size={16} />
+                <span>Print Slip</span>
               </button>
-              <button className="rx-btn-icon" type="button" onClick={downloadPrescription}>
-                <Download size={16} /> Download PDF
+
+              <button
+                className="rx-btn-submit"
+                type="button"
+                onClick={submitPrescription}
+                disabled={submitting || !canCreatePrescription}
+                title="Submit Prescription"
+              >
+                <Check size={16} />
+                <span>{submitting ? "Submitting..." : "Submit Prescription"}</span>
+              </button>
+
+              <button
+                className="rx-btn-icon rx-btn-icon--download"
+                type="button"
+                onClick={downloadPrescription}
+                title="Download PDF"
+              >
+                <Download size={16} />
+                <span>Download PDF</span>
               </button>
             </div>
           </div>
@@ -1337,7 +1407,7 @@ function Prescription() {
                 <table className="rx-slip-table">
                   <thead>
                     <tr>
-                      <th>#</th>
+                      <th data-column-kind="center">#</th>
                       <th>Medicine</th>
                       <th>Route</th>
                       <th>Dose</th>

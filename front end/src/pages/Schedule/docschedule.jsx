@@ -3,6 +3,7 @@
 //   useState,
 // } from "react";
 
+
 // import "./docschedule.css";
 
 // import {
@@ -271,7 +272,7 @@
 
 //       {/* HEADER */}
 
-//       <div className="page-header">
+//       <div className="page-header" data-page-header>
 
 //         <h2>
 //           Schedule Settings
@@ -537,6 +538,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
+import DatePickerField from "../../components/DatePickerField";
 
 import "./docschedule.css";
 
@@ -544,8 +546,13 @@ import {
   Trash2,
   Save,
   Pencil,
+  CalendarDays,
+  Clock,
+  Sliders,
+  CalendarOff,
 } from "lucide-react";
 import { apiUrl } from "../../config/api";
+import { cacheScheduleSettings } from "../../utils/scheduleSettings";
 import { useToast } from "../../components/ToastProvider";
 import { getRoleProfile } from "../../profile/sessionProfile";
 import {
@@ -639,8 +646,10 @@ function ScheduleSettingsPage() {
         data
       );
 
+      cacheScheduleSettings(data);
+
       setSlotDuration(
-        data.slotDuration || 30
+        data.slotDuration || data.SlotDuration || 30
       );
 
       setClinicOpen(
@@ -739,6 +748,12 @@ function ScheduleSettingsPage() {
             `${clinicClose}:00`,
         }),
       });
+      cacheScheduleSettings({
+        slotDuration: Number(slotDuration),
+        clinicOpen: `${clinicOpen}:00`,
+        clinicClose: `${clinicClose}:00`,
+      });
+      window.dispatchEvent(new Event("scheduleSettingsUpdated"));
 
       toast.success(
         "Schedule settings saved successfully"
@@ -955,10 +970,25 @@ function ScheduleSettingsPage() {
 
   return (
     <div className="schedule-page">
+      <div className="schedule-bg-overlay" />
+
+      {/* 3D Floating Schedule & Time Planning Particles */}
+      <div className="schedule-particle sched-part-1" title="Calendar Planning">
+        <CalendarDays size={28} />
+      </div>
+      <div className="schedule-particle sched-part-2" title="Slot Timings">
+        <Clock size={26} />
+      </div>
+      <div className="schedule-particle sched-part-3" title="Clinic Configuration">
+        <Sliders size={26} />
+      </div>
+      <div className="schedule-particle sched-part-4" title="Holidays & Days Off">
+        <CalendarOff size={26} />
+      </div>
 
       {/* HEADER */}
 
-      <div className="page-header">
+      <div className="page-header" data-page-header>
 
         <h2>
           Schedule Settings
@@ -996,6 +1026,16 @@ function ScheduleSettingsPage() {
             }
           >
 
+            <option value="">Select Slot Duration</option>
+
+            <option value={5}>
+              5 minutes
+            </option>
+
+            <option value={10}>
+              10 minutes
+            </option>
+
             <option value={15}>
               15 minutes
             </option>
@@ -1006,14 +1046,6 @@ function ScheduleSettingsPage() {
 
             <option value={30}>
               30 minutes
-            </option>
-
-            <option value={45}>
-              45 minutes
-            </option>
-
-            <option value={60}>
-              60 minutes
             </option>
 
           </select>
@@ -1161,7 +1193,7 @@ function ScheduleSettingsPage() {
                           cursor:
                             "pointer",
                           color:
-                            "#0f9d9d",
+                            "var(--theme-primary-dark)",
                         }}
                         onClick={() =>
                           editHoliday(
@@ -1209,19 +1241,14 @@ function ScheduleSettingsPage() {
 
           <div className="holiday-form">
 
-            <input
-              type="date"
+            <DatePickerField
               min={getTodayInputValue()}
               disabled={editingId ? !canEditScheduleSettings : !canCreateScheduleSettings}
-              value={
-                newHoliday.date
-              }
-              onChange={(e) =>
+              value={newHoliday.date}
+              onChange={(nextValue) =>
                 setNewHoliday({
                   ...newHoliday,
-                  date:
-                    e.target
-                      .value,
+                  date: nextValue,
                 })
               }
             />
@@ -1267,3 +1294,8 @@ function ScheduleSettingsPage() {
 }
 
 export default ScheduleSettingsPage;
+
+
+
+
+
