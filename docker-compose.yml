@@ -1,29 +1,76 @@
-version: "3.8"
-
 services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: cms-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_PID: Developer
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
+      DB_NAME: ${DB_NAME:-cmsdb}
+      DB_USER: ${DB_USER:-cmsdbuser}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+    volumes:
+      - cms_sql_data:/var/opt/mssql
+      - ./db/init-database.sh:/usr/local/bin/init-database.sh:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/init-database.sh"]
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$${MSSQL_SA_PASSWORD}\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+    restart: unless-stopped
+
   backend:
     build:
-      context: ./backend
+      context: ./Backend
       dockerfile: Dockerfile
     container_name: cms-backend
-    env_file:
-      - ./backend/.env
+    environment:
+      ASPNETCORE_URLS: http://+:5000
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      BEHIND_PROXY: "true"
+      RUN_DB_MIGRATIONS: "true"
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=${DB_NAME:-cmsdb};User Id=${DB_USER:-cmsdbuser};Password=${DB_PASSWORD:?Set DB_PASSWORD in .env};TrustServerCertificate=True;Encrypt=True"
+      Jwt__Key: ${JWT_KEY:?Set JWT_KEY in .env}
+      DATA_PROTECTION_KEYS_PATH: /var/lib/adminclinic/dataprotection
+    volumes:
+      - cms_uploads:/app/wwwroot
+      - cms_dataprotection:/var/lib/adminclinic/dataprotection
+    depends_on:
+      db:
+        condition: service_healthy
+    expose:
+      - "5000"
     ports:
       - "5000:5000"
-    volumes:
-      - ./backend/wwwroot:/app/wwwroot
-      - ./backend/uploads:/app/uploads
     restart: unless-stopped
 
   frontend:
     build:
-      context: ./frontend
+      context: ./front end
       dockerfile: Dockerfile
     container_name: cms-frontend
-    env_file:
-      - ./frontend/.env
-    depends_on:
-      - backend
+    expose:
+      - "3000"
     ports:
       - "3000:3000"
     restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: cms-nginx
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    restart: unless-stopped
+
+volumes:
+  cms_sql_data:
+  cms_uploads:
+  cms_dataprotection:
+

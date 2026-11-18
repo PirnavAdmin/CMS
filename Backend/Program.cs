@@ -20,28 +20,22 @@ var builder = WebApplication.CreateBuilder(args);
 // ======================================================
 // RAZORPAY - PERSISTENT LOCAL WINDOWS DATA PROTECTION
 // ======================================================
-// Keep this key ring secure and backed up. For deployment to IIS or
-// another machine, configure a durable key store before migrating.
-// DPAPI protects this key ring only on Windows. Do not fall back to
-// unencrypted key storage if the application is moved to another OS.
-if (!OperatingSystem.IsWindows())
-{
-    throw new PlatformNotSupportedException(
-        "Razorpay credential Data Protection uses Windows DPAPI. " +
-        "Configure a secure, persistent key protector before running on a non-Windows host.");
-}
-
-var dataProtectionFolder = Path.Combine(
-    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-    "Adminclinic",
-    "DataProtectionKeys");
+// Keep this key ring secure and backed up. Windows uses DPAPI; Linux
+// deployments persist the key ring in a private Docker volume.
+var dataProtectionFolder = OperatingSystem.IsWindows()
+    ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Adminclinic", "DataProtectionKeys")
+    : Environment.GetEnvironmentVariable("DATA_PROTECTION_KEYS_PATH") ?? "/var/lib/adminclinic/dataprotection";
 
 Directory.CreateDirectory(dataProtectionFolder);
 
-builder.Services.AddDataProtection()
+var dataProtection = builder.Services.AddDataProtection()
     .SetApplicationName("Adminclinic-Razorpay")
-    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionFolder))
-    .ProtectKeysWithDpapi();
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionFolder));
+
+if (OperatingSystem.IsWindows())
+{
+    dataProtection.ProtectKeysWithDpapi();
+}
 
 builder.Services.AddScoped<RazorpayCredentialStore>();
 
@@ -457,7 +451,11 @@ if (app.Environment.IsDevelopment())
 // 12. COMMON MIDDLEWARE
 // ======================================================
 
-app.UseHttpsRedirection();
+// TLS is terminated by the public reverse proxy in Docker deployments.
+if (!string.Equals(Environment.GetEnvironmentVariable("BEHIND_PROXY"), "true", StringComparison.OrdinalIgnoreCase))
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseStaticFiles();
 
@@ -911,6 +909,13 @@ app.Use(async (httpContext, next) =>
 // ======================================================
 
 app.MapControllers();
+
+if (string.Equals(Environment.GetEnvironmentVariable("RUN_DB_MIGRATIONS"), "true", StringComparison.OrdinalIgnoreCase))
+{
+    await using var scope = app.Services.CreateAsyncScope();
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await db.Database.MigrateAsync();
+}
 
 // ======================================================
 // 24. RUN APPLICATION
