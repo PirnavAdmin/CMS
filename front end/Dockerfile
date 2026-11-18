@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci
 COPY . ./
-RUN npm run build
+RUN npm_config_script_shell=/bin/sh npm run build
 
 FROM nginx:1.27-alpine
 COPY --from=build /app/build /usr/share/nginx/html

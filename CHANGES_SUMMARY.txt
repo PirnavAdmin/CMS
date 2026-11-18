@@ -36,6 +36,11 @@ Backend/.dockerignore
 
 front end/Dockerfile
   Added multi-stage frontend build and production static serving on port 3000.
+  Forces /bin/sh for npm scripts in the Linux container.
+
+front end/.npmrc (deleted)
+  Removed the Windows-only cmd.exe script-shell setting that caused the Linux
+  Docker frontend build to fail.
 
 front end/.dockerignore
   Excludes node_modules, build output, Git metadata, and env files from the
