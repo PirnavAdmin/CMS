@@ -1,0 +1,109 @@
+CHANGES SUMMARY
+===============
+
+Scope: deployment setup for pulseleef.com using host-installed Nginx and MySQL.
+This file is the requested inventory of the changed project files.
+
+DEPLOYMENT AND CONFIGURATION
+---------------------------
+.env
+  Host MySQL connection settings and application secrets for this deployment.
+
+.env.example
+  Template for MySQL host, port, database, user, password, SSL mode, JWT key,
+  ASP.NET environment, and domain settings.
+
+.gitignore
+  Environment-file ignore rules were removed. Review this carefully because
+  .env contains credentials and secrets.
+
+docker-compose.yml
+  Builds the frontend and backend only. Removed the database container and
+  Nginx container. Backend connects to host MySQL via host.docker.internal;
+  frontend/backend are published on ports 3000/5000. Uploads and Data
+  Protection keys use persistent Docker volumes.
+
+EC2_DEPLOYMENT.md
+  Updated server deployment instructions for host-installed MySQL and Nginx,
+  DNS records, MySQL network access, Compose startup, and HTTPS setup.
+
+Backend/Dockerfile
+  Added multi-stage .NET 8 backend container build.
+
+Backend/.dockerignore
+  Excludes build outputs, Git metadata, and environment files from the backend
+  Docker build context.
+
+front end/Dockerfile
+  Added multi-stage frontend build and production static serving on port 3000.
+
+front end/.dockerignore
+  Excludes node_modules, build output, Git metadata, and env files from the
+  frontend Docker build context.
+
+front end/nginx.conf
+  Configures the frontend container's internal web server and API, image, and
+  upload proxy routes.
+
+nginx/pulseleef.com.conf
+  Host Nginx site config for pulseleef.com. Proxies API/assets to port 5000
+  and frontend requests to port 3000. HTTP is configured; HTTPS needs a host
+  certificate.
+
+FRONTEND
+--------
+front end/src/config/api.jsx
+  Uses same-origin relative API and asset URLs by default instead of the old
+  ngrok endpoint.
+
+BACKEND MYSQL CONVERSION
+------------------------
+Backend/Adminclinic.csproj
+  Added Pomelo.EntityFrameworkCore.MySql 8.0.3 for EF Core 8 MySQL support.
+
+Backend/Program.cs
+  Configures EF Core to use MySQL and validates demo database names using a
+  MySQL connection string. Removed the startup SQL Server migration call.
+  Linux Data Protection keys persist in the mounted Docker volume.
+
+Backend/Data/AppDbContext.cs
+  Removed SQL Server filtered-index configuration and datetime2 column types;
+  adapted check-constraint expressions for MySQL.
+
+Backend/Controllers/BranchController.cs
+  Reworked hospital-row locking as a MySQL SELECT ... FOR UPDATE query.
+
+Backend/Controllers/CmsSubscriptionRazorpayController.cs
+Backend/Controllers/CmsSubscriptionWebhookController.cs
+Backend/Controllers/HospitalPaymentsController.cs
+Backend/Controllers/PatientPortalController.cs
+Backend/Controllers/SubscriptionController.cs
+Backend/Controllers/SuperAdminPendingAdminController.cs
+Backend/Services/AppointmentService.cs
+Backend/Services/CmsRazorpayReconciliationService.cs
+Backend/Services/HospitalPaymentAllocationService.cs
+Backend/Services/HospitalRefundReconciliationService.cs
+  Converted SQL Server row-lock queries to MySQL SELECT ... FOR UPDATE.
+
+Backend/Controllers/SubscriptionController.cs
+  Also recognizes MySQL duplicate-key errors.
+
+Backend/Services/CmsWebhookRetryBackgroundService.cs
+Backend/Services/HospitalPaymentRecoveryLockService.cs
+Backend/Services/HospitalReconciliationDiscoveryWorker.cs
+Backend/Services/HospitalSettlementReconciliationLockService.cs
+  Replaced SQL Server application locks with MySQL named locks.
+
+Backend/Services/HospitalPaymentRecoveryService.cs
+  Updated lock-provider documentation for MySQL.
+
+DATABASE MIGRATION NOTE
+-----------------------
+The existing EF migration files were authored for SQL Server and are not run
+against MySQL. This configuration expects the MySQL schema to have already
+been migrated. Future schema changes need MySQL-compatible migrations/scripts.
+
+VERIFICATION
+------------
+The backend build was not verified because the dotnet CLI is unavailable in
+this workspace. No test suite was run.
