@@ -3033,6 +3033,54 @@ html body .content.superadmin-content .sa-report-search-filter > select {
   }
 }
 
+.sa-subscription-table-section > .sa-report-table-scroll {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: scroll !important;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: auto !important;
+  -ms-overflow-style: auto !important;
+  scrollbar-color: var(--theme-primary) #d9eeee;
+}
+
+.sa-subscription-table-section .sa-report-table-content {
+  width: max-content;
+}
+
+.sa-subscription-table-section .sa-subscription-report-table {
+  width: max-content !important;
+  min-width: 100%;
+}
+
+.sa-subscription-table-section > .sa-report-table-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: auto !important;
+  height: 14px !important;
+}
+
+.sa-subscription-table-section > .sa-report-table-scroll::-webkit-scrollbar-track {
+  display: block !important;
+  background: #d9eeee !important;
+  border-radius: 999px;
+}
+
+.sa-subscription-table-section > .sa-report-table-scroll::-webkit-scrollbar-thumb {
+  display: block !important;
+  background: #72cbc8 !important;
+  border: 3px solid #d9eeee !important;
+  border-radius: 999px;
+}
+
+.sa-subscription-table-section > .sa-report-table-scroll::-webkit-scrollbar-corner {
+  display: block !important;
+  width: auto !important;
+  height: auto !important;
+  background: #d9eeee !important;
+}
+
 .sa-report-table-wrap .sa-table {
   border: 0;
   border-radius: 10px 10px 0 0;

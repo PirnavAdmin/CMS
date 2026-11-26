@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ChevronRight, Menu, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import NotificationPopup from "../components/NotificationPopup";
+import ThemePicker from "../components/ThemePicker";
 import UserProfileMenu from "../profile/UserProfileMenu";
 import { labModuleSearchItems, searchModuleItems } from "../utils/moduleSearch";
 
@@ -59,6 +60,7 @@ function LabTopbar({ title, onMenu }) {
             </div>
           ) : null}
         </form>
+        <ThemePicker />
         <NotificationPopup />
         <UserProfileMenu roleType="lab" />
       </div>

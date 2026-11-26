@@ -28,6 +28,7 @@ const fields = [
   { key: "startDate", label: "Start Date", width: "130px" },
   { key: "renewalDate", label: "Renewal Date", width: "130px" },
 ];
+const visibleFields = fields.filter((field) => field.key !== "hospitalId");
 const escapeHtml = (value) => String(value ?? "-").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const getAdminForSubscription = (row, admins) => {
   const raw = row.raw || {};
@@ -147,7 +148,7 @@ export default function Reports() {
     <section className="sa-subscription-table-section">
       <SearchFilter className="sa-report-search-filter" value={search} onChange={setSearch} placeholder="Search subscriptions..." filters={["All", ...new Set(subscriptions.map((row) => row.status).filter(Boolean))]} selectedFilter={status} onFilterChange={setStatus} />
       {error && <div className="sa-state sa-state--error" role="alert">{error}</div>}
-      <div style={{ overflowX: "auto" }}><div style={{ minWidth: fields.reduce((sum, field) => sum + parseInt(field.width, 10) + 12, 40), "--report-columns": fields.map(field => field.width).join(" ") }}><DataTable className="sa-subscription-report-table" columns={fields} rows={rows} loading={loading} emptyMessage="No subscription report records found." preserveColumnFractions /></div></div>
+      <div className="sa-report-table-scroll"><div className="sa-report-table-content" style={{ minWidth: visibleFields.reduce((sum, field) => sum + parseInt(field.width, 10) + 12, 40), "--report-columns": visibleFields.map(field => field.width).join(" ") }}><DataTable className="sa-subscription-report-table" columns={visibleFields} rows={rows} loading={loading} emptyMessage="No subscription report records found." preserveColumnFractions /></div></div>
     </section>
   </>;
 }

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ChevronRight, Menu, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import NotificationPopup from "../components/NotificationPopup";
+import ThemePicker from "../components/ThemePicker";
 import UserProfileMenu from "../profile/UserProfileMenu";
 import { receptionModuleSearchItems, searchModuleItems } from "../utils/moduleSearch";
 
@@ -69,6 +70,7 @@ function ReceptionTopbar({ title, onMenu, areaLabel = "Reception", roleType = "r
             </div>
           ) : null}
         </form>
+        <ThemePicker />
         <NotificationPopup />
         <UserProfileMenu roleType={roleType} />
       </div>

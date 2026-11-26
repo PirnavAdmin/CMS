@@ -1,5 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Eye, EyeOff } from 'lucide-react';
 import { registerAdmin, verifyAdminRegistrationOtp, resendAdminRegistrationOtp } from '../../utils/paymentApi';
 import { unwrapPaymentData } from '../../utils/paymentAdministration.mjs';
 import './PaymentAdministration.css';
@@ -8,6 +9,7 @@ export default function AdminRegistration({ standalone = false }) {
   const [stage, setStage] = useState('register');
   const [form, setForm] = useState({ name: '', email: '', mobileNumber: '', password: '', otp: '' });
   const [busy, setBusy] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const lock = useRef(false);
@@ -52,7 +54,7 @@ export default function AdminRegistration({ standalone = false }) {
             <label>Registration email<input name="email" type="email" value={form.email} onChange={change} maxLength={200} autoComplete="email" required /></label>
             {stage === 'register' ? <>
               <label>Mobile number<input name="mobileNumber" type="tel" value={form.mobileNumber} onChange={change} pattern="[6-9][0-9]{9}" maxLength={10} autoComplete="tel-national" required /></label>
-              <label>Registration password<input name="password" type="password" value={form.password} onChange={change} maxLength={100} autoComplete="new-password" required /></label>
+              <label>Registration password<div className="payment-api-password-field"><input name="password" type={showPassword ? 'text' : 'password'} value={form.password} onChange={change} maxLength={100} autoComplete="new-password" required /><button type="button" className="payment-api-password-toggle" onClick={() => setShowPassword(current => !current)} aria-label={showPassword ? 'Hide password' : 'Show password'} aria-pressed={showPassword}>{showPassword ? <Eye size={18} /> : <EyeOff size={18} />}</button></div></label>
             </> : <label>Registration OTP<input name="otp" value={form.otp} onChange={change} inputMode="numeric" pattern="[0-9]{6}" maxLength={6} autoComplete="one-time-code" required /></label>}
           </div>
           <div className="payment-api-actions">

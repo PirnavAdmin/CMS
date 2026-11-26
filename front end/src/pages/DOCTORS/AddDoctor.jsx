@@ -656,9 +656,10 @@ function AddDoctor() {
     }
 
     if (["experience", "fees"].includes(name)) {
-      value = onlyNumberValue(value);
       if (name === "experience") {
-        value = value.slice(0, 2);
+        value = String(value).replace(/\D/g, "").slice(0, 2);
+      } else {
+        value = onlyNumberValue(value);
       }
     }
 
@@ -1130,6 +1131,7 @@ const validateBranchSelection = (values = form) => {
                 min="0"
                 max="99"
                 step="1"
+                inputMode="numeric"
                 value={form.experience}
                 onChange={handleChange}
                 className={fieldErrors.experience ? "is-invalid" : ""}

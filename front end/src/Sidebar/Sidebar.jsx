@@ -90,6 +90,7 @@ function Sidebar({ collapsed = false }) {
     .trim()
     .toLowerCase()
     .replace(/[\s_-]+/g, "");
+  const isAdminUser = ["admin", "clinicadmin"].includes(sessionRole);
   const isSuperAdmin = location.pathname.startsWith("/superadmin") || sessionRole === "superadmin";
   const isPatient =
     location.pathname === "/patient" ||
@@ -105,14 +106,22 @@ function Sidebar({ collapsed = false }) {
   const [subscription, setSubscription] = useState(null);
   useEffect(() => {
     let active = true;
-    setSubscription(null);
-    if (!isSuperAdmin && !isPatient) {
+    const loadSubscription = () => {
       fetchMySubscription().then((value) => { if (active) setSubscription(value); }).catch(() => { if (active) setSubscription(null); });
-    }
-    return () => { active = false; };
-  }, [isSuperAdmin, isPatient]);
+    };
+    setSubscription(null);
+    if (!isSuperAdmin && !isPatient && isAdminUser) loadSubscription();
+    if (isAdminUser) window.addEventListener("cms:subscription-updated", loadSubscription);
+    return () => { active = false; window.removeEventListener("cms:subscription-updated", loadSubscription); };
+  }, [isAdminUser, isSuperAdmin, isPatient]);
   const labEntitled = subscription?.includesLab === true && String(subscription.status).toLowerCase() === "active";
-  const moduleScopedItems = labEntitled ? items : items.filter((item) => !["Lab Technicians", "Lab Files"].includes(item.label));
+  const pharmacyEntitled = subscription?.includesPharmacy === true && String(subscription.status).toLowerCase() === "active";
+  const cmsEntitled = subscription?.includesCms === true && String(subscription.status).toLowerCase() === "active";
+  const moduleScopedItems = !isAdminUser
+    ? items
+    : !cmsEntitled
+    ? items.filter((item) => ["Subscription", "Audit Logs"].includes(item.label))
+    : items.filter((item) => (labEntitled || !["Lab Technicians", "Lab Files"].includes(item.label)) && (pharmacyEntitled || item.label !== "Pharmacists"));
   const baseNavItems = isSuperAdmin ? superAdminItems : isPatient ? patientItems : moduleScopedItems;
   const navItems = useMemo(() => {
     if (isSuperAdmin || isPatient) return baseNavItems;

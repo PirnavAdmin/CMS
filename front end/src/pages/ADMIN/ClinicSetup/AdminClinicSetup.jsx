@@ -23,6 +23,7 @@ import {
 } from "../../../utils/validation";
 import { getJsonHeaders, parseErrorMessage } from "../../../utils/branchApi";
 import { formatClinicName } from "../../../utils/clinicDisplay";
+import { clearAdminSession, refreshAdminSession } from "../../../utils/adminAuthSession";
 import "./AdminClinicSetup.css";
 
 const emptyClinic = {
@@ -235,10 +236,20 @@ function AdminClinicSetup() {
       sessionStorage.setItem("clinicName", nextClinicName);
       sessionStorage.setItem("assignedClinic", nextClinicName);
 
+      try {
+        await refreshAdminSession();
+      } catch (refreshError) {
+        clearAdminSession();
+        const message = refreshError.message || "Clinic created. Sign in again to continue with subscription setup.";
+        toast.error(message);
+        navigate("/login", { replace: true, state: { message } });
+        return;
+      }
+
       const message = "Clinic created successfully.";
       setSuccess(message);
       toast.success(message);
-      navigate("/dashboard", { replace: true });
+      navigate("/plans", { replace: true });
     } catch (requestError) {
       const message = requestError.message || "Unable to create clinic.";
       setError(message);

@@ -2142,7 +2142,7 @@ html body .role-single-screen :is(.nd-action-text h3,.rc-dash-action-title) { fo
 html body .role-single-screen :is(.dd-queue-card,.nd-table-card,.rc-dash-table-card) { flex: 1 1 0 !important; min-height: 0 !important; height: auto !important; display: flex !important; flex-direction: column !important; overflow: hidden !important; padding: 10px !important; margin: 0 !important; background: #fff !important; border: 1px solid #e2e8f0 !important; border-top: 3px solid var(--theme-primary) !important; border-radius: 12px !important; box-shadow: none !important; }
 html body .role-single-screen :is(.dd-queue-header,.nd-table-header,.rc-dash-table-head) { padding: 0 0 8px !important; min-height: 0 !important; gap: 6px !important; margin: 0 !important; flex-shrink: 0; background: transparent !important; border: 0 !important; box-shadow: none !important; }
 html body .role-single-screen :is(.dd-queue-title,.nd-table-title-wrap h3,.rc-dash-table-head h3) { font-size: 15px !important; margin: 0 !important; }
-html body .role-single-screen :is(.dd-table,.rc-dash-table-container,.rc-dash-table-body) { min-height: 0 !important; height: auto !important; max-height: none !important; overflow: visible !important; flex: 1; }
+html body .role-single-screen :is(.dd-table,.rc-dash-table-container,.rc-dash-table-body) { min-width: 0 !important; min-height: 0 !important; width: 100% !important; max-width: 100% !important; height: auto !important; max-height: none !important; overflow: auto !important; flex: 1; }
 html body .role-single-screen :is(.dd-thead,.rc-dash-table-header) { min-height: 32px !important; height: auto !important; padding-top: 5px !important; padding-bottom: 5px !important; }
 html body .role-single-screen :is(.dd-row,.rc-dash-table-row) { min-height: 44px !important; height: auto !important; padding-top: 5px !important; padding-bottom: 5px !important; }
 html body .role-single-screen :is(.dd-queue-filters,.dd-queue-footer) { padding: 5px 0 !important; gap: 6px !important; margin: 0 !important; flex-shrink: 0; }
@@ -2273,7 +2273,7 @@ html body :is(.content,.rc-content,.dr-layout-content,.lab-main,.pharmacy-main,.
 /* Shared shell geometry. Explicit specificity also covers lazy-loaded module CSS. */
 :root {
   --app-topbar-height: 64px;
-  --app-sidebar-width: 232px;
+  --app-sidebar-width: 240px;
   --app-sidebar-rail: 72px;
 }
 
@@ -2322,10 +2322,19 @@ html body :is(.topbar, .dr-topbar, .rc-topbar, .pharmacy-topbar, .pp-topbar) :is
 
 html body .topbar-search-results { top: calc(100% + 6px); }
 
+/* Keep the fixed sidebar reservation and its main pane inside the viewport. */
+html body .layout {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 html body :is(.sidebar, .rc-sidebar, .pharmacy-sidebar, .pp-sidebar) {
   width: var(--app-sidebar-width) !important;
   min-width: 0 !important;
-  padding: 12px 10px !important;
+  box-sizing: border-box !important;
+  padding: 12px 14px !important;
   height: 100dvh !important;
   max-width: 88vw;
   overflow-y: auto !important;
@@ -2364,13 +2373,53 @@ html body :is(.sidebar-header, .rc-brand, .pharmacy-brand, .pp-brand) {
 
 html body .layout > .main {
   margin-left: var(--app-sidebar-width) !important;
+  flex: 0 0 calc(100% - var(--app-sidebar-width)) !important;
+  width: calc(100% - var(--app-sidebar-width)) !important;
+  box-sizing: border-box;
+  min-width: 0 !important;
+  max-width: calc(100% - var(--app-sidebar-width));
 }
 html body .layout.sidebar-collapsed > .main {
   margin-left: var(--app-sidebar-rail) !important;
+  flex-basis: calc(100% - var(--app-sidebar-rail)) !important;
+  width: calc(100% - var(--app-sidebar-rail)) !important;
+  max-width: calc(100% - var(--app-sidebar-rail));
+}
+html body .layout > .main > .content,
+html body .layout > .main > .topbar {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+html body .layout > .main > .content > * {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
 }
 html body .sidebar.collapsed {
   width: var(--app-sidebar-rail) !important;
   padding: 12px 6px !important;
+}
+
+html body .sidebar .nav-item {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+}
+
+html body .topbar-right {
+  flex: 0 1 auto !important;
+  min-width: 0 !important;
+}
+html body .topbar-profile,
+html body .user-profile-chip {
+  min-width: 0 !important;
+  max-width: min(320px, 28vw);
+}
+html body .topbar-user-info,
+html body .user-profile-copy {
+  min-width: 0 !important;
+  overflow: hidden;
 }
 
 @media (min-width: 901px) {
@@ -2680,4 +2729,133 @@ html body :is(.admin-greeting-icon, .role-greeting-icon, .sa-dashboard-greeting-
     flex: 1 1 280px;
     max-width: 520px;
   }
+}
+
+/* Keep shared application shells and their page roots within the viewport. */
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+html body .content .db-dashboard.db-admin-overview {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+
+:where(
+  .layout,
+  .main,
+  .content,
+  .dr-layout,
+  .dr-layout-body,
+  .dr-layout-content,
+  .rc-shell,
+  .rc-main,
+  .rc-content,
+  .lab-shell,
+  .lab-main,
+  .nurse-content,
+  .pharmacy-shell,
+  .pharmacy-main,
+  .pharmacy-content,
+  .pp-shell,
+  .pp-main,
+  .pp-content
+) {
+  min-width: 0;
+  max-width: 100%;
+}
+
+:where(
+  .content,
+  .dr-layout-content,
+  .rc-content,
+  .lab-main,
+  .nurse-content,
+  .pharmacy-content,
+  .pp-main,
+  .pp-content
+) > * {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+:where(
+  .content,
+  .dr-layout-content,
+  .rc-content,
+  .lab-main,
+  .nurse-content,
+  .pharmacy-content,
+  .pp-main,
+  .pp-content
+) > :where([class*="-page"], [class$="-dashboard"], .dashboard, .role-single-screen) {
+  width: 100%;
+}
+
+/* Let non-dashboard pages scroll vertically inside their application pane. */
+@media screen {
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main):not(:has(.role-single-screen, .db-admin-overview, .sa-dashboard-page, .sa-dashboard)) {
+    min-height: 0;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-color: #79c9c3 #e8f6f5 !important;
+  }
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main):not(:has(.role-single-screen, .db-admin-overview, .sa-dashboard-page, .sa-dashboard))::-webkit-scrollbar-track {
+    background: #e8f6f5 !important;
+  }
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main):not(:has(.role-single-screen, .db-admin-overview, .sa-dashboard-page, .sa-dashboard))::-webkit-scrollbar-thumb {
+    background: #79c9c3 !important;
+    border-color: #e8f6f5 !important;
+  }
+  html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main):not(:has(.role-single-screen, .db-admin-overview, .sa-dashboard-page, .sa-dashboard))::-webkit-scrollbar-thumb:hover {
+    background: #5bb8b3 !important;
+  }
+}
+
+/* Keep every application page vertically scrollable, including dashboard pages. */
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main) {
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin !important;
+  -ms-overflow-style: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main):has(:is(.role-single-screen, .db-admin-overview, .sa-dashboard-page, .sa-dashboard)) {
+  overflow-y: auto !important;
+}
+
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main)::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main)::-webkit-scrollbar-track {
+  display: block !important;
+  background: #e8f6f5 !important;
+  border-radius: 999px !important;
+}
+
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main)::-webkit-scrollbar-thumb {
+  display: block !important;
+  background: #79c9c3 !important;
+  border: 2px solid #e8f6f5 !important;
+  border-radius: 999px !important;
+}
+
+html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-content, .pharmacy-content, .pp-content, .pp-main)::-webkit-scrollbar-thumb:hover {
+  background: #5bb8b3 !important;
 }

@@ -167,10 +167,18 @@ export const fetchSubscriptionPaymentMethods=async()=>{
     name:String(method.name??method.Name??method.label??method.Label??method.code??method.Code??"").trim(),
     enabled:asBoolean(method.enabled??method.Enabled??true),
     liveProcessingAvailable:asBoolean(method.liveProcessingAvailable??method.LiveProcessingAvailable??false),
-  })).filter((method)=>method.code&&method.enabled);
+  })).filter((method)=>method.code);
+  const standardMethods=[
+    {code:"UPI",name:"UPI"},
+    {code:"Card",name:"Debit / Credit Card"},
+    {code:"NetBanking",name:"Net Banking"},
+  ].map((standard)=>{
+    const configured=methods.find((method)=>method.code.toLowerCase()===standard.code.toLowerCase());
+    return {...standard,...configured,code:standard.code,name:standard.name,enabled:Boolean(configured?.enabled)};
+  });
   return {
     gatewayConfigured:asBoolean(response?.gatewayConfigured??response?.GatewayConfigured??false),
-    methods,
+    methods:standardMethods,
   };
 };
 export const fetchAdminSubscriptionPlans=async()=>{

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronRight, Menu, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import NotificationPopup from "../components/NotificationPopup";
+import ThemePicker from "../components/ThemePicker";
 import UserProfileMenu from "../profile/UserProfileMenu";
 import { doctorModuleSearchItems, searchModuleItems } from "../utils/moduleSearch";
 import "./DoctorTopbar.css";
@@ -83,6 +84,7 @@ function DoctorTopbar({ title, sidebarOpen, onMenuToggle, search = "", onSearch 
       </form>
 
       <div className="dr-topbar-right">
+        <ThemePicker />
         <NotificationPopup />
         <UserProfileMenu roleType="doctor" />
       </div>

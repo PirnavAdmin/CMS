@@ -101,7 +101,15 @@ const RxCustomSelect = ({
   disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [optionSearch, setOptionSearch] = useState("");
   const dropdownRef = useRef(null);
+  const filteredOptions = useMemo(() => {
+    const search = optionSearch.trim().toLowerCase();
+    const matches = search
+      ? options.filter((option) => String(option).toLowerCase().includes(search))
+      : options;
+    return matches.slice(0, 100);
+  }, [optionSearch, options]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -137,7 +145,10 @@ const RxCustomSelect = ({
       <button
         type="button"
         className={`rx-cell-input rx-custom-select-trigger ${className} ${isOpen ? "rx-select-open" : ""}`}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => {
+          setOptionSearch("");
+          setIsOpen((prev) => !prev);
+        }}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
         aria-label={ariaLabel || placeholder}
@@ -155,6 +166,19 @@ const RxCustomSelect = ({
 
       {isOpen && (
         <div className="rx-custom-dropdown-menu" role="listbox">
+          {options.length > 12 ? (
+            <div className="rx-custom-dropdown-search">
+              <Search size={14} aria-hidden="true" />
+              <input
+                type="search"
+                value={optionSearch}
+                onChange={(event) => setOptionSearch(event.target.value)}
+                placeholder="Search"
+                aria-label="Search options"
+                autoFocus
+              />
+            </div>
+          ) : null}
           <button
             type="button"
             className={`rx-custom-dropdown-item is-placeholder ${!value ? "active" : ""}`}
@@ -166,7 +190,7 @@ const RxCustomSelect = ({
             <span>{placeholder}</span>
             {!value && <Check size={14} className="rx-dropdown-check" />}
           </button>
-          {options.map((option) => (
+          {filteredOptions.map((option) => (
             <button
               type="button"
               key={option}
@@ -180,6 +204,9 @@ const RxCustomSelect = ({
               {value === option && <Check size={14} className="rx-dropdown-check" />}
             </button>
           ))}
+          {filteredOptions.length === 0 ? (
+            <div className="rx-custom-dropdown-empty">No matching options</div>
+          ) : null}
         </div>
       )}
     </div>
@@ -443,6 +470,7 @@ function Prescription() {
   const [medicineCatalogueLoading, setMedicineCatalogueLoading] = useState(true);
   const [catalogueReload, setCatalogueReload] = useState(0);
   const [isMedicineSearchFocused, setIsMedicineSearchFocused] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
 
   useEffect(() => {
@@ -1310,6 +1338,15 @@ function Prescription() {
           <div className="rx-actions">
             <div className="rx-actions-right">
               <button
+                className="rx-btn-icon rx-btn-icon--preview"
+                type="button"
+                onClick={() => setIsPreviewOpen(true)}
+                title="Prescription Preview"
+              >
+                <span>Prescription Preview</span>
+              </button>
+
+              <button
                 className="rx-btn-icon rx-btn-icon--print"
                 type="button"
                 onClick={printPrescription}
@@ -1343,8 +1380,22 @@ function Prescription() {
           </div>
         </div>
 
-        <div className="rx-preview-panel">
-          <h4 className="rx-preview-heading">Prescription Preview</h4>
+        <div
+          className={`rx-preview-panel${isPreviewOpen ? " is-open" : ""}`}
+          id="prescription-preview-panel"
+          role={isPreviewOpen ? "dialog" : undefined}
+          aria-modal={isPreviewOpen ? "true" : undefined}
+        >
+          <div className="rx-preview-heading-row">
+            <h4 className="rx-preview-heading">Prescription Preview</h4>
+            <button
+              type="button"
+              className="rx-preview-close"
+              onClick={() => setIsPreviewOpen(false)}
+            >
+              Close
+            </button>
+          </div>
           <div className="rx-preview-slip">
             <div className="rx-slip-header">
               <p className="rx-slip-clinic">{hospitalName}</p>

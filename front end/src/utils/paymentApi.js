@@ -22,7 +22,7 @@ const getToken = (scope) => {
   return '';
 };
 
-export const paymentApi = createPaymentApiClient({ url: apiUrl, getToken });
+export const paymentApi = createPaymentApiClient({ url: apiUrl, getToken, fetchImpl: (...args) => window.fetch(...args) });
 
 export const registerAdmin = (body) => paymentApi('POST auth/admin/register', { body });
 export const verifyAdminRegistrationOtp = (body) => paymentApi('POST auth/admin/verify-otp', { body });

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import DatePickerField from "../../components/DatePickerField";
+import ThemePicker from "../../components/ThemePicker";
 import { Navigate, NavLink, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import {
   Activity, ArrowLeftToLine, Bell, Calendar, Check, CheckCircle2, ChevronDown, ChevronRight, Circle, ClipboardList,
@@ -1151,6 +1152,8 @@ function PatientShell({ notifications, children, patient }) {
                 aria-label="Search patient portal"
               />
             </form>
+
+            <ThemePicker />
 
             <NavLink to="/patient/notifications" className="pp-icon-btn" title="Notifications">
               <Bell size={18} />

@@ -6,6 +6,10 @@
 .payment-api-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; margin: 12px 0; }
 .payment-api-panel label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; min-width: 0; }
 .payment-api-panel :is(input:not([type=checkbox]), select, textarea) { box-sizing: border-box; width: 100%; min-height: 38px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; color: #334155; font: inherit; }
+.payment-api-password-field { position: relative; width: 100%; }
+.payment-api-password-field input { padding-right: 42px !important; }
+.payment-api-panel .payment-api-password-toggle { position: absolute; top: 50%; right: 4px; display: grid; place-items: center; width: 34px; min-height: 34px; padding: 0; border: 0; background: transparent; color: #64748b; transform: translateY(-50%); }
+.payment-api-panel .payment-api-password-toggle:hover { color: var(--theme-primary-dark, #0f5960); }
 .payment-api-panel textarea { min-height: 70px; }
 .payment-api-panel .payment-api-check { display: flex; flex-direction: row; align-items: center; gap: 8px; margin: 10px 0; }
 .payment-api-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }

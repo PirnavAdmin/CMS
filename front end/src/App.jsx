@@ -158,7 +158,7 @@ function App() {
           <Route path="roles" element={<PermissionRoute roleType="admin" module="Roles & Permissions"><AdminRolesPermissions /></PermissionRoute>} />
           <Route path="roles-permissions" element={<Navigate to="/roles" replace />} />
           <Route path="users" element={<PermissionRoute roleType="admin" module="User Management"><AdminUserManagement /></PermissionRoute>} />
-          <Route path="pharmacists" element={<PermissionRoute roleType="admin" module="User Management"><AdminPharmacists /></PermissionRoute>} />
+          <Route path="pharmacists" element={<PermissionRoute roleType="admin" module="User Management" entitlement="pharmacy"><AdminPharmacists /></PermissionRoute>} />
           <Route path="settings" element={<PermissionRoute roleType="admin" module="Settings"><AdminSettings /></PermissionRoute>} />
           <Route path="payment-settings" element={<PermissionRoute roleType="admin" module="Settings"><AdminPaymentSettings /></PermissionRoute>} />
           <Route path="payment-settings/:method" element={<PermissionRoute roleType="admin" module="Settings"><AdminPaymentSettings /></PermissionRoute>} />

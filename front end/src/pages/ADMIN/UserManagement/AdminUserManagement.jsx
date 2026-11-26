@@ -615,7 +615,7 @@ function AdminUserManagement() {
 
         <div className="admin-users-table">
           <div className="admin-users-table-head">
-            <span className="admin-users-sno-head">S.No.</span>
+            <span className="admin-users-sno-head">S.No</span>
             <span className="admin-users-name-head">Name</span>
             <span className="admin-users-email-head">Email</span>
             <span className="admin-users-clinic-head">Clinic</span>
