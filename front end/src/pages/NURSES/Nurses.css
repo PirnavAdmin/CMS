@@ -1165,6 +1165,40 @@
   background: #94a3b8;
 }
 
+/* Keep the add-nurse form within the modal while retaining vertical scrolling. */
+.nurses-modal:not(.nurses-view-modal) .nurses-form {
+  min-width: 0;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  scrollbar-width: auto !important;
+  -ms-overflow-style: auto !important;
+  scrollbar-color: #8fcac8 #e7f3f3 !important;
+}
+
+.nurses-modal:not(.nurses-view-modal) .nurses-form > * {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+html body .nurses-modal:not(.nurses-view-modal) .nurses-form::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+  height: 0 !important;
+}
+
+html body .nurses-modal:not(.nurses-view-modal) .nurses-form::-webkit-scrollbar-track {
+  display: block !important;
+  background: #e7f3f3 !important;
+}
+
+html body .nurses-modal:not(.nurses-view-modal) .nurses-form::-webkit-scrollbar-thumb {
+  display: block !important;
+  background: #8fcac8 !important;
+  border: 2px solid #e7f3f3 !important;
+  border-radius: 999px;
+}
+
 .nurses-image-upload {
   display: flex;
   flex-direction: column;

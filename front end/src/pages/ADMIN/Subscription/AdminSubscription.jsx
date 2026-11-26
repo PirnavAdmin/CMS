@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import "./AdminSubscription.css";
 import { CheckCircle2, RefreshCw } from "lucide-react";
 import Header from "../../../components/superadmin/Header";
@@ -10,7 +11,7 @@ import {
   createUpgradeCheckout,
   activateSubscriptionRenewal,
   createRenewalCheckout,
-  fetchClinicSubscription,
+  fetchMySubscription,
   fetchRenewalHistory,
   fetchSubscriptionPaymentMethods,
   fetchSubscriptionPaymentStatus,
@@ -51,6 +52,7 @@ const readPaymentStatus = (value) =>
 
 export default function AdminSubscription() {
   const toast = useToast();
+  const navigate = useNavigate();
   const [subscription, setSubscription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -114,13 +116,17 @@ export default function AdminSubscription() {
   useEffect(() => {
     let active = true;
     setLoading(true); setError("");
-    fetchClinicSubscription().then((value) => {
+    fetchMySubscription().then((value) => {
       if (!active) return;
       setSubscription(value);
       if (refresh) toast.success("Subscription refreshed.");
     }).catch((failure) => {
       if (!active) return;
       setSubscription(null);
+      if (failure.status === 404) {
+        setError("");
+        return;
+      }
       const message = failure.message || "Unable to load subscription.";
       setError(message); toast.error(message);
     }).finally(() => { if (active) setLoading(false); });
@@ -223,7 +229,8 @@ export default function AdminSubscription() {
     }
   };
   const currency = (value) => value == null ? "-" : formatIndianCurrency(value);
-  const details = subscription ? [
+  const hasActiveSubscription = String(subscription?.status || "").trim().toLowerCase() === "active" && subscription?.includesCms === true;
+  const details = hasActiveSubscription ? [
     ["Plan", subscription.planName],
     ["Plan ID", subscription.subscriptionPlanId],
     ["Purchased branch limit", subscription.maxBranches ?? "Unknown"],
@@ -252,11 +259,16 @@ export default function AdminSubscription() {
   return <div className="admin-subscription-page">
     <Header title="Subscription Details" action={<button type="button" className="sa-btn" title="Refresh subscription" aria-label="Refresh subscription" disabled={loading} onClick={() => setRefresh((value) => value + 1)}><RefreshCw size={16} /></button>} />
     {error && <div className="sa-state sa-state--error" role="alert">{error}</div>}
-    {loading ? <div className="sa-state">Loading...</div> : subscription ? <section className="sa-form-card">
+    {loading ? <div className="sa-state">Loading...</div> : hasActiveSubscription ? <section className="sa-form-card">
       <h3>Plan Summary</h3>
       <div className="sa-form-grid">{details.map(([label, value], index) => <div className="sa-form-field" key={label}><label htmlFor={"subscription-detail-" + index}>{label}</label><input id={"subscription-detail-" + index} readOnly value={value == null || value === "" ? "-" : value} /></div>)}</div>
-    </section> : !error && <div className="sa-state">No subscription assigned.</div>}
-    <section className="sa-form-card" style={{ marginTop: 16 }}>
+    </section> : !error && <div className="sa-state">No active subscription assigned.</div>}
+    {!loading && !hasActiveSubscription && !error ? <section className="sa-form-card" style={{ marginTop: 16 }}>
+      <h3>Choose a subscription plan</h3>
+      <p>Your clinic does not have an active subscription yet. Select a plan to continue with checkout and payment verification.</p>
+      <div className="sa-subscription-actions"><button type="button" className="sa-btn sa-btn-primary" onClick={() => navigate("/plans")}>Choose plan</button></div>
+    </section> : null}
+    {hasActiveSubscription ? <section className="sa-form-card" style={{ marginTop: 16 }}>
       <h3>Renew or upgrade subscription</h3>
       <div className="sa-form-field"><label htmlFor="purchase-type">Purchase type</label><select id="purchase-type" value={purchaseType} disabled={Boolean(renewalAction) || Boolean(pendingPurchase)} onChange={event => setPurchaseType(event.target.value)}><option value="renewal">Renew current plan</option><option value="upgrade">Upgrade to another plan</option></select></div>
       <p>Renewals extend the current expiry when renewed early. Upgrade credit and payable amounts are calculated by the server. Activation requires verified payment.</p>
@@ -289,7 +301,7 @@ export default function AdminSubscription() {
           </div>
         </form>
       )}
-    </section>
+    </section> : null}
     <section className="sa-subscription-table-section" style={{ marginTop: 16 }}>
       <div className="sa-subscription-panel-head">
         <h3>Renewal and upgrade payments</h3>

@@ -5,6 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { createApiReadCoordinator } from "./utils/apiReadCoordinator.mjs";
 import { applySavedTheme, startThemeSync } from "./theme/theme";
+import { clearAdminSession, refreshAdminSession } from "./utils/adminAuthSession";
 
 applySavedTheme();
 startThemeSync();
@@ -64,6 +65,9 @@ const getRequestPath = (input) => {
 
 const PUBLIC_AUTH_PATHS = new Set([
   "/api/auth/login",
+  "/api/auth/admin/register",
+  "/api/auth/admin/verify-otp",
+  "/api/auth/admin/resend-otp",
   "/api/auth/forgot-password",
   "/api/auth/verify-otp",
   "/api/auth/reset-password",
@@ -72,6 +76,19 @@ const PUBLIC_AUTH_PATHS = new Set([
 const isPublicAuthRequest = (input) => {
   const path = getRequestPath(input);
   return PUBLIC_AUTH_PATHS.has(path);
+};
+
+const isAdminRefreshRequest = (input) => getRequestPath(input) === "/api/auth/refresh-token";
+
+const isRefreshTokenRequiredResponse = async (response) => {
+  if (response.status !== 401) return false;
+  try {
+    const payload = await response.clone().json();
+    return payload?.refreshTokenRequired === true || payload?.RefreshTokenRequired === true ||
+      payload?.data?.refreshTokenRequired === true || payload?.data?.RefreshTokenRequired === true;
+  } catch {
+    return false;
+  }
 };
 
 const getRequestMethod = (input, init = {}) =>
@@ -142,6 +159,7 @@ window.fetch = (input, init = {}) => {
     requestHeaders ||
     {}
   );
+  const retryInput = typeof Request !== "undefined" && input instanceof Request ? input.clone() : input;
 
   headers.set(
     "ngrok-skip-browser-warning",
@@ -210,6 +228,19 @@ window.fetch = (input, init = {}) => {
       if (timeoutId) window.clearTimeout(timeoutId);
       if (externalSignal && controller) {
         externalSignal.removeEventListener("abort", abortFromExternalSignal);
+      }
+    })
+    .then(async (response) => {
+      if (isAdminRefreshRequest(input) || !(await isRefreshTokenRequiredResponse(response))) return response;
+      try {
+        const refreshedToken = await refreshAdminSession();
+        const retryHeaders = new Headers(headers);
+        retryHeaders.set("Authorization", `Bearer ${refreshedToken}`);
+        return await originalFetch(retryInput, { ...init, headers: retryHeaders, cache: "no-store" });
+      } catch {
+        clearAdminSession();
+        if (window.location.pathname !== "/login") window.location.assign("/login");
+        return response;
       }
     });
 };

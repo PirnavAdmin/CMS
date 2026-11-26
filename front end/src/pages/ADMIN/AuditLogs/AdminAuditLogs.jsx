@@ -182,7 +182,6 @@ function AdminAuditLogs() {
     },
     { key: "email", label: "Email Address", width: "minmax(180px, 1fr)", render: (row) => row.email || row.userEmail || "-" },
     { key: "action", label: "Action", width: "120px", align: "center", render: (row) => <span className={`sa-audit-pill sa-audit-pill--${getActionTone(getActionLabel(row))}`}>{getActionLabel(row)}</span> },
-    { key: "ipAddress", label: "IP Address", width: "120px", render: (row) => row.ipAddress || row.raw?.ipAddress || "-" },
     { key: "login", label: "Login", width: "90px", align: "center", render: (row) => <span className={`sa-audit-login ${row.isLoginActivity || getActionLabel(row) === "Login" ? "is-yes" : "is-no"}`}>{row.isLoginActivity || getActionLabel(row) === "Login" ? "Yes" : "No"}</span> },
     { key: "timestamp", label: "Timestamp", width: "170px", render: (row) => formatDateTime(getRowDateValue(row)) },
     {
@@ -228,8 +227,8 @@ function AdminAuditLogs() {
       <div className="sa-audit-scope-filter">
         <label><span>Start Date</span><DatePickerField value={startDate} onChange={setStartDate} /></label>
         <label><span>End Date</span><DatePickerField value={endDate} onChange={setEndDate} /></label>
-        <label><span>Clinic</span><select value="current" disabled><option>Current Admin Clinic</option></select></label>
-        <label><span>Branch</span><select value="all" disabled><option>All Branches</option></select></label>
+        <label><span>Clinic</span><select value="current"><option>Current Admin Clinic</option></select></label>
+        <label><span>Branch</span><select value="all"><option>All Branches</option></select></label>
       </div>
 
       <DataTable className="sa-table--audit" columns={columns} rows={pagedRows} loading={loading} error={error} emptyMessage="No admin audit logs found." preserveColumnFractions />

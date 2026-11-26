@@ -61,6 +61,7 @@ export const getSavedTheme = () => {
 export const applySavedTheme = () => applyTheme(getSavedTheme());
 
 const themeFetch = typeof window !== 'undefined' ? window.fetch.bind(window) : null;
+const THEME_SYNC_INTERVAL_MS = 15000;
 let pendingSaves = 0;
 let editVersion = 0;
 let saveQueue = Promise.resolve();
@@ -100,7 +101,7 @@ export const startThemeSync = () => {
         if (['id', 'color', 'dark', 'soft', 'glow'].some(key => saved[key] !== theme[key])) applyTheme(theme);
       }
     } catch { /* Keep the cached palette when the shared server is unavailable. */ }
-    finally { if (!stopped) timer = window.setTimeout(refresh, 1500); }
+    finally { if (!stopped) timer = window.setTimeout(refresh, THEME_SYNC_INTERVAL_MS); }
   };
   refresh();
   return () => { stopped = true; window.clearTimeout(timer); };

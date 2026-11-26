@@ -134,6 +134,13 @@
   display: none;
 }
 
+@media (min-width: 769px) {
+  .dr-sidebar-overlay {
+    display: none !important;
+    pointer-events: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .dr-layout {
     display: block;
@@ -185,4 +192,42 @@
 
 @media screen and (max-width: 900px) {
   html body .dr-layout-content:has(.role-single-screen) { overflow-y: auto !important; }
+}
+
+html body .dr-layout-content:has(:is(.cn-page, .rx-page, .da-page, .doctor-schedule-page)) {
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin !important;
+  -ms-overflow-style: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+html body .dr-layout-content:has(:is(.cn-page, .rx-page, .da-page, .doctor-schedule-page))::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+
+html body .dr-layout-content:has(:is(.cn-page, .rx-page, .da-page, .doctor-schedule-page))::-webkit-scrollbar-track {
+  display: block !important;
+  background: var(--theme-primary-soft) !important;
+  border-radius: 999px !important;
+}
+
+html body .dr-layout-content:has(:is(.cn-page, .rx-page, .da-page, .doctor-schedule-page))::-webkit-scrollbar-thumb {
+  display: block !important;
+  background: var(--theme-primary) !important;
+  border: 2px solid var(--theme-primary-soft) !important;
+  border-radius: 999px !important;
+}
+
+.dr-layout-content:has(:is(.cn-page, .rx-page, .da-page, .doctor-schedule-page)) > :is(
+  .cn-page,
+  .rx-page,
+  .da-page,
+  .doctor-schedule-page
+) {
+  flex: 0 0 auto;
+  min-height: max-content;
 }

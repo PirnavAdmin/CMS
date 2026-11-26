@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { ChevronRight, Menu, Search } from "lucide-react";
 import UserProfileMenu from "../profile/UserProfileMenu";
 import NotificationPopup from "../components/NotificationPopup";
+import ThemePicker from "../components/ThemePicker";
 import { isPharmacistSession } from "./pharmacySession";
 import PharmacySidebar from "./PharmacySidebar";
 import "./Pharmacy.css";
@@ -55,6 +56,7 @@ function PharmacyLayout() {
             <input aria-label="Search pharmacy pages" placeholder="Search medicines, stock, billing..." value={query} onFocus={() => setSearchOpen(true)} onChange={(event) => { setQuery(event.target.value); setSearchOpen(true); }} />
             {searchOpen && <div className="pharmacy-search-results">{results.length ? results.map(([path, label]) => <button type="button" key={path} onClick={() => { navigate(path); setSearchOpen(false); }}>{label}</button>) : <span>No matching pages</span>}</div>}
           </form>
+          <ThemePicker />
           <NotificationPopup />
           <UserProfileMenu roleType="pharmacist" />
         </header>

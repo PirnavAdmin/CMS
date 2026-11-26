@@ -22,6 +22,7 @@ import {
 import AppointmentModal from "./AppointmentModal";
 import { apiUrl } from "../../config/api";
 import { formatDateMMDDYYYY } from "../../utils/dateFormat";
+import { fetchAppointmentVitals, mergeStoredAppointmentVitals } from "../../utils/appointmentVitals";
 import {
   buildBranchOptions,
   fetchBranchesForHospital,
@@ -129,6 +130,7 @@ const getInitials = (name) => {
 };
 
 const normalizeAppointment = (item) => {
+  const vitals = item.vitals || item.Vitals || {};
   const patientName =
     item.patientName ||
     item.patient?.name ||
@@ -219,21 +221,39 @@ const normalizeAppointment = (item) => {
     vitals: {
       bloodPressure:
         item.bloodPressure ||
+        item.BloodPressure ||
+        vitals.bloodPressure ||
+        vitals.BloodPressure ||
         emptyValue,
       sugarLevel:
         item.sugarLevel ||
+        item.SugarLevel ||
+        vitals.sugarLevel ||
+        vitals.SugarLevel ||
         emptyValue,
       temperature:
         item.temperature ||
+        item.Temperature ||
+        vitals.temperature ||
+        vitals.Temperature ||
         emptyValue,
       weight:
         item.weight ||
+        item.Weight ||
+        vitals.weight ||
+        vitals.Weight ||
         emptyValue,
       pulseRate:
         item.pulseRate ||
+        item.PulseRate ||
+        vitals.pulseRate ||
+        vitals.PulseRate ||
         emptyValue,
       respiratoryRate:
         item.respiratoryRate ||
+        item.RespiratoryRate ||
+        vitals.respiratoryRate ||
+        vitals.RespiratoryRate ||
         emptyValue,
     },
   };
@@ -281,6 +301,20 @@ function Appointments() {
 
   const [search, setSearch] =
     useState("");
+
+  const handleViewAppointment = async (appointment) => {
+    const initialData = normalizeAppointment(mergeStoredAppointmentVitals(appointment));
+    setSelected(initialData);
+
+    const vitals = await fetchAppointmentVitals(appointment.appointmentId);
+    if (!vitals) return;
+
+    setSelected((current) =>
+      current?.appointmentId === appointment.appointmentId
+        ? normalizeAppointment({ ...current, ...vitals })
+        : current
+    );
+  };
 
   // ================= FETCH =================
 
@@ -820,7 +854,7 @@ function Appointments() {
                     canEdit={false}
                     canStatus={false}
                     canDelete={false}
-                    onView={() => setSelected(item)}
+                    onView={() => handleViewAppointment(item)}
                   />
                 </div>
 

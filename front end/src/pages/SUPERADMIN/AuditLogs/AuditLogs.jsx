@@ -486,7 +486,39 @@ function AuditLogs() {
 
     setSelectedBranchId("");
     if (!clinic) {
-      setBranches([]);
+      setLoadingBranches(true);
+      (async () => {
+        let options = [];
+        try {
+          options = buildBranchOptions(await fetchBranchesForHospital(""));
+        } catch {
+          // Try each clinic using the existing clinic-scoped branch lookup.
+        }
+
+        if (!options.length) {
+          const collected = [];
+          for (const item of clinics) {
+            for (const candidate of getClinicIdCandidates(item)) {
+              try {
+                collected.push(...buildBranchOptions(await fetchBranchesForHospital(candidate)));
+              } catch {
+                // Try the next clinic id shape.
+              }
+            }
+          }
+          options = mergeBranchOptions(collected);
+        }
+        return options;
+      })()
+        .then((options) => {
+          if (active) setBranches(options);
+        })
+        .catch(() => {
+          if (active) setBranches([]);
+        })
+        .finally(() => {
+          if (active) setLoadingBranches(false);
+        });
       return () => {
         active = false;
       };
@@ -705,17 +737,6 @@ function AuditLogs() {
       },
     },
     {
-      key: "ipAddress",
-      label: "IP Address",
-      width: "minmax(180px, 1.1fr)",
-      cellClassName: "sa-table-cell--nowrap",
-      render: (row) => (
-        <span title={row.ipAddress || ""} className="sa-table-text-overflow">
-          {row.ipAddress || "-"}
-        </span>
-      ),
-    },
-    {
       key: "isLoginActivity",
       label: "Login",
       width: "56px",
@@ -851,7 +872,7 @@ function AuditLogs() {
           <select
             value={selectedBranchId}
             onChange={(event) => setSelectedBranchId(event.target.value)}
-            disabled={!selectedClinicId || loadingBranches}
+            disabled={loadingBranches}
           >
             <option value="">
               {!selectedClinicId

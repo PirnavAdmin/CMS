@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { fetchMySubscription, isLabModule } from "../utils/subscriptionFlow";
+import { getStoredHospitalId } from "../utils/branchApi.jsx";
 import { Navigate } from "react-router-dom";
 import { getRoleProfile } from "../profile/sessionProfile";
 import { getLabProfile } from "../Lab/labSession";
@@ -91,19 +92,44 @@ const getFallbackPath = (roleType = "admin", profile = {}, currentModule = "") =
   return match?.to || null;
 };
 
-function PermissionRoute({ roleType, module, children }) {
+function PermissionRoute({ roleType, module, entitlement, children }) {
   const profile = useMemo(() => getPermissionProfile(roleType), [roleType]);
   const { loading: permissionsLoading } = useRolePermissionsSync(profile);
   const needsLab = roleType === "admin" && isLabModule(module);
   const [labAccess, setLabAccess] = useState(null);
+  const [cmsAccess, setCmsAccess] = useState(null);
+  const [pharmacyAccess, setPharmacyAccess] = useState(null);
+  const clinicId = roleType === "admin" ? getStoredHospitalId() : "";
   useEffect(() => {
     let active = true;
     setLabAccess(null);
-    if (needsLab) fetchMySubscription().then((subscription) => {
-      if (active) setLabAccess(subscription?.includesLab === true && String(subscription.status).toLowerCase() === "active");
-    }).catch(() => { if (active) setLabAccess(false); });
+    setCmsAccess(null);
+    setPharmacyAccess(null);
+    if (roleType === "admin") {
+      if (!clinicId) {
+        setCmsAccess(false);
+        setLabAccess(false);
+        setPharmacyAccess(false);
+      } else fetchMySubscription().then((subscription) => {
+        if (!active) return;
+        const activeSubscription = String(subscription?.status || "").trim().toLowerCase() === "active";
+        setCmsAccess(activeSubscription && subscription?.includesCms === true);
+        setLabAccess(activeSubscription && subscription?.includesLab === true);
+        setPharmacyAccess(activeSubscription && subscription?.includesPharmacy === true);
+      }).catch(() => {
+        if (active) {
+          setCmsAccess(false);
+          setLabAccess(false);
+          setPharmacyAccess(false);
+        }
+      });
+    }
     return () => { active = false; };
-  }, [needsLab, module]);
+  }, [roleType, needsLab, module, clinicId]);
+  if (roleType === "admin" && cmsAccess === null) return <div className="app-route-loading">Loading subscription...</div>;
+  if (roleType === "admin" && !clinicId) return <Navigate to="/clinic/setup" replace />;
+  if (roleType === "admin" && !cmsAccess) return <Navigate to="/subscription" replace />;
+  if (roleType === "admin" && entitlement === "pharmacy" && !pharmacyAccess) return <Navigate to="/subscription" replace />;
   if (needsLab && labAccess === null) return <div className="app-route-loading">Loading...</div>;
   if (needsLab && !labAccess) return <Navigate to="/subscription" replace />;
 

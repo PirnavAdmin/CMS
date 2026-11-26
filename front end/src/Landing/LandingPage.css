@@ -1021,6 +1021,16 @@
 .landing-payment-methods { display: flex; gap: 10px; border: 0; padding: 16px 0; margin: 0; }
 .landing-payment-methods legend { font-size: 12px; font-weight: 800; margin-bottom: 8px; }
 .landing-payment-methods label { border: 1px solid #cbd5e1; border-radius: 9px; padding: 10px 12px; cursor: pointer; }
+.landing-payment-methods label.is-unavailable { opacity: .58; cursor: not-allowed; }
+.landing-merchant-modal-backdrop { position: fixed; inset: 0; z-index: 2000; display: grid; place-items: center; padding: 20px; background: rgb(15 23 42 / 55%); }
+.landing-merchant-modal { width: min(100%, 520px); padding: 24px; border: 1px solid #cbd5e1; border-radius: 16px; background: #fff; color: var(--hd-text-main); box-shadow: 0 24px 70px rgb(15 23 42 / 25%); }
+.landing-merchant-modal h2 { margin: 0 0 12px; font-size: 20px; line-height: 1.4; }
+.landing-merchant-modal p { line-height: 1.55; }
+.landing-merchant-settings-link { display: inline-block; margin: 4px 0 16px; color: var(--theme-primary-dark); font-weight: 800; }
+.landing-merchant-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.landing-merchant-modal-actions button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-width: 96px; padding: 10px 16px; border: 1px solid #cbd5e1; border-radius: 9px; background: #fff; color: var(--hd-text-main); font: inherit; font-weight: 700; cursor: pointer; }
+.landing-merchant-modal-actions button:first-child { border-color: var(--theme-primary-dark); background: var(--theme-primary-dark); color: #fff; }
+.landing-merchant-modal-actions button:disabled { opacity: .6; cursor: wait; }
 .landing-pay-button, .landing-payment-success button { width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; border: 0; border-radius: 10px; padding: 14px; background: #0f766e; color: #ffffff; font-weight: 800; cursor: pointer; }
 .landing-pay-button:disabled { opacity: .6; }
 .landing-payment-note { display: flex; align-items: center; justify-content: center; gap: 6px; color: #64748b; margin-top: 12px; }

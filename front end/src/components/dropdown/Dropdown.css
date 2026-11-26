@@ -957,3 +957,12 @@
     border-radius: 20px;
   }
 }
+
+/* Keep profile menu action text readable against its orange and red cards. */
+html[data-cms-theme] body #root .hc-dropdown-item--orange .hc-dropdown-item-title,
+html[data-cms-theme] body #root .hc-dropdown-item--danger .hc-dropdown-item-title,
+html[data-cms-theme] body #root .hc-dropdown-item--orange .hc-dropdown-item-subtitle,
+html[data-cms-theme] body #root .hc-dropdown-item--danger .hc-dropdown-item-subtitle {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}

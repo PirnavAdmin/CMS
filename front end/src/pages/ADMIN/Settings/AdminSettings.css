@@ -1665,3 +1665,31 @@ html body :is(.content, .dr-layout-content, .rc-content, .lab-main, .nurse-conte
 @media screen {
   html body .content .admin-settings-page { padding: 0 !important; min-width: 0; height: auto; }
 }
+
+html body .content:has(.admin-settings-page) {
+  min-height: 0 !important;
+  overflow-x: hidden !important;
+  overflow-y: scroll !important;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin !important;
+  scrollbar-color: #79c9c3 #e8f6f5 !important;
+  -ms-overflow-style: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+html body .content:has(.admin-settings-page)::-webkit-scrollbar {
+  display: block !important;
+  width: 10px !important;
+}
+
+html body .content:has(.admin-settings-page)::-webkit-scrollbar-track {
+  display: block !important;
+  background: #e8f6f5 !important;
+}
+
+html body .content:has(.admin-settings-page)::-webkit-scrollbar-thumb {
+  display: block !important;
+  background: #79c9c3 !important;
+  border: 2px solid #e8f6f5 !important;
+  border-radius: 999px !important;
+}

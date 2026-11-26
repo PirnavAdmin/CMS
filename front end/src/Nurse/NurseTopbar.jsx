@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { ChevronRight, Menu, Search } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import NotificationPopup from "../components/NotificationPopup";
+import ThemePicker from "../components/ThemePicker";
 import UserProfileMenu from "../profile/UserProfileMenu";
 import { nurseModuleSearchItems, searchModuleItems } from "../utils/moduleSearch";
 
@@ -69,6 +70,7 @@ function NurseTopbar({ title, onMenu, areaLabel = "Nurse", roleType = "nurse" })
             </div>
           ) : null}
         </form>
+        <ThemePicker />
         <NotificationPopup />
         <UserProfileMenu roleType={roleType} />
       </div>

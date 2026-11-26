@@ -1,4 +1,5 @@
 import { recordAuditLog } from "../pages/SUPERADMIN/superAdminApi";
+import { API_ENDPOINTS, apiUrl } from "../config/api";
 
 const getSessionValue = (key) =>
   sessionStorage.getItem(key) || localStorage.getItem(key) || "";
@@ -84,6 +85,15 @@ export const logoutAndClearSessions = async (roleType = "admin") => {
       ipAddress,
       timestamp: new Date().toISOString(),
   };
+
+  const token = getSessionValue("adminToken") || getSessionValue("superAdminToken") || getSessionValue("doctorToken") || getSessionValue("receptionistToken") || getSessionValue("nurseToken") || getSessionValue("labToken") || getSessionValue("pharmacistToken") || getSessionValue("patientToken") || getSessionValue("token");
+  if (token) {
+    await fetch(apiUrl(API_ENDPOINTS.auth.logout), {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "ngrok-skip-browser-warning": "true" },
+      credentials: "include",
+    }).catch(() => {});
+  }
 
   clearAllSessions();
   window.setTimeout(() => {

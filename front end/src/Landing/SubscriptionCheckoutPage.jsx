@@ -1,28 +1,28 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Clock3,
   HeartPulse,
+  RefreshCw,
   ShieldCheck,
   XCircle,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   createSubscriptionCheckout,
-  confirmDemoSubscriptionPayment,
   fetchSubscriptionPaymentMethods,
   fetchSubscriptionPaymentStatus,
   fetchSubscriptionPlans,
-  getDemoCheckoutToken,
+  fetchMySubscription,
   hasVerifiedAdminSession,
   getSubscriptionPurchaseId,
   initiateSubscriptionPayment,
 } from "../utils/subscriptionFlow";
+import { fetchCurrentAdminProfile } from "../utils/adminAuthSession";
 import { formatIndianCurrency } from "../utils/format";
 import "./LandingPage.css";
-import AdminRegistration from '../components/payments/AdminRegistration';
 
 const getPaymentOutcome = (response) => {
   const statuses = [
@@ -72,7 +72,7 @@ const getPaymentOutcome = (response) => {
   if (rejectedStatus || rejectedMessage || response?.isApproved === false || response?.IsApproved === false) return "rejected";
   if (
     normalized.some((value) =>
-      ["approved", "success", "successful", "succeeded", "paid", "completed"].includes(value)
+      ["approved", "success", "successful", "succeeded", "paid", "completed", "verified"].includes(value)
     ) ||
     response?.isApproved === true ||
     response?.IsApproved === true
@@ -94,6 +94,9 @@ export default function SubscriptionCheckoutPage() {
   const [loading, setLoading] = useState(true);
   const [paymentMethods, setPaymentMethods] = useState([]);
   const [gatewayConfigured, setGatewayConfigured] = useState(false);
+  const [merchantSetupOpen, setMerchantSetupOpen] = useState(false);
+  const [checkingPaymentConfiguration, setCheckingPaymentConfiguration] = useState(false);
+  const [adminRole, setAdminRole] = useState("");
   const [paymentMethodsError, setPaymentMethodsError] = useState("");
   const [details, setDetails] = useState({
     name: "",
@@ -101,20 +104,37 @@ export default function SubscriptionCheckoutPage() {
     phone: "",
   });
   const [paymentMethod, setPaymentMethod] = useState("");
-  const [demoPaymentResult, setDemoPaymentResult] = useState("Success");
   const [confirmed, setConfirmed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [purchaseId, setPurchaseId] = useState("");
-  const [demoToken, setDemoToken] = useState("");
   const [paymentOutcome, setPaymentOutcome] = useState(null);
   const [checkingPaymentStatus, setCheckingPaymentStatus] = useState(false);
+  const [subscriptionActive, setSubscriptionActive] = useState(false);
+  const paymentSubmitLock = useRef(false);
+  const configurationRetryLock = useRef(false);
 
   useEffect(() => {
     let active = true;
-    Promise.all([fetchSubscriptionPlans(), fetchSubscriptionPaymentMethods()])
-      .then(([items, paymentOptions]) => {
+    const readSessionValue = (key) => sessionStorage.getItem(key) || localStorage.getItem(key) || "";
+    if (!hasVerifiedAdminSession()) {
+      navigate("/login", { replace: true, state: { returnTo: window.location.pathname } });
+      return () => { active = false; };
+    }
+
+    Promise.all([fetchCurrentAdminProfile(), fetchSubscriptionPlans(), fetchSubscriptionPaymentMethods()])
+      .then(([profile, items, paymentOptions]) => {
         if (!active) return;
+        const clinicId = profile.hospitalId || profile.HospitalId || profile.clinicId || profile.ClinicId || readSessionValue("hospitalId") || readSessionValue("clinicId");
+        if (!clinicId) {
+          navigate("/clinic/setup", { replace: true });
+          return;
+        }
+        const name = profile.name ?? profile.fullName ?? profile.adminName ?? profile.Name ?? readSessionValue("adminName");
+        const email = profile.email ?? profile.adminEmail ?? profile.Email ?? readSessionValue("adminEmail");
+        setAdminRole(String(profile.role ?? profile.Role ?? readSessionValue("adminRole") ?? readSessionValue("userRole") ?? ""));
+        const phone = profile.mobileNumber ?? profile.phoneNumber ?? profile.phone ?? profile.MobileNumber ?? readSessionValue("mobileNumber");
+        setDetails((current) => ({ name: name || current.name, email: email || current.email, phone: phone || current.phone }));
         const activePlans = items.filter((item) => item.isActive);
         const selected = activePlans.find((item) => String(item.id) === String(planId));
         setPlans(activePlans);
@@ -122,9 +142,9 @@ export default function SubscriptionCheckoutPage() {
         setPaymentMethods(paymentOptions.methods);
         setGatewayConfigured(paymentOptions.gatewayConfigured);
         setPaymentMethod((current) =>
-          paymentOptions.methods.some((method) => method.code === current)
+          paymentOptions.methods.some((method) => method.code === current && method.enabled)
             ? current
-            : paymentOptions.methods[0]?.code || ""
+            : paymentOptions.methods.find((method) => method.enabled)?.code || ""
         );
       })
       .catch((failure) => {
@@ -132,7 +152,7 @@ export default function SubscriptionCheckoutPage() {
         setPlans([]);
         setPlan(null);
         setPaymentMethods([]);
-        setPaymentMethodsError(failure.message || "Unable to load current plans and payment methods.");
+        setPaymentMethodsError(failure.message || "Unable to load the signed-in Admin, plans, and payment methods.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -141,7 +161,26 @@ export default function SubscriptionCheckoutPage() {
     return () => {
       active = false;
     };
-  }, [planId]);
+  }, [planId, navigate]);
+
+  useEffect(() => {
+    const refreshAvailability = () => {
+      if (document.visibilityState !== "visible") return;
+      fetchSubscriptionPaymentMethods().then((configuration) => {
+        setPaymentMethods(configuration.methods);
+        setGatewayConfigured(configuration.gatewayConfigured);
+        setPaymentMethod((current) => configuration.methods.some((method) => method.code === current && method.enabled)
+          ? current
+          : configuration.methods.find((method) => method.enabled)?.code || "");
+      }).catch(() => {});
+    };
+    window.addEventListener("focus", refreshAvailability);
+    document.addEventListener("visibilitychange", refreshAvailability);
+    return () => {
+      window.removeEventListener("focus", refreshAvailability);
+      document.removeEventListener("visibilitychange", refreshAvailability);
+    };
+  }, []);
 
   const accessVariants = useMemo(() => {
     if (!plan) return { without: null, with: null };
@@ -175,13 +214,15 @@ export default function SubscriptionCheckoutPage() {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (submitting) return;
+    if (paymentSubmitLock.current) return;
     if (!hasVerifiedAdminSession()) {
       setSubmitError("Sign in with a verified Admin account before starting subscription checkout.");
       return;
     }
+    paymentSubmitLock.current = true;
     setSubmitting(true);
     setSubmitError("");
+    setPaymentMethodsError("");
     const request = {
       plan,
       includesLab: Boolean(plan.includesLab),
@@ -190,8 +231,25 @@ export default function SubscriptionCheckoutPage() {
       paymentConfirmed: confirmed,
     };
     let activePurchaseId = purchaseId;
-    let activeDemoToken = demoToken;
     try {
+      setCheckingPaymentConfiguration(true);
+      const latestConfiguration = await fetchSubscriptionPaymentMethods();
+      setPaymentMethods(latestConfiguration.methods);
+      setGatewayConfigured(latestConfiguration.gatewayConfigured);
+      setPaymentMethod((current) => latestConfiguration.methods.some((method) => method.code === current && method.enabled)
+        ? current
+        : latestConfiguration.methods.find((method) => method.enabled)?.code || "");
+      setCheckingPaymentConfiguration(false);
+      if (!latestConfiguration.gatewayConfigured) {
+        setMerchantSetupOpen(true);
+        return;
+      }
+      if (!latestConfiguration.methods.some((method) => method.code === paymentMethod && method.enabled)) {
+        setSubmitError(latestConfiguration.methods.some((method) => method.enabled)
+          ? "Payment options were updated. Select an available payment method and try again."
+          : "No payment methods are currently available. Please contact the CMS Owner.");
+        return;
+      }
       if (!activePurchaseId) {
         const purchase = await createSubscriptionCheckout({
           name: details.name,
@@ -205,12 +263,8 @@ export default function SubscriptionCheckoutPage() {
           throw new Error("The checkout was created, but the API response did not include a purchase ID. Contact support before retrying to avoid creating a duplicate purchase.");
         }
         setPurchaseId(activePurchaseId);
-        activeDemoToken = getDemoCheckoutToken(purchase);
-        setDemoToken(activeDemoToken);
       }
-      const payment = gatewayConfigured
-        ? await initiateSubscriptionPayment(activePurchaseId, paymentMethod)
-        : await confirmDemoSubscriptionPayment(activePurchaseId, paymentMethod, demoPaymentResult, activeDemoToken);
+      const payment = await initiateSubscriptionPayment(activePurchaseId, paymentMethod);
       const initiatedOutcome = {
         status: getPaymentOutcome(payment),
         message: getPaymentMessage(payment, "The payment service returned no status details."),
@@ -219,10 +273,25 @@ export default function SubscriptionCheckoutPage() {
       try {
         const status = await fetchSubscriptionPaymentStatus(activePurchaseId);
         const statusOutcome = getPaymentOutcome(status);
+        const confirmedOutcome = statusOutcome === "unknown" ? initiatedOutcome.status : statusOutcome;
         setPaymentOutcome({
-          status: statusOutcome === "unknown" ? initiatedOutcome.status : statusOutcome,
+          status: confirmedOutcome,
           message: getPaymentMessage(status, initiatedOutcome.message),
         });
+        if (confirmedOutcome === "approved") {
+          try {
+            const currentSubscription = await fetchMySubscription();
+            const activeSubscription = String(currentSubscription?.status || "").trim().toLowerCase() === "active" && currentSubscription?.includesCms === true;
+            setSubscriptionActive(activeSubscription);
+            if (activeSubscription) {
+              window.dispatchEvent(new Event("cms:subscription-updated"));
+              navigate("/dashboard", { replace: true });
+            }
+            else setPaymentOutcome((current) => ({ ...current, activationPending: true }));
+          } catch {
+            setPaymentOutcome((current) => ({ ...current, activationPending: true }));
+          }
+        }
       } catch (statusFailure) {
         setPaymentOutcome({
           ...initiatedOutcome,
@@ -248,7 +317,30 @@ export default function SubscriptionCheckoutPage() {
         setSubmitError(failure.message || "Unable to submit the subscription request.");
       }
     } finally {
+      setCheckingPaymentConfiguration(false);
       setSubmitting(false);
+      paymentSubmitLock.current = false;
+    }
+  };
+  const retryPaymentConfiguration = async () => {
+    if (configurationRetryLock.current) return;
+    configurationRetryLock.current = true;
+    setCheckingPaymentConfiguration(true);
+    setPaymentMethodsError("");
+    try {
+      const latestConfiguration = await fetchSubscriptionPaymentMethods();
+      setPaymentMethods(latestConfiguration.methods);
+      setGatewayConfigured(latestConfiguration.gatewayConfigured);
+      setPaymentMethod((current) => latestConfiguration.methods.some((method) => method.code === current && method.enabled)
+        ? current
+        : latestConfiguration.methods.find((method) => method.enabled)?.code || "");
+      if (latestConfiguration.gatewayConfigured) setMerchantSetupOpen(false);
+      else setPaymentMethodsError("Razorpay merchant setup is still required before payment can proceed.");
+    } catch (failure) {
+      setPaymentMethodsError(failure.message || "Unable to refresh payment configuration. Please retry.");
+    } finally {
+      setCheckingPaymentConfiguration(false);
+      configurationRetryLock.current = false;
     }
   };
   const checkPaymentStatus = async () => {
@@ -256,10 +348,21 @@ export default function SubscriptionCheckoutPage() {
     setCheckingPaymentStatus(true);
     try {
       const status = await fetchSubscriptionPaymentStatus(purchaseId);
+      const statusOutcome = getPaymentOutcome(status);
       setPaymentOutcome({
-        status: getPaymentOutcome(status),
+        status: statusOutcome,
         message: getPaymentMessage(status, "The payment service returned no status details."),
       });
+      if (statusOutcome === "approved") {
+        const currentSubscription = await fetchMySubscription().catch(() => null);
+        const activeSubscription = String(currentSubscription?.status || "").trim().toLowerCase() === "active" && currentSubscription?.includesCms === true;
+        setSubscriptionActive(activeSubscription);
+        if (activeSubscription) {
+          window.dispatchEvent(new Event("cms:subscription-updated"));
+          navigate("/dashboard", { replace: true });
+        }
+        else setPaymentOutcome((current) => ({ ...current, activationPending: true }));
+      }
     } catch (failure) {
       setPaymentOutcome((current) => ({
         ...current,
@@ -270,7 +373,7 @@ export default function SubscriptionCheckoutPage() {
     }
   };
   const continueAfterApproval = () => {
-    navigate("/");
+    navigate(subscriptionActive ? "/dashboard" : "/subscription", { replace: true });
   };
 
   return (
@@ -298,7 +401,6 @@ export default function SubscriptionCheckoutPage() {
         </div>
       ) : (
         <section className="subscription-form-page">
-          <AdminRegistration />
           {!hasVerifiedAdminSession() ? (
             <div className="landing-payment-error" role="status">
               Subscription checkout requires a verified Admin account. <Link to="/login">Sign in as Admin</Link>, then return to this plan.
@@ -340,9 +442,9 @@ export default function SubscriptionCheckoutPage() {
                 {paymentOutcome.statusCheckError ? <p className="landing-payment-error" role="alert">Payment initiation was recorded, but the payment status could not be confirmed: {paymentOutcome.statusCheckError}</p> : null}
                 {paymentOutcome.status === "approved" ? (
                   <>
-                    <p className="landing-payment-result-note">Purchase ID: {purchaseId}. Your paid purchase is awaiting Admin account creation. The Super Admin will create the account and initiate password setup; you can sign in after receiving those setup instructions.</p>
+                    <p className="landing-payment-result-note">Purchase ID: {purchaseId}. {paymentOutcome.activationPending ? "Payment is verified and the subscription is awaiting activation. Refresh the subscription page to check access." : subscriptionActive ? "Your subscription is active." : "Checking subscription activation."}</p>
                     <button type="button" onClick={continueAfterApproval}>
-                      Return to Home <ArrowRight size={17} />
+                      {subscriptionActive ? "Continue to clinic" : "Check subscription"} <ArrowRight size={17} />
                     </button>
                   </>
                 ) : paymentOutcome.status === "rejected" ? (
@@ -455,41 +557,25 @@ export default function SubscriptionCheckoutPage() {
                 </label>
               </div>
 
-              <fieldset className="landing-payment-methods" disabled={!paymentMethods.length || submitting}>
+              <fieldset className="landing-payment-methods" disabled={submitting}>
                 <legend>Payment option</legend>
                 {paymentMethods.map((method) => (
-                  <label key={method.code}>
+                  <label key={method.code} className={gatewayConfigured && !method.enabled ? "is-unavailable" : ""}>
                     <input
                       type="radio"
                       name="paymentMethod"
                       value={method.code}
                       checked={paymentMethod === method.code}
+                      disabled={submitting || (gatewayConfigured && !method.enabled)}
                       onChange={(event) =>
                         setPaymentMethod(event.target.value)
                       }
                     />
-                    <span>{method.name}</span>
+                    <span>{method.name}{!gatewayConfigured ? " (Setup required)" : !method.enabled ? " (Unavailable)" : ""}</span>
                   </label>
                 ))}
               </fieldset>
-              {!gatewayConfigured && paymentMethods.length ? (
-                <div className="landing-demo-payment-settings">
-                  <small className="landing-payment-note landing-demo-payment-note">
-                    Payment gateway is not configured. This is a development payment simulation.
-                  </small>
-                  <label className="landing-demo-payment-select">
-                    Demo payment result
-                    <select
-                      value={demoPaymentResult}
-                      onChange={(event) => setDemoPaymentResult(event.target.value)}
-                      disabled={submitting}
-                    >
-                      <option value="Success">Simulate success</option>
-                      <option value="Failed">Simulate failure</option>
-                    </select>
-                  </label>
-                </div>
-              ) : null}
+              {!gatewayConfigured ? <p className="landing-payment-note">Payment options are shown but unavailable until CMS Razorpay merchant setup is complete.</p> : null}
               {paymentMethodsError ? <div className="landing-payment-error" role="alert">{paymentMethodsError}</div> : null}
 
               <label className="landing-payment-confirm">
@@ -514,9 +600,11 @@ export default function SubscriptionCheckoutPage() {
               <button
                 className="landing-pay-button"
                 type="submit"
-                disabled={!hasVerifiedAdminSession() || !confirmed || submitting || !paymentMethod || !paymentMethods.length}
+                disabled={!hasVerifiedAdminSession() || !plan || !details.name.trim() || !details.email.trim() || !details.phone.trim() || !confirmed || submitting}
               >
-                {submitting
+                {checkingPaymentConfiguration
+                  ? "Checking payment setup..."
+                  : submitting
                   ? "Initiating payment..."
                   : "Initiate Payment"}{" "}
                 <ArrowRight size={17} />
@@ -530,6 +618,28 @@ export default function SubscriptionCheckoutPage() {
           </div>
         </section>
       )}
+      {merchantSetupOpen ? (
+        <div className="landing-merchant-modal-backdrop" role="presentation">
+          <section className="landing-merchant-modal" role="dialog" aria-modal="true" aria-labelledby="merchant-setup-title">
+            <h2 id="merchant-setup-title">CMS Razorpay merchant setup is required before payment can proceed.</h2>
+            {/(super\s*admin|superadmin|cms\s*owner|cmsowner)/i.test(adminRole) ? (
+              <p>Configure the CMS Razorpay merchant details in the authorized settings page, then retry.</p>
+            ) : (
+              <p>Please contact the CMS Owner to configure subscription payments.</p>
+            )}
+            {/(super\s*admin|superadmin|cms\s*owner|cmsowner)/i.test(adminRole) ? (
+              <Link to="/superadmin/settings" className="landing-merchant-settings-link">Open merchant settings</Link>
+            ) : null}
+            {paymentMethodsError ? <p className="landing-payment-error" role="alert">{paymentMethodsError}</p> : null}
+            <div className="landing-merchant-modal-actions">
+              <button type="button" onClick={retryPaymentConfiguration} disabled={checkingPaymentConfiguration}>
+                <RefreshCw size={16} /> {checkingPaymentConfiguration ? "Checking..." : "Retry"}
+              </button>
+              <button type="button" onClick={() => setMerchantSetupOpen(false)} disabled={checkingPaymentConfiguration}>Close</button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </main>
   );
 }

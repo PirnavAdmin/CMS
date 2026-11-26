@@ -436,11 +436,16 @@ function Consultation() {
         );
 
         const backendVitals = await fetchConsultationVitals(detailedAppointment.appointmentId, headers);
-        const hydratedAppointment = mergeStoredAppointmentVitals({
+        const appointmentVitals = {
           ...detailedAppointment,
           ...(backendVitals || {}),
           patientId: detailedAppointment.patientId || savedConsultation?.patientId,
-        });
+        };
+        const sugarLevel = pickVital(backendVitals || {}, detailedAppointment, "sugarLevel");
+        const hydratedAppointment = {
+          ...mergeStoredAppointmentVitals(appointmentVitals),
+          sugarLevel,
+        };
         let medicalHistory = null;
         try {
           medicalHistory = await fetchPatientMedicalHistory(hydratedAppointment.patientId, headers);
@@ -465,7 +470,7 @@ function Consultation() {
               []
           ),
           bp: hydratedAppointment.bloodPressure || "",
-          sugar: hydratedAppointment.sugarLevel || "",
+          sugar: sugarLevel,
           temp: hydratedAppointment.temperature || "",
           weight: hydratedAppointment.weight || "",
           pulse: hydratedAppointment.pulseRate || "",
@@ -491,7 +496,6 @@ function Consultation() {
         return {
           ...prev,
           bp: hydrated.bloodPressure || prev.bp,
-          sugar: hydrated.sugarLevel || prev.sugar,
           temp: hydrated.temperature || prev.temp,
           weight: hydrated.weight || prev.weight,
           pulse: hydrated.pulseRate || prev.pulse,
